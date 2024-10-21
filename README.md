@@ -1,1 +1,0 @@
-# adoptable-platform-repo
