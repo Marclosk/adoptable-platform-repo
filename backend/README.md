@@ -1,1 +1,1 @@
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Backend Build Status](https://github.com/Marclosk/adoptable-platform-repo/actions/workflows/backend-ci.yml/badge.svg)
