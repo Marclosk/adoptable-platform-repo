@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Login from "./features/auth/login";
-import Dashboard from "./pages/dashboard"; // Suponiendo que tienes una página de dashboard
+import Login from "./features/auth/login/login";
+import Register from "./features/auth/register/register";
+import Dashboard from "./pages/dashboard";
 
 const App = () => {
   return (
@@ -9,6 +10,7 @@ const App = () => {
         <Route path="/login" Component={Login} />
         <Route path="/dashboard" Component={Dashboard} />
         <Route path="/" Component={Login} />
+        <Route path="/register" Component={Register} />
       </Routes>
     </Router>
   );

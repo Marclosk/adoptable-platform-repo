@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import "../../styles/login/login.css";
-
 import {
   Button,
   FormControl,
@@ -13,9 +11,11 @@ import {
   Card,
   CardBody,
   Heading,
+  Text,
+  Flex,
 } from "@chakra-ui/react";
-import { loginSuccess, loginFailure } from "./authSlice";
-import { login } from "./authService";
+import { loginSuccess, loginFailure } from "../authSlice";
+import { login } from "../authService";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -74,52 +74,85 @@ const Login = () => {
     }
   };
 
+  const goToRegister = () => {
+    navigate("/register");
+  };
+
   return (
     <Box
       minHeight="100vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
+      bg="#DDD2B5"
     >
-      <Card className="login-card" maxWidth="400px" width="full" boxShadow="lg">
+      <Card
+        maxWidth="400px"
+        width="full"
+        boxShadow="lg"
+        borderRadius="md"
+        bg="white"
+        borderColor="teal.300"
+        p="6"
+      >
         <CardBody>
-          <Heading as="h2" size="lg" textAlign="center" mb="6">
+          <Heading as="h2" size="lg" textAlign="center" mb="6" color="teal.500">
             Iniciar sesión
           </Heading>
-          <FormControl isInvalid={!!emailError}>
+
+          {/* Descripción de la plataforma */}
+          <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
+            Bienvenido a nuestra plataforma de adopción de perros. Conéctate
+            para encontrar a tu nuevo amigo peludo.
+          </Text>
+
+          {/* Formulario de login */}
+          <FormControl isInvalid={!!emailError} mb="4">
             <FormLabel>Email</FormLabel>
             <Input
-              className="input-field"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Correo electrónico"
+              borderColor="teal.300"
             />
             {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
           </FormControl>
-          <FormControl mt="4" isInvalid={!!passwordError}>
+
+          <FormControl isInvalid={!!passwordError} mb="6">
             <FormLabel>Contraseña</FormLabel>
             <Input
-              className="input-field"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"
               onKeyDown={handleKeyDown}
+              borderColor="teal.300"
             />
             {passwordError && (
               <FormErrorMessage>{passwordError}</FormErrorMessage>
             )}
           </FormControl>
+
+          {/* Botón de inicio de sesión */}
           <Button
-            className="login-button"
-            mt="6"
             colorScheme="teal"
             onClick={handleLogin}
             width="full"
+            size="lg"
+            mb="6"
           >
             Iniciar sesión
           </Button>
+
+          <Flex justify="center">
+            <Text fontSize="sm" color="gray.600">
+              ¿No tienes cuenta?{" "}
+              <Button variant="link" color="teal.500" onClick={goToRegister}>
+                Regístrate aquí
+              </Button>
+            </Text>
+          </Flex>
         </CardBody>
       </Card>
     </Box>
