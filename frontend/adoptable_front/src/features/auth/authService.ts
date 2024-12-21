@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL_login = "https://api.example.com/login";
-const API_URL_register = "https://api.example.com/register";
+const API_URL_login = "http://localhost:8000/users/login/";
+const API_URL_register = "http://localhost:8000/users/register/";
 
 interface LoginCredentials {
   email: string;
@@ -16,9 +16,15 @@ interface RegisterCredentials {
 export const login = async ({ email, password }: LoginCredentials) => {
   try {
     const response = await axios.post(API_URL_login, { email, password });
-    return response.data;
+    const { token, user } = response.data;
+    localStorage.setItem("token", token);
+    return { user };
   } catch (error) {
-    throw new Error("Error de autenticación");
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data?.detail || "Error de autenticación");
+    } else {
+      throw new Error("Error de autenticación");
+    }
   }
 };
 

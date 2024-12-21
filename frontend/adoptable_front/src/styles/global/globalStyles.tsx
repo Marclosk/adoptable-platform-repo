@@ -1,4 +1,4 @@
-import { Global } from "@emotion/react"; // Si estás usando Chakra UI para CSS global
+import { Global } from "@emotion/react";
 
 const GlobalStyles = () => (
   <Global

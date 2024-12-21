@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Proyecto{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <!-- Aquí podrías agregar el menú o barra de navegación -->
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- Aquí se renderizará el contenido de la página -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <!-- Aquí podrías agregar el pie de página -->
+    </footer>
+</body>
+</html>

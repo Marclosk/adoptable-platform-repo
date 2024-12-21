@@ -57,7 +57,12 @@ const Login = () => {
 
     try {
       const data = await login({ email, password });
-      dispatch(loginSuccess(data.user));
+      dispatch(
+        loginSuccess({
+          user: data.user,
+          token: localStorage.getItem("token") ?? "",
+        })
+      );
       navigate("/dashboard");
     } catch (err) {
       if (err instanceof Error) {
