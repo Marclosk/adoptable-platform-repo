@@ -1,3 +1,26 @@
+# Ignorar archivos compilados de Python
 *.pyc
 *.pyo
+
+# Ignorar base de datos SQLite (si usas SQLite como base de datos)
 *.sqlite3
+
+# Ignorar la carpeta __pycache__ generada por Python
+__pycache__/
+
+# Archivos estáticos generados por Django
+staticfiles/
+static/
+
+# Archivos de log
+*.log
+
+# Archivos de imagen (si se suben imágenes u otros recursos)
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Archivos de backups o temporales
+*.bak
+*.swp

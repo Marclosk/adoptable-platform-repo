@@ -22,6 +22,9 @@ const Register = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [first_name, setFirstName] = useState("");
+  const [last_name, setLastName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -42,6 +45,9 @@ const Register = () => {
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
+    setUsername("");
+    setFirstName("");
+    setLastName("");
 
     if (!validateEmail(email)) {
       setEmailError("Por favor, ingresa un correo válido.");
@@ -62,7 +68,7 @@ const Register = () => {
     }
 
     try {
-      const data = await register({ email, password });
+      const data = await register({ username, email, password, first_name, last_name });
       dispatch({ type: "auth/registerSuccess", payload: data.user });
       navigate("/login");
     } catch (err) {
@@ -100,6 +106,17 @@ const Register = () => {
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
             Crea tu cuenta para adoptar a tu nuevo amigo peludo.
           </Text>
+
+          <FormControl mb="6">
+            <FormLabel>Nombre de usuario</FormLabel>
+            <Input
+              type="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Nombre de usuario"
+              borderColor="teal.300"
+            />
+          </FormControl>
 
           {/* Formulario de registro */}
           <FormControl isInvalid={!!emailError} mb="4">
@@ -140,6 +157,28 @@ const Register = () => {
             {confirmPasswordError && (
               <FormErrorMessage>{confirmPasswordError}</FormErrorMessage>
             )}
+          </FormControl>
+
+          <FormControl mb="6">
+            <FormLabel>Nombre</FormLabel>
+            <Input
+              type="name"
+              value={first_name}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Nombre"
+              borderColor="teal.300"
+            />
+          </FormControl>
+
+          <FormControl mb="6">
+            <FormLabel>Apellido</FormLabel>
+            <Input
+              type="name"
+              value={last_name}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Apellido"
+              borderColor="teal.300"
+            />
           </FormControl>
 
           {/* Botón de registro */}

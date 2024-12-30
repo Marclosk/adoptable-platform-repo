@@ -1,19 +1,20 @@
-version: '3.8'
+version: "3.8"
 
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command:
+      ["poetry", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
-      - .:/code
+      - .:/app
     ports:
       - "8001:8000"
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
       - DJANGO_SETTINGS_ENV=Production
-      - DATABASE_URL=postgres://user:password@db:5432/mydatabase
+      - DATABASE_URL=postgres://marc:admin@db:5432/adoptable_db
     depends_on:
       - db
 

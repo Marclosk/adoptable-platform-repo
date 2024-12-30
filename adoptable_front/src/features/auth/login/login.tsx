@@ -21,7 +21,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -38,12 +38,7 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
-    setEmailError("");
     setPasswordError("");
-
-    if (!validateEmail(email)) {
-      setEmailError("Por favor, ingresa un correo válido.");
-    }
 
     if (!validatePassword(password)) {
       setPasswordError(
@@ -51,25 +46,27 @@ const Login = () => {
       );
     }
 
-    if (emailError || passwordError) {
+    if (passwordError) {
       return;
     }
 
     try {
-      const data = await login({ email, password });
-      dispatch(
-        loginSuccess({
-          user: data.user,
-          token: localStorage.getItem("token") ?? "",
-        })
-      );
+      console.log("Intentando iniciar sesión..."); // Comentario antes de intentar el login
+      await login({ username, password });
       navigate("/dashboard");
     } catch (err) {
+      // Falla en el inicio de sesión
       if (err instanceof Error) {
         dispatch(loginFailure(err.message));
+        console.error("Error durante el inicio de sesión:");
+        console.error(err.message);
       } else {
-        dispatch(loginFailure("Error desconocido"));
+        const unknownError = "Error desconocido durante el inicio de sesión.";
+        dispatch(loginFailure(unknownError));
+        console.error(unknownError);
       }
+    } finally {
+      console.log("Fin del proceso de inicio de sesión."); // Comentario para saber que el proceso ha terminado
     }
   };
 
@@ -112,16 +109,15 @@ const Login = () => {
           </Text>
 
           {/* Formulario de login */}
-          <FormControl isInvalid={!!emailError} mb="4">
-            <FormLabel>Email</FormLabel>
+          <FormControl mb="4">
+            <FormLabel>Nombre de usuario</FormLabel>
             <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Correo electrónico"
+              type="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Nombre de usuario"
               borderColor="teal.300"
             />
-            {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
           </FormControl>
 
           <FormControl isInvalid={!!passwordError} mb="6">
