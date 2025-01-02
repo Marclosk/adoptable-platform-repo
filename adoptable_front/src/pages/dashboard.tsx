@@ -16,13 +16,31 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  useDisclosure,
-  useBreakpointValue,
 } from "@chakra-ui/react";
 import { FaUserCircle, FaSignOutAlt } from "react-icons/fa"; // Icono de perfil y logout
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { logoutSuccess } from "../features/auth/authSlice"; // Asegúrate de que esta acción esté definida
+import { logout } from "../features/auth/authService"; // Asegúrate de que esta función esté definida
 
 const Dashboard: React.FC = () => {
-  // Array de ejemplo con perros para las cards
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  // Función para manejar el logout
+  const handleLogout = async () => {
+    try {
+      // Llamamos a la función logout (asíncrona)
+      await logout();
+      // Disparamos la acción para limpiar el estado en Redux
+      dispatch(logoutSuccess());
+      // Redirigimos al usuario a la página de login
+      navigate("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
   const dogs = [
     {
       id: 1,
@@ -67,12 +85,13 @@ const Dashboard: React.FC = () => {
             fontSize="24px"
           />
           <MenuList>
-            <MenuItem icon={<FaSignOutAlt />} onClick={() => alert("Logout")}>
+            <MenuItem icon={<FaSignOutAlt />} onClick={handleLogout}>
               Logout
             </MenuItem>
           </MenuList>
         </Menu>
       </Flex>
+
       {/* Navbar inferior */}
       <Flex as="nav" bg="#C3B898" p="4" justify="space-evenly" align="center">
         <Button variant="link" color="teal.500">

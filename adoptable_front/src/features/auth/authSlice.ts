@@ -8,7 +8,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: null, 
+  token: null,
   error: null,
 };
 
@@ -37,9 +37,19 @@ const authSlice = createSlice({
       state.error = action.payload;
       state.user = null;
     },
+    logoutSuccess: (state) => {
+      state.user = null;
+      state.token = null;
+      state.error = null;
+    },
   },
 });
 
-export const { loginSuccess, loginFailure, registerSuccess, registerFailure } =
-  authSlice.actions;
+export const {
+  loginSuccess,
+  loginFailure,
+  registerSuccess,
+  registerFailure,
+  logoutSuccess,
+} = authSlice.actions;
 export default authSlice.reducer;

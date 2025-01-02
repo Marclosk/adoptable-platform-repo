@@ -51,11 +51,10 @@ const Login = () => {
     }
 
     try {
-      console.log("Intentando iniciar sesión..."); // Comentario antes de intentar el login
+      console.log("Intentando iniciar sesión..."); 
       await login({ username, password });
       navigate("/dashboard");
     } catch (err) {
-      // Falla en el inicio de sesión
       if (err instanceof Error) {
         dispatch(loginFailure(err.message));
         console.error("Error durante el inicio de sesión:");
@@ -66,7 +65,7 @@ const Login = () => {
         console.error(unknownError);
       }
     } finally {
-      console.log("Fin del proceso de inicio de sesión."); // Comentario para saber que el proceso ha terminado
+      console.log("Fin del proceso de inicio de sesión."); 
     }
   };
 

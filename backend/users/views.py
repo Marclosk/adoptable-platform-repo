@@ -2,9 +2,10 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,  permission_classes
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
 
 
 @permission_classes([AllowAny])
@@ -24,17 +25,30 @@ def login_view(request):
     Vista para iniciar sesión con nombre de usuario y contraseña.
     """
     if request.method == 'POST':
-        # Obtenemos los datos del request (nombre de usuario y contraseña)
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Intentamos autenticar al usuario
         user = authenticate(request, username=username, password=password)
         
-        # Si el usuario existe y las credenciales son correctas
         if user is not None:
-            login(request, user)  # Creamos una sesión para el usuario
+            login(request, user)  
             return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
         else:
-            # Si las credenciales son incorrectas
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@permission_classes([AllowAny])
+@api_view(['POST'])
+def logout_view(request):
+    """
+    Vista para cerrar sesión.
+    """
+    if request.method == 'POST':
+        logout(request)
+        
+        response = Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
+        
+        response.delete_cookie('sessionid')
+
+        response.delete_cookie('csrftoken')
+        
+        return response
