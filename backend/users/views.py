@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view,  permission_classes
 from django.contrib.auth import authenticate, login, logout
 from .serializers import RegisterSerializer, UserSerializer
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -47,8 +47,16 @@ def logout_view(request):
         
         response = Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
         
-        response.delete_cookie('sessionid')
-
-        response.delete_cookie('csrftoken')
+        response.delete_cookie('sessionid', path='/')
+        response.delete_cookie('csrftoken', path='/')
         
         return response
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
+def check_session(request):
+    """
+    Verifica si el usuario ha iniciado sesión correctamente.
+    """
+    return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)

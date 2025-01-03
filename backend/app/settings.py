@@ -145,14 +145,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = 'home'  # Redirige a la página principal después de iniciar sesión
-LOGOUT_REDIRECT_URL = 'login'  # Redirige a la página de login después de cerrar sesión
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Permitir acceso por defecto
+        'rest_framework.permissions.AllowAny',
     ],
 }
