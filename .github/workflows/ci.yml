@@ -40,14 +40,19 @@ jobs:
 
       - name: Set DATABASE_URL environment variable
         run: |
-          echo "DATABASE_URL=postgres://marc:admin@localhost:5432/adoptable_db" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgres://marc:admin@db:5432/adoptable_db" >> $GITHUB_ENV
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          until pg_isready -h localhost -p 5432 -U marc; do
+          until pg_isready -h db -p 5432 -U marc; do
             echo "Waiting for database..."
             sleep 2
           done
+
+      - name: Run code
+        run: |
+          cd backend
+          poetry run python manage.py migrate
 
       - name: Run backend tests
         run: |
