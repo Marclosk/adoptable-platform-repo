@@ -29,7 +29,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DJANGO_SETTINGS_MODULE=my_django_project.settings" >> $GITHUB_ENV
+          echo "DJANGO_SETTINGS_MODULE=app.settings" >> $GITHUB_ENV
         # Agrega otras variables si son necesarias:
         # echo "DATABASE_URL=sqlite:///db.sqlite3" >> $GITHUB_ENV
 
@@ -41,7 +41,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
-          poetry run pytest --ds=my_django_project.settings --disable-warnings
+          poetry run pytest --ds=app.settings --disable-warnings
 
   frontend:
     runs-on: ubuntu-latest
