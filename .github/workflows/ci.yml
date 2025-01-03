@@ -1,5 +1,3 @@
-name: CI
-
 on:
   push:
     branches: [main, frontend-login-create]
@@ -9,6 +7,7 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -28,10 +27,21 @@ jobs:
           cd backend
           poetry install
 
+      - name: Set environment variables
+        run: |
+          echo "DJANGO_SETTINGS_MODULE=my_django_project.settings" >> $GITHUB_ENV
+        # Agrega otras variables si son necesarias:
+        # echo "DATABASE_URL=sqlite:///db.sqlite3" >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: |
+          cd backend
+          poetry run python manage.py migrate
+
       - name: Run backend tests
         run: |
           cd backend
-          poetry run pytest
+          poetry run pytest --ds=my_django_project.settings --disable-warnings
 
   frontend:
     runs-on: ubuntu-latest
