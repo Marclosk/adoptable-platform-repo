@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, frontend-login-create]
   pull_request:
     branches: [main]
 
