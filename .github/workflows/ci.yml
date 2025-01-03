@@ -47,6 +47,9 @@ jobs:
         run: |
           echo "DATABASE_URL=postgres://marc:admin@db:5432/adoptable_db" >> $GITHUB_ENV
 
+      - name: Verify DATABASE_URL
+        run: echo $DATABASE_URL
+
       - name: Wait for PostgreSQL to be ready
         run: |
           for i in {1..10}; do
