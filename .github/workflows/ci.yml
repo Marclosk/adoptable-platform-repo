@@ -1,3 +1,5 @@
+name: CI
+
 on:
   push:
     branches: [main, frontend-login-create]
@@ -7,6 +9,21 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd="pg_isready -U test_user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
       - name: Check out code
@@ -29,9 +46,15 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "DJANGO_SETTINGS_MODULE=app.settings" >> $GITHUB_ENV
-        # Agrega otras variables si son necesarias:
-        # echo "DATABASE_URL=sqlite:///db.sqlite3" >> $GITHUB_ENV
+          echo "DJANGO_SETTINGS_MODULE=my_django_project.settings" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgres://marc:admin@localhost:5432/adoptable_db" >> $GITHUB_ENV
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h 127.0.0.1 -U test_user; do
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
 
       - name: Run migrations
         run: |
@@ -41,7 +64,8 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
-          poetry run pytest --ds=app.settings --disable-warnings
+          poetry run pytest --ds=my_django_project.settings --disable-warnings
+
 
   frontend:
     runs-on: ubuntu-latest
