@@ -38,20 +38,35 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
-    setPasswordError("");
-
+    setPasswordError(""); // Limpiar errores previos
+  
+    // Validar si ambos campos están vacíos
+    if (!username && !password) {
+      setPasswordError("Los campos están vacíos");
+      return;
+    }
+  
+    // Validar si solo uno de los campos está vacío
+    if (!username) {
+      setPasswordError("El campo nombre de usuario está vacío");
+      return;
+    }
+  
+    if (!password) {
+      setPasswordError("El campo contraseña está vacío");
+      return;
+    }
+  
+    // Validar contraseña según las reglas existentes
     if (!validatePassword(password)) {
       setPasswordError(
         "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
       );
-    }
-
-    if (passwordError) {
       return;
     }
-
+  
     try {
-      console.log("Intentando iniciar sesión..."); 
+      console.log("Intentando iniciar sesión...");
       await login({ username, password });
       navigate("/dashboard");
     } catch (err) {
@@ -59,15 +74,17 @@ const Login = () => {
         dispatch(loginFailure(err.message));
         console.error("Error durante el inicio de sesión:");
         console.error(err.message);
+        setPasswordError("Credenciales invalidas.");
       } else {
         const unknownError = "Error desconocido durante el inicio de sesión.";
         dispatch(loginFailure(unknownError));
         console.error(unknownError);
       }
     } finally {
-      console.log("Fin del proceso de inicio de sesión."); 
+      console.log("Fin del proceso de inicio de sesión.");
     }
   };
+  
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

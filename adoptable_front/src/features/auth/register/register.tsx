@@ -148,7 +148,7 @@ const Register = () => {
           <FormControl isInvalid={!!confirmPasswordError} mb="6">
             <FormLabel>Confirmar Contraseña</FormLabel>
             <Input
-              type="password"
+              type="confirm_password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirmar contraseña"
@@ -173,7 +173,7 @@ const Register = () => {
           <FormControl mb="6">
             <FormLabel>Apellido</FormLabel>
             <Input
-              type="name"
+              type="last_name"
               value={last_name}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="Apellido"

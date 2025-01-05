@@ -9,10 +9,10 @@
 
     /* Bundler mode */
     "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "composite": true,
+    "noEmit": false,
     "jsx": "react-jsx",
 
     /* Linting */

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getCSRFToken } from "./session/token";
 
 axios.defaults.withCredentials = true;
 
@@ -30,14 +31,6 @@ export const login = async ({ username, password }: LoginCredentials) => {
       throw new Error("Error desconocido");
     }
   }
-};
-
-const getCSRFToken = () => {
-  const csrfToken = document.cookie
-    .split(";")
-    .find((cookie) => cookie.trim().startsWith("csrftoken="))
-    ?.split("=")[1];
-  return csrfToken;
 };
 
 export const logout = async () => {
