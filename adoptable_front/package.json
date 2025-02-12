@@ -12,9 +12,11 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.0.0",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
+    "@fontsource/montserrat": "^5.1.1",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.7",
     "framer-motion": "^11.11.11",

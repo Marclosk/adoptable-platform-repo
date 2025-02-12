@@ -54,9 +54,14 @@ def logout_view(request):
     
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated]) 
+@permission_classes([AllowAny]) 
 def check_session(request):
     """
     Verifica si el usuario ha iniciado sesión correctamente.
     """
-    return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)
+    # Si el usuario está autenticado, respondemos con un mensaje de éxito
+    if request.user.is_authenticated:
+        return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)
+
+    # Si no está autenticado, devolvemos un error indicando que la sesión no es válida
+    return Response({"message": "Session is invalid, please log in."}, status=status.HTTP_401_UNAUTHORIZED)

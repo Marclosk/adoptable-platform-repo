@@ -1,21 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { loginSuccess, loginFailure } from "../authSlice";
+import { login } from "../authService";
+import { checkSession } from "../session/checkSession";
 import {
+  Box,
   Button,
   FormControl,
   FormLabel,
   Input,
-  Box,
-  FormErrorMessage,
   Card,
   CardBody,
   Heading,
   Text,
+  FormErrorMessage,
   Flex,
 } from "@chakra-ui/react";
-import { loginSuccess, loginFailure } from "../authSlice";
-import { login } from "../authService";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -23,13 +25,18 @@ const Login = () => {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+  useEffect(() => {
+    const checkAndRedirect = async () => {
+      const sessionValid = await checkSession();
+      if (sessionValid) {
+        navigate("/dashboard");
+      }
+    };
+
+    checkAndRedirect();
+  }, [navigate]);
 
   const validatePassword = (password: string) => {
     const regex =
@@ -39,24 +46,24 @@ const Login = () => {
 
   const handleLogin = async () => {
     setPasswordError(""); // Limpiar errores previos
-  
+
     // Validar si ambos campos están vacíos
     if (!username && !password) {
       setPasswordError("Los campos están vacíos");
       return;
     }
-  
+
     // Validar si solo uno de los campos está vacío
     if (!username) {
       setPasswordError("El campo nombre de usuario está vacío");
       return;
     }
-  
+
     if (!password) {
       setPasswordError("El campo contraseña está vacío");
       return;
     }
-  
+
     // Validar contraseña según las reglas existentes
     if (!validatePassword(password)) {
       setPasswordError(
@@ -64,7 +71,7 @@ const Login = () => {
       );
       return;
     }
-  
+
     try {
       console.log("Intentando iniciar sesión...");
       await login({ username, password });
@@ -84,7 +91,6 @@ const Login = () => {
       console.log("Fin del proceso de inicio de sesión.");
     }
   };
-  
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -118,13 +124,11 @@ const Login = () => {
             Iniciar sesión
           </Heading>
 
-          {/* Descripción de la plataforma */}
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
             Bienvenido a nuestra plataforma de adopción de perros. Conéctate
             para encontrar a tu nuevo amigo peludo.
           </Text>
 
-          {/* Formulario de login */}
           <FormControl mb="4">
             <FormLabel>Nombre de usuario</FormLabel>
             <Input
@@ -151,7 +155,6 @@ const Login = () => {
             )}
           </FormControl>
 
-          {/* Botón de inicio de sesión */}
           <Button
             colorScheme="teal"
             onClick={handleLogin}
