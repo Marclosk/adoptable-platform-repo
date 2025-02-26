@@ -1,5 +1,5 @@
 import React from "react";
-import NavbarSuperior from "./navbar/navbar_superior";  // Asegúrate de que estos componentes existen
+import NavbarSuperior from "./navbar/navbar_superior";
 import NavbarInferior from "./navbar/navbar_inferior";
 import Footer from "./navbar/footer";
 import { Box } from "@chakra-ui/react";

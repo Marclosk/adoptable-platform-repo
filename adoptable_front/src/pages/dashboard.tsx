@@ -9,6 +9,7 @@ import Layout from "../components/layout";
 import LocationHeader from "../components/location/location_header";
 import DogCards from "../components/card/card";
 import { getAnimals } from "./card_detail/animal_services";
+import { fetchCSRFToken } from "./profile/user_services";
 
 interface Dog {
   id: number;
@@ -25,6 +26,8 @@ const Dashboard: React.FC = () => {
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  fetchCSRFToken();
+  
   useEffect(() => {
     const verifySession = async () => {
       const valid = await checkSession();

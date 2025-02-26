@@ -7,29 +7,24 @@ const API_URL_login = "http://localhost:8000/users/login/";
 const API_URL_register = "http://localhost:8000/users/register/";
 const API_URL_logout = "http://localhost:8000/users/logout/";
 
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
 interface RegisterCredentials {
   username: string;
-  email: string;
+  email: string;  
   password: string;
   first_name: string;
   last_name: string;
 }
 
-export const login = async ({ username, password }: LoginCredentials) => {
+export const login = async ({ username, password }: { username: string; password: string }) => {
   try {
     const response = await axios.post(API_URL_login, { username, password });
-    return { response };
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data?.detail || "Error en el servidor");
-    } else {
-      throw new Error("Error desconocido");
-    }
+
+    console.log("✅ Respuesta del servidor:", response.data);
+
+    return response.data; 
+  } catch (error: any) {
+    console.error("❌ Error en login:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.detail || "Error en el servidor");
   }
 };
 

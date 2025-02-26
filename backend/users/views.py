@@ -1,12 +1,11 @@
-# users/views.py
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view,  permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import authenticate, login, logout
-from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
-
+from .serializers import RegisterSerializer, UserSerializer, AdopterProfileSerializer
+from .models import AdopterProfile
 
 @permission_classes([AllowAny])
 @api_view(['POST'])
@@ -14,7 +13,7 @@ def register_view(request):
     if request.method == 'POST':
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            serializer.save()
             return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,7 +50,6 @@ def logout_view(request):
         response.delete_cookie('csrftoken', path='/')
         
         return response
-    
 
 @api_view(['GET'])
 @permission_classes([AllowAny]) 
@@ -59,9 +57,39 @@ def check_session(request):
     """
     Verifica si el usuario ha iniciado sesión correctamente.
     """
-    # Si el usuario está autenticado, respondemos con un mensaje de éxito
     if request.user.is_authenticated:
         return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)
 
-    # Si no está autenticado, devolvemos un error indicando que la sesión no es válida
     return Response({"message": "Session is invalid, please log in."}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    """
+    Obtiene la información del perfil del usuario autenticado.
+    """
+    try:
+        profile = request.user.profile 
+        serializer = AdopterProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except AdopterProfile.DoesNotExist:
+        return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    """
+    Permite al usuario actualizar su perfil.
+    """
+    try:
+        profile = request.user.profile 
+        serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except AdopterProfile.DoesNotExist:
+        return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)

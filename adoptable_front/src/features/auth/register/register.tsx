@@ -102,7 +102,6 @@ const Register = () => {
             Registrarse
           </Heading>
 
-          {/* Descripción de la plataforma */}
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
             Crea tu cuenta para adoptar a tu nuevo amigo peludo.
           </Text>
@@ -118,7 +117,6 @@ const Register = () => {
             />
           </FormControl>
 
-          {/* Formulario de registro */}
           <FormControl isInvalid={!!emailError} mb="4">
             <FormLabel>Email</FormLabel>
             <Input
@@ -181,7 +179,6 @@ const Register = () => {
             />
           </FormControl>
 
-          {/* Botón de registro */}
           <Button
             colorScheme="teal"
             onClick={handleRegister}
@@ -192,7 +189,6 @@ const Register = () => {
             Registrarse
           </Button>
 
-          {/* Botón para volver al login */}
           <Flex justify="center">
             <Button variant="link" color="teal.500" onClick={goBackToLogin}>
               Volver al Login

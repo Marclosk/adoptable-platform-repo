@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { loginSuccess, loginFailure } from "../authSlice";
 import { login } from "../authService";
 import { checkSession } from "../session/checkSession";
@@ -18,6 +17,7 @@ import {
   FormErrorMessage,
   Flex,
 } from "@chakra-ui/react";
+import { getCSRFToken } from "../../../pages/profile/user_services";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -45,15 +45,13 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
-    setPasswordError(""); // Limpiar errores previos
+    setPasswordError("");
 
-    // Validar si ambos campos están vacíos
     if (!username && !password) {
       setPasswordError("Los campos están vacíos");
       return;
     }
 
-    // Validar si solo uno de los campos está vacío
     if (!username) {
       setPasswordError("El campo nombre de usuario está vacío");
       return;
@@ -64,7 +62,6 @@ const Login = () => {
       return;
     }
 
-    // Validar contraseña según las reglas existentes
     if (!validatePassword(password)) {
       setPasswordError(
         "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
@@ -75,6 +72,12 @@ const Login = () => {
     try {
       console.log("Intentando iniciar sesión...");
       await login({ username, password });
+      dispatch(
+        loginSuccess({
+          user: username,
+          token: getCSRFToken(),
+        })
+      );
       navigate("/dashboard");
     } catch (err) {
       if (err instanceof Error) {

@@ -1,16 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
+export interface AuthState {
   user: { id: string; name: string; email: string } | null;
   token: string | null;
   error: string | null;
 }
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  error: null,
+const loadState = (): AuthState => {
+  try {
+    const savedState = localStorage.getItem("authState");
+    return savedState ? JSON.parse(savedState) : { user: null, token: null, error: null };
+  } catch (error) {
+    return { user: null, token: null, error: null };
+  }
 };
+
+const initialState: AuthState = loadState();
 
 const authSlice = createSlice({
   name: "auth",
@@ -23,33 +28,22 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.error = null;
+      localStorage.setItem("authState", JSON.stringify(state));
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
       state.user = null;
       state.token = null;
-    },
-    registerSuccess: (state, action: PayloadAction<any>) => {
-      state.user = action.payload;
-      state.error = null;
-    },
-    registerFailure: (state, action: PayloadAction<string>) => {
-      state.error = action.payload;
-      state.user = null;
+      localStorage.removeItem("authState");
     },
     logoutSuccess: (state) => {
       state.user = null;
       state.token = null;
       state.error = null;
+      localStorage.removeItem("authState"); 
     },
   },
 });
 
-export const {
-  loginSuccess,
-  loginFailure,
-  registerSuccess,
-  registerFailure,
-  logoutSuccess,
-} = authSlice.actions;
+export const { loginSuccess, loginFailure, logoutSuccess } = authSlice.actions;
 export default authSlice.reducer;

@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
         justify="space-between"
         align={{ base: "center", md: "flex-start" }}
       >
-        {/* Logo y descripción */}
+
         <VStack align="start" spacing="4" mb={{ base: 6, md: 0 }}>
           <Text fontSize="xl" fontWeight="bold">
             AdoptAble
@@ -31,7 +31,6 @@ const Footer: React.FC = () => {
           </Text>
         </VStack>
 
-        {/* Navegación */}
         <HStack
           spacing="8"
           align={{ base: "center", md: "flex-start" }}
@@ -76,7 +75,6 @@ const Footer: React.FC = () => {
           </VStack>
         </HStack>
 
-        {/* Redes sociales */}
         <VStack align="start" spacing="4">
           <Text fontSize="md" fontWeight="semibold" color="white">
             Síguenos
@@ -126,7 +124,6 @@ const Footer: React.FC = () => {
         </VStack>
       </Flex>
 
-      {/* Derechos reservados */}
       <Box mt="8" textAlign="center" fontSize="sm" color="white">
         <Text>
           © {new Date().getFullYear()} AdoptAble. Todos los derechos reservados.
