@@ -24,12 +24,13 @@ export const getCSRFToken = () => {
 export const getProfile = async () => {
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/users/profile/`, {
+    const response = await axios.get(`${API_URL}/profile/`, {
       withCredentials: true,
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("Perfil:", response.data);
     return response.data;
   } catch (error: any) {
     console.error(
@@ -40,29 +41,18 @@ export const getProfile = async () => {
   }
 };
 
-export const updateProfile = async (profileData: any) => {
+export const updateProfile = async (profileData: FormData) => {
   try {
     const token = localStorage.getItem("token");
     const csrfToken = getCSRFToken(); 
 
-    console.log("Token en localStorage:", token);
-    console.log("CSRF Token:", csrfToken);
-
-    const payload = {
-      avatar: profileData.avatar,
-      location: profileData.location,
-      phone_number: profileData.phone_number,
-      bio: profileData.bio,
-    };
-
-    const response = await axios.put(`${API_URL}/profile/update/`, payload, {
+    const response = await axios.put(`${API_URL}/profile/update/`, profileData, {
       withCredentials: true,
       headers: {
         Authorization: `Bearer ${token}`,
         "X-CSRFToken": csrfToken, 
       },
     });
-
     return response.data;
   } catch (error: any) {
     console.error(
@@ -72,4 +62,3 @@ export const updateProfile = async (profileData: any) => {
     throw error;
   }
 };
-

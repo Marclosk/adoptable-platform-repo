@@ -21,7 +21,7 @@ class Animal(models.Model):
     ]
 
     name = models.CharField(max_length=100, default='Nombre del animal')
-    age = models.CharField(max_length=50, default='0 años')  # Si necesitas cálculos, mejor usar IntegerField
+    age = models.CharField(max_length=50, default='0 años')
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='male')
     size = models.CharField(max_length=10, choices=SIZE_CHOICES, default='medium')
     activity = models.CharField(max_length=10, choices=ACTIVITY_CHOICES, default='low')
@@ -36,11 +36,11 @@ class Animal(models.Model):
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal('0.0'))
 
     # Características del animal (Lista de etiquetas)
-    characteristics = models.JSONField(default=dict)  # Usa dict en lugar de list para evitar problemas
+    characteristics = models.JSONField(default=dict)
 
     # Información sobre la protectora
     shelter = models.CharField(max_length=150, default='Protectora desconocida')
-    since = models.DateField(default=timezone.now)  # Usa timezone.now en lugar de date.today
+    since = models.DateField(default=timezone.now)
 
     # Estado de salud
     vaccinated = models.BooleanField(default=False)
@@ -50,7 +50,11 @@ class Animal(models.Model):
 
     # Imagen principal + imágenes adicionales
     image = models.ImageField(upload_to='animal_images/', default='animal_images/default_image.jpg')
-    extra_images = models.JSONField(default=dict)  # Usa dict en lugar de list
+    extra_images = models.JSONField(default=dict)
+
+    # NUEVOS CAMPOS DE LATITUD Y LONGITUD
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     # Fechas de creación y actualización
     created_at = models.DateTimeField(auto_now_add=True)

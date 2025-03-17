@@ -7,6 +7,7 @@ import Register from "./features/auth/register/register";
 import Dashboard from "./pages/dashboard";
 import CardDetail from "./pages/card_detail/card_detail";
 import Profile from "./pages/profile/profile";
+import Donations from "./pages/donations/donations";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ const App = () => {
         <Route path="/register" Component={Register} />
         <Route path="/card_detail/:id" Component={CardDetail} />
         <Route path="/perfil" element={<Profile />} />
+        <Route path="/donacions" element={<Donations />} />
       </Routes>
     </Router>
   );

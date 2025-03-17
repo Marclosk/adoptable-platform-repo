@@ -1,14 +1,17 @@
+// animal_services.tsx
 import axios from "axios";
 
-// Configuración base para Axios
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/", // Cambia la URL si usas otra base para tu API
+  baseURL: "http://localhost:8000/api/", // Ajusta la URL si usas otra base
 });
 
-// Obtener todos los animales
-export const getAnimals = async () => {
+// Obtener animales filtrados por distancia y coordenadas del usuario
+export const getAnimals = async (distance: number, userLat: number, userLng: number) => {
   try {
-    const response = await api.get("animals/");
+    // Ejemplo: /animals/?distance=30&user_lat=41.40338&user_lng=2.17403
+    const response = await api.get(
+      `animals/?distance=${distance}&user_lat=${userLat}&user_lng=${userLng}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error al obtener los animales:", error);

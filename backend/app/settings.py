@@ -29,8 +29,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'users',
     'animals',
+    'donacions',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'storages'
     ]
 
 MIDDLEWARE = [
@@ -111,11 +113,24 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
 ]
 
-STATIC_URL = "static/"
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'build/static')
-]
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles_temp")
+
+
+# Configuración de almacenamiento estático en MinIO
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_ACCESS_KEY_ID = "minioadmin"
+AWS_SECRET_ACCESS_KEY = "minioadmin"
+AWS_STORAGE_BUCKET_NAME = "public"
+AWS_S3_ENDPOINT_URL = "http://localhost:9001"  
+AWS_S3_ADDRESSING_STYLE = "path"
+
+# Asegurar que los archivos estáticos se sirvan correctamente desde MinIO
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}"
+STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/"
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -45,26 +45,29 @@ const Register = () => {
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
-    setUsername("");
-    setFirstName("");
-    setLastName("");
+    
+    // Validación de los campos antes de intentar hacer el registro
+    let valid = true;
 
     if (!validateEmail(email)) {
       setEmailError("Por favor, ingresa un correo válido.");
+      valid = false;
     }
 
     if (!validatePassword(password)) {
       setPasswordError(
         "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
       );
+      valid = false;
     }
 
     if (password !== confirmPassword) {
       setConfirmPasswordError("Las contraseñas no coinciden.");
+      valid = false;
     }
 
-    if (emailError || passwordError || confirmPasswordError) {
-      return;
+    if (!valid) {
+      return; // No redirigir si hay errores
     }
 
     try {
@@ -146,7 +149,7 @@ const Register = () => {
           <FormControl isInvalid={!!confirmPasswordError} mb="6">
             <FormLabel>Confirmar Contraseña</FormLabel>
             <Input
-              type="confirm_password"
+              type="password" // Cambié esto para ocultar lo que se escribe
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirmar contraseña"

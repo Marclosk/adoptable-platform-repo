@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import RegisterSerializer, UserSerializer, AdopterProfileSerializer
 from .models import AdopterProfile
@@ -75,15 +76,19 @@ def get_profile(request):
     except AdopterProfile.DoesNotExist:
         return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     """
-    Permite al usuario actualizar su perfil.
+    Permite al usuario actualizar su perfil, incluyendo la carga de un avatar.
     """
     try:
         profile = request.user.profile 
+        
+        # Establece el parser para que maneje datos de formulario y archivos
+        parser_classes = (MultiPartParser, FormParser)
+        
+        # Usar el serializer para manejar tanto los datos como los archivos
         serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -91,5 +96,8 @@ def update_profile(request):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     except AdopterProfile.DoesNotExist:
         return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+

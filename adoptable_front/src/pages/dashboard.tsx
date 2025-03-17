@@ -1,5 +1,6 @@
+// src/pages/dashboard.tsx
 import React, { useEffect, useState } from "react";
-import { Box, Center, Spinner, Text } from "@chakra-ui/react";
+import { Box, Center, Spinner, Text, Heading } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../features/auth/authSlice";
@@ -21,13 +22,24 @@ interface Dog {
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Verificación de sesión
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
-  const [distance] = useState<number>(30);
+
+  // Distancia en km
+  const [distance, setDistance] = useState<number>(30);
+
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+
+  // Lista de perros y estado de carga
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Cargar el CSRF token
   fetchCSRFToken();
-  
+
+  // Verificar la sesión al montar el componente
   useEffect(() => {
     const verifySession = async () => {
       const valid = await checkSession();
@@ -37,24 +49,39 @@ const Dashboard: React.FC = () => {
         setIsSessionValid(true);
       }
     };
-
     verifySession();
   }, [navigate]);
 
   useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLat(position.coords.latitude);
+        setUserLng(position.coords.longitude);
+      },
+      (error) => {
+        console.error("Error obteniendo la ubicación:", error);
+        // Podrías redirigir al usuario o mostrar un mensaje
+      }
+    );
+  }, []);
+
+  // Cada vez que cambien distance, userLat o userLng, cargamos los perros
+  useEffect(() => {
     const fetchDogs = async () => {
-      try {
-        const data = await getAnimals();
-        setDogs(data);
-      } catch (error) {
-        console.error("Error al cargar los animales:", error);
-      } finally {
-        setLoading(false);
+      if (userLat !== null && userLng !== null) {
+        setLoading(true);
+        try {
+          const data = await getAnimals(distance, userLat, userLng);
+          setDogs(data);
+        } catch (error) {
+          console.error("Error al cargar los animales:", error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
-
     fetchDogs();
-  }, []);
+  }, [distance, userLat, userLng]);
 
   if (isSessionValid === null) {
     return (
@@ -67,6 +94,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Cerrar sesión
   const handleLogout = async () => {
     try {
       await logout();
@@ -79,10 +107,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout handleLogout={handleLogout}>
-      <Box minHeight="100vh" bg="#FFFFFF" display="flex" flexDirection="column">
-        <Box p="6" flex="1" display="flex" justifyContent="center">
+      <Box minHeight="100vh" bg="#F7FAFC" display="flex" flexDirection="column">
+        <Box p={6} flex="1" display="flex" justifyContent="center">
           <Box maxWidth="1200px" width="100%">
-            <LocationHeader distance={distance} />
+            {/* Cabecera de ubicación y slider de distancia */}
+            <LocationHeader
+              distance={distance}
+              onDistanceChange={(val) => setDistance(val)}
+            />
             {loading ? (
               <Center>
                 <Spinner size="xl" />

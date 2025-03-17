@@ -26,6 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('users/', include('users.urls')),  
     path('api/', include('animals.urls')), 
+    path('api/', include('donacions.urls')),
     path("csrf-token/", csrf_token_view, name="csrf-token"), 
 
 ]
