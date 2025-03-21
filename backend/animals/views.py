@@ -20,10 +20,14 @@ class AnimalListCreateView(generics.ListCreateAPIView):
                 lng_user = float(user_lng)
                 distance_km = float(distance_param)
 
+                print("[DEBUG] user_lat:", lat_user, "user_lng:", lng_user, "distance:", distance_km)
+
                 filtered_ids = []
                 for animal in queryset:
                     if animal.latitude and animal.longitude:
                         dist = haversine_distance(lat_user, lng_user, animal.latitude, animal.longitude)
+                        print(f"[DEBUG] Animal {animal.id} -> lat={animal.latitude}, lng={animal.longitude}, dist={dist} km")
+
                         if dist <= distance_km:
                             filtered_ids.append(animal.id)
 
@@ -33,6 +37,7 @@ class AnimalListCreateView(generics.ListCreateAPIView):
                 pass
 
         return queryset
+
 
 class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Animal.objects.all()

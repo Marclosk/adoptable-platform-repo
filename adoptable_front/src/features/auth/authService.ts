@@ -9,11 +9,14 @@ const API_URL_logout = "http://localhost:8000/users/logout/";
 
 interface RegisterCredentials {
   username: string;
-  email: string;  
+  email: string;
   password: string;
   first_name: string;
   last_name: string;
+  role: string; 
+  localidad?: string; 
 }
+
 
 export const login = async ({ username, password }: { username: string; password: string }) => {
   try {
@@ -62,6 +65,8 @@ export const register = async ({
   password,
   first_name,
   last_name,
+  role,
+  localidad,
 }: RegisterCredentials) => {
   try {
     const response = await axios.post(API_URL_register, {
@@ -70,11 +75,15 @@ export const register = async ({
       password,
       first_name,
       last_name,
+      role, 
+      localidad,
     });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data?.detail || "Error en el servidor");
+      // Si el backend envía error en 'detail'
+      const serverMessage = error.response.data?.detail || "Error en el servidor";
+      throw new Error(serverMessage);
     } else {
       throw new Error("Error desconocido");
     }

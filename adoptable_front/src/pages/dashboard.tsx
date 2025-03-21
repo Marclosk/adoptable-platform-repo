@@ -1,6 +1,6 @@
 // src/pages/dashboard.tsx
 import React, { useEffect, useState } from "react";
-import { Box, Center, Spinner, Text, Heading } from "@chakra-ui/react";
+import { Box, Center, Spinner, Text } from "@chakra-ui/react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../features/auth/authSlice";
@@ -9,7 +9,7 @@ import { checkSession } from "../features/auth/session/checkSession";
 import Layout from "../components/layout";
 import LocationHeader from "../components/location/location_header";
 import DogCards from "../components/card/card";
-import { getAnimals } from "./card_detail/animal_services";
+import { getAnimals, getAllAnimals } from "./card_detail/animal_services";
 import { fetchCSRFToken } from "./profile/user_services";
 
 interface Dog {
@@ -26,11 +26,15 @@ const Dashboard: React.FC = () => {
   // Verificación de sesión
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
 
-  // Distancia en km
+  // Distancia en km (inicialmente 30)
   const [distance, setDistance] = useState<number>(30);
 
+  // Ubicación del usuario
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
+
+  // Controla si la ubicación está disponible
+  const [locationAvailable, setLocationAvailable] = useState<boolean>(true);
 
   // Lista de perros y estado de carga
   const [dogs, setDogs] = useState<Dog[]>([]);
@@ -52,6 +56,7 @@ const Dashboard: React.FC = () => {
     verifySession();
   }, [navigate]);
 
+  // Intentamos obtener la geolocalización al montar
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -60,28 +65,51 @@ const Dashboard: React.FC = () => {
       },
       (error) => {
         console.error("Error obteniendo la ubicación:", error);
-        // Podrías redirigir al usuario o mostrar un mensaje
+        // Marcar locationAvailable = false
+        setLocationAvailable(false);
       }
     );
   }, []);
 
-  // Cada vez que cambien distance, userLat o userLng, cargamos los perros
+  // Cada vez que cambien distance, userLat, userLng o locationAvailable, cargamos perros
   useEffect(() => {
     const fetchDogs = async () => {
-      if (userLat !== null && userLng !== null) {
-        setLoading(true);
+      setLoading(true);
+
+      // Si la ubicación no está disponible, cargamos todos los animales
+      if (!locationAvailable) {
+        console.log("[DEBUG] Cargando todos los animales (sin filtro)...");
         try {
-          const data = await getAnimals(distance, userLat, userLng);
-          setDogs(data);
+          const all = await getAllAnimals();
+          setDogs(all);
         } catch (error) {
-          console.error("Error al cargar los animales:", error);
+          console.error("Error al cargar todos los animales:", error);
         } finally {
           setLoading(false);
         }
+        return;
+      }
+
+      // Si la ubicación está disponible y lat/lng no son nulos, filtramos
+      if (userLat !== null && userLng !== null) {
+        console.log("[DEBUG] Llamando a getAnimals con:", { distance, userLat, userLng });
+        try {
+          const data = await getAnimals(distance, userLat, userLng);
+          console.log("[DEBUG] Respuesta getAnimals:", data);
+          setDogs(data);
+        } catch (error) {
+          console.error("Error al cargar los animales (con geolocalización):", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Si la ubicación está "disponible" pero userLat/userLng no han llegado todavía
+        // no hacemos nada; esperamos a que se definan
+        setLoading(false);
       }
     };
     fetchDogs();
-  }, [distance, userLat, userLng]);
+  }, [distance, userLat, userLng, locationAvailable]);
 
   if (isSessionValid === null) {
     return (
@@ -110,11 +138,17 @@ const Dashboard: React.FC = () => {
       <Box minHeight="100vh" bg="#F7FAFC" display="flex" flexDirection="column">
         <Box p={6} flex="1" display="flex" justifyContent="center">
           <Box maxWidth="1200px" width="100%">
-            {/* Cabecera de ubicación y slider de distancia */}
-            <LocationHeader
-              distance={distance}
-              onDistanceChange={(val) => setDistance(val)}
-            />
+            {/* 
+              Si la ubicación está disponible, mostramos el LocationHeader.
+              Si no, lo ocultamos. 
+            */}
+            {locationAvailable && (
+              <LocationHeader
+                distance={distance}
+                onDistanceChange={(val) => setDistance(val)}
+              />
+            )}
+
             {loading ? (
               <Center>
                 <Spinner size="xl" />

@@ -149,7 +149,7 @@ const CardDetail: React.FC = () => {
                 ¿Cómo soy?
               </Text>
               <HStack wrap="wrap" spacing={2} mb={4}>
-                {animal.characteristics.map((char, index) => (
+                {Object.keys(animal.characteristics).map((char, index) => (
                   <Badge key={index} colorScheme="teal">
                     {char}
                   </Badge>

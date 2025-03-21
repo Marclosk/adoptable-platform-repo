@@ -35,8 +35,8 @@ class Animal(models.Model):
     # Peso del animal
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal('0.0'))
 
-    # Características del animal (Lista de etiquetas)
-    characteristics = models.JSONField(default=dict)
+    # Características del animal (opcional)
+    characteristics = models.JSONField(blank=True, null=True, default=dict)
 
     # Información sobre la protectora
     shelter = models.CharField(max_length=150, default='Protectora desconocida')
@@ -50,7 +50,7 @@ class Animal(models.Model):
 
     # Imagen principal + imágenes adicionales
     image = models.ImageField(upload_to='animal_images/', default='animal_images/default_image.jpg')
-    extra_images = models.JSONField(default=dict)
+    extra_images = models.JSONField(blank=True, null=True, default=dict)
 
     # NUEVOS CAMPOS DE LATITUD Y LONGITUD
     latitude = models.FloatField(null=True, blank=True)

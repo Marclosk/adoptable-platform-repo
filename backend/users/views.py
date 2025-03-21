@@ -7,16 +7,44 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.views.decorators.csrf import csrf_exempt
 from .serializers import RegisterSerializer, UserSerializer, AdopterProfileSerializer
 from .models import AdopterProfile
+from django.core.mail import send_mail
 
-@permission_classes([AllowAny])
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def register_view(request):
-    if request.method == 'POST':
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+    role = request.data.get("role", "adoptante")
+    localidad = request.data.get("localidad", "")
+
+
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        
+        # Si es protectora, ponemos is_active = False, 
+        # enviamos un correo a marclosquino2@gmail.com
+        if role == "protectora":
+            send_mail(
+                subject="Solicitud de registro de protectora",
+                message=f"La protectora {user.username} (email: {user.email}) solicita registrarse. Localidad: {localidad}",
+                from_email="no-reply@miapp.com",
+                recipient_list=["marclosquino2@gmail.com"],
+            )
+            user.is_active = False
+            user.save()
+
+            return Response(
+                {"message": "Solicitud de protectora enviada. Espera aprobación."},
+                status=status.HTTP_201_CREATED,
+            )
+
+        # Si es adoptante, simplemente creamos el perfil adoptante, etc.
+        return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+    else:
+        print("[DEBUG] serializer.errors:", serializer.errors)  # <--- Añade esto
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @permission_classes([AllowAny])
 @api_view(['POST'])
