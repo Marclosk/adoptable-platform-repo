@@ -1,3 +1,4 @@
+// authService.ts
 import axios from "axios";
 import { getCSRFToken } from "./session/token";
 
@@ -15,16 +16,20 @@ interface RegisterCredentials {
   last_name: string;
   role: string; 
   localidad?: string; 
+  shelter_name?: string;
 }
 
-
-export const login = async ({ username, password }: { username: string; password: string }) => {
+export const login = async ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}) => {
   try {
     const response = await axios.post(API_URL_login, { username, password });
-
     console.log("✅ Respuesta del servidor:", response.data);
-
-    return response.data; 
+    return response.data;
   } catch (error: any) {
     console.error("❌ Error en login:", error.response?.data || error.message);
     throw new Error(error.response?.data?.detail || "Error en el servidor");
@@ -34,7 +39,6 @@ export const login = async ({ username, password }: { username: string; password
 export const logout = async () => {
   try {
     const csrfToken = getCSRFToken();
-
     const response = await axios.post(
       API_URL_logout,
       {},
@@ -45,7 +49,6 @@ export const logout = async () => {
         withCredentials: true,
       }
     );
-
     console.log(response.data.message);
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -67,6 +70,7 @@ export const register = async ({
   last_name,
   role,
   localidad,
+  shelter_name,
 }: RegisterCredentials) => {
   try {
     const response = await axios.post(API_URL_register, {
@@ -75,15 +79,14 @@ export const register = async ({
       password,
       first_name,
       last_name,
-      role, 
-      localidad,
+      role,
+      localidad,    
+      shelter_name,
     });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      // Si el backend envía error en 'detail'
-      const serverMessage = error.response.data?.detail || "Error en el servidor";
-      throw new Error(serverMessage);
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      throw error;
     } else {
       throw new Error("Error desconocido");
     }

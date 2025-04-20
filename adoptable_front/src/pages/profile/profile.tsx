@@ -36,7 +36,6 @@ const Profile: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Datos del formulario
   const [formData, setFormData] = useState<{
     avatar: File | null;
     location: string;
@@ -49,7 +48,6 @@ const Profile: React.FC = () => {
     bio: "",
   });
 
-  // Vista previa del avatar
   const [preview, setPreview] = useState<string>("");
 
   const toast = useToast();
@@ -61,14 +59,12 @@ const Profile: React.FC = () => {
         let data = await getProfile();
 
         if (!data || Object.keys(data).length === 0) {
-          // Si el perfil está vacío, entramos en modo edición
           setIsEditing(true);
         } else {
           setProfile(data);
-          // Guardamos la URL del avatar actual en preview
           setPreview(data.avatar || "");
           setFormData({
-            avatar: null, // Este campo se rellena sólo si el usuario sube un archivo
+            avatar: null, 
             location: data.location || "",
             phone_number: data.phone_number || "",
             bio: data.bio || "",
@@ -102,7 +98,7 @@ const Profile: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       setFormData({ ...formData, avatar: file });
-      setPreview(URL.createObjectURL(file)); // Mostramos vista previa del nuevo avatar
+      setPreview(URL.createObjectURL(file)); 
     }
   };
 
@@ -120,7 +116,6 @@ const Profile: React.FC = () => {
       setProfile(updatedData);
       setIsEditing(false);
 
-      // Actualizamos la vista previa con la nueva imagen si el usuario la cambió
       if (updatedData.avatar) {
         setPreview(updatedData.avatar);
       }
@@ -150,7 +145,6 @@ const Profile: React.FC = () => {
         py={10}
         px={{ base: 6, sm: 8, lg: 12 }}
       >
-        {/* Si no hay perfil (todavía cargando) */}
         {!profile ? (
           <Center height="100vh">
             <Spinner size="xl" color="teal.500" />
@@ -160,7 +154,6 @@ const Profile: React.FC = () => {
           </Center>
         ) : (
           <VStack spacing={8} align="center">
-            {/* Tarjeta de perfil */}
             <Box
               bg="white"
               boxShadow="lg"
@@ -170,7 +163,6 @@ const Profile: React.FC = () => {
               maxW="900px"
             >
               {isEditing ? (
-                // MODO EDICIÓN
                 <VStack spacing={5} align="stretch">
                   <Heading as="h2" size="lg" color="gray.800" textAlign="center">
                     Editar Perfil
@@ -230,7 +222,6 @@ const Profile: React.FC = () => {
                   </HStack>
                 </VStack>
               ) : (
-                // MODO VISTA
                 <VStack spacing={4} align="center">
                   <Avatar
                     size="xl"
@@ -270,8 +261,6 @@ const Profile: React.FC = () => {
                 </VStack>
               )}
             </Box>
-
-            {/* Favoritos */}
             <Box
               bg="white"
               boxShadow="lg"
@@ -296,8 +285,6 @@ const Profile: React.FC = () => {
                 )}
               </Wrap>
             </Box>
-
-            {/* Adoptados */}
             <Box
               bg="white"
               boxShadow="lg"

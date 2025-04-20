@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,58 +16,63 @@ import {
   Select,
   Alert,
   AlertIcon,
+  useToast,
 } from "@chakra-ui/react";
+import axios from "axios"; 
 import { register } from "../authService";
 
 const Register: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const toast = useToast();
 
-  // Manejo de errores de servidor
   const [serverError, setServerError] = useState("");
 
-  // Ejemplo de rol, email, password, etc. (código omitido por brevedad)
   const [role, setRole] = useState<"adoptante" | "protectora">("adoptante");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  // etc...
 
-  // Errores de validación local
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  // Campos para adoptante
   const [username, setUsername] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // Campos para protectora
   const [shelterName, setShelterName] = useState("");
   const [localidad, setLocalidad] = useState("");
+  const [protectoraUsername, setProtectoraUsername] = useState("");
+  const [protectoraUsernameError, setProtectoraUsernameError] = useState("");
 
-  // Funciones de validación local (ejemplo)
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
+
   const validatePassword = (password: string) => {
     const regex =
       /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+={}[\]|\\:;"'<>,.?/`~-]{8,}$/;
     return regex.test(password);
   };
 
-  const handleRegister = async () => {
-    // Limpiar errores
+  const clearErrors = () => {
     setServerError("");
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
+    setUsernameError("");
+    setProtectoraUsernameError("");
+  };
+
+  const handleRegister = async () => {
+    clearErrors();
 
     let valid = true;
 
-    // Validación local
     if (!validateEmail(email)) {
       setEmailError("Por favor, ingresa un correo válido.");
       valid = false;
@@ -83,10 +88,25 @@ const Register: React.FC = () => {
       valid = false;
     }
 
+    if (role === "adoptante") {
+      if (!/^[A-Za-z0-9@.+-_]+$/.test(username)) {
+        setUsernameError(
+          "El nombre de usuario solo puede contener letras, números y @/./+/-/_"
+        );
+        valid = false;
+      }
+    } else {
+      if (!/^[A-Za-z0-9@.+-_]+$/.test(protectoraUsername)) {
+        setProtectoraUsernameError(
+          "El nombre de usuario solo puede contener letras, números y @/./+/-/_"
+        );
+        valid = false;
+      }
+    }
+
     if (!valid) return;
 
     try {
-      // Llamada al servicio de registro
       if (role === "adoptante") {
         await register({
           username,
@@ -98,33 +118,83 @@ const Register: React.FC = () => {
         });
       } else {
         await register({
-          username: shelterName,
+          username: protectoraUsername,
           email,
           password,
           first_name: "",
           last_name: "",
           role: "protectora",
-          // localidad, si tu backend lo necesita
+          localidad,
+          shelter_name: shelterName,
         });
       }
 
-      // Si todo sale bien, podemos mostrar un mensaje y redirigir
-      if (role === "protectora") {
-        // Por ejemplo, mostrar un alert
-        alert("Se ha enviado la solicitud de protectora. Espera aprobación.");
-      } else {
-        alert("¡Registro exitoso! Ya puedes iniciar sesión.");
-      }
-      // Redirigir al login
+      toast({
+        title: "Registro exitoso",
+        description:
+          role === "protectora"
+            ? "Se ha enviado la solicitud de protectora. Espera aprobación."
+            : "¡Te has registrado correctamente!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
       navigate("/login");
     } catch (error: any) {
       console.error("❌ Error en el servidor:", error);
-      if (error.message) {
-        setServerError(error.message);
+    
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        const data = error.response.data;
+        console.log("[DEBUG] error.response.data:", data);
+    
+        if (data.username && Array.isArray(data.username)) {
+          const detail = data.username[0];
+    
+          if (typeof detail === "object" && detail.string) {
+            console.log("[DEBUG] detail.string:", detail.string);
+            if (detail.string.toLowerCase().includes("already exists")) {
+              setProtectoraUsernameError("Ese nombre de usuario ya está en uso.");
+            } else {
+              setProtectoraUsernameError(detail.string);
+            }
+          } else if (typeof detail === "string") {
+            console.log("[DEBUG] detail:", detail);
+            if (detail.toLowerCase().includes("already exists")) {
+              setProtectoraUsernameError("Ese nombre de usuario ya está en uso.");
+            } else {
+              setProtectoraUsernameError(detail);
+            }
+          }
+        }
+    
+        if (data.email && Array.isArray(data.email)) {
+          const detail = data.email[0];
+          if (typeof detail === "object" && detail.string) {
+            setEmailError(detail.string);
+          } else if (typeof detail === "string") {
+            setEmailError(detail);
+          }
+        }
+    
+        if (data.password && Array.isArray(data.password)) {
+          const detail = data.password[0];
+          if (typeof detail === "object" && detail.string) {
+            setPasswordError(detail.string);
+          } else if (typeof detail === "string") {
+            setPasswordError(detail);
+          }
+        }
+    
+        if (!data.username && !data.email && !data.password) {
+          setServerError(JSON.stringify(data));
+        }
       } else {
-        setServerError("Error en el servidor");
+        setServerError(error.message || "Error en el servidor");
       }
     }
+    
+    
   };
 
   const goBackToLogin = () => {
@@ -140,7 +210,7 @@ const Register: React.FC = () => {
       bg="#DDD2B5"
     >
       <Card
-        maxWidth="500px"
+        maxWidth="600px"
         width="full"
         boxShadow="lg"
         borderRadius="md"
@@ -157,14 +227,14 @@ const Register: React.FC = () => {
             Selecciona tu tipo de cuenta y rellena los campos requeridos.
           </Text>
 
-          {/* Si hay error de servidor, mostramos un alert */}
+          {/* Error global de servidor */}
           {serverError && (
-            <Box mb={4} color="red.500">
+            <Alert status="error" mb={4}>
+              <AlertIcon />
               {serverError}
-            </Box>
+            </Alert>
           )}
 
-          {/* Seleccionar rol */}
           <FormControl mb="6">
             <FormLabel>¿Eres adoptante o protectora?</FormLabel>
             <Select
@@ -207,7 +277,7 @@ const Register: React.FC = () => {
             )}
           </FormControl>
 
-          {/* Confirmar Contraseña */}
+          {/* Confirmar contraseña */}
           <FormControl isInvalid={!!confirmPasswordError} mb="6">
             <FormLabel>Confirmar Contraseña</FormLabel>
             <Input
@@ -222,21 +292,24 @@ const Register: React.FC = () => {
             )}
           </FormControl>
 
-          {/* Campos adoptante */}
+          {/* Adoptante */}
           {role === "adoptante" && (
             <>
-              <FormControl mb="6">
+              <FormControl isInvalid={!!usernameError} mb="4">
                 <FormLabel>Nombre de usuario</FormLabel>
                 <Input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Tu nombre de usuario"
+                  placeholder="Ej. juan_perez"
                   borderColor="teal.300"
                 />
+                {usernameError && (
+                  <FormErrorMessage>{usernameError}</FormErrorMessage>
+                )}
               </FormControl>
 
-              <FormControl mb="6">
+              <FormControl mb="4">
                 <FormLabel>Nombre</FormLabel>
                 <Input
                   type="text"
@@ -260,18 +333,32 @@ const Register: React.FC = () => {
             </>
           )}
 
-          {/* Campos protectora */}
+          {/* Protectora */}
           {role === "protectora" && (
             <>
-              <FormControl mb="6">
+              <FormControl mb="4">
                 <FormLabel>Nombre de la protectora</FormLabel>
                 <Input
                   type="text"
                   value={shelterName}
                   onChange={(e) => setShelterName(e.target.value)}
-                  placeholder="Ej. Protectora Canina XYZ"
+                  placeholder="Ej. Abam i Apropat"
                   borderColor="teal.300"
                 />
+              </FormControl>
+
+              <FormControl isInvalid={!!protectoraUsernameError} mb="4">
+                <FormLabel>Username de protectora</FormLabel>
+                <Input
+                  type="text"
+                  value={protectoraUsername}
+                  onChange={(e) => setProtectoraUsername(e.target.value)}
+                  placeholder="Ej. abam_apropat"
+                  borderColor="teal.300"
+                />
+                {protectoraUsernameError && (
+                  <FormErrorMessage>{protectoraUsernameError}</FormErrorMessage>
+                )}
               </FormControl>
 
               <FormControl mb="6">

@@ -28,5 +28,6 @@ urlpatterns = [
     path('api/', include('animals.urls')), 
     path('api/', include('donacions.urls')),
     path("csrf-token/", csrf_token_view, name="csrf-token"), 
+    path("api/", include("contact.urls")),
 
 ]

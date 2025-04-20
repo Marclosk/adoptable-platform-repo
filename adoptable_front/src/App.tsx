@@ -8,6 +8,7 @@ import Dashboard from "./pages/dashboard";
 import CardDetail from "./pages/card_detail/card_detail";
 import Profile from "./pages/profile/profile";
 import Donations from "./pages/donations/donations";
+import ContactPage from "./pages/contact/contact";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -32,6 +33,7 @@ const App = () => {
         <Route path="/card_detail/:id" Component={CardDetail} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/donacions" element={<Donations />} />
+        <Route path="/contacte" element={<ContactPage />} />
       </Routes>
     </Router>
   );

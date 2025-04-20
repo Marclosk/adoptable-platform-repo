@@ -32,7 +32,8 @@ INSTALLED_APPS = [
     'donacions',
     'rest_framework',
     'corsheaders',
-    'storages'
+    'storages',
+    'contact',
     ]
 
 MIDDLEWARE = [
@@ -113,24 +114,43 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
 ]
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles_temp")
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 
-# Configuración de almacenamiento estático en MinIO
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+EMAIL_HOST_USER = "marcfakemail22@gmail.com"
+EMAIL_HOST_PASSWORD = "cvzz vazl vrhf amwd"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(BASE_DIR, '/static')
+STORAGES = {
+
+    "default": {
+
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+
+    },
+
+    "staticfiles": {
+
+        "BACKEND": "app.storages.PublicS3Boto3Storage",
+
+    },
+}
+
 
 AWS_ACCESS_KEY_ID = "minioadmin"
 AWS_SECRET_ACCESS_KEY = "minioadmin"
 AWS_STORAGE_BUCKET_NAME = "public"
-AWS_S3_ENDPOINT_URL = "http://localhost:9001"  
+AWS_S3_ENDPOINT_URL = "http://localhost:9000"  
 AWS_S3_ADDRESSING_STYLE = "path"
 
-# Asegurar que los archivos estáticos se sirvan correctamente desde MinIO
-AWS_S3_CUSTOM_DOMAIN = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}"
-STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/"
-
+STATIC_URL = "/static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
