@@ -1,6 +1,7 @@
 // src/components/location/location_header.tsx
-import React from "react";
+import React, { useState } from "react";
 import {
+  Box,
   Flex,
   Image,
   Text,
@@ -8,47 +9,156 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  Input,
 } from "@chakra-ui/react";
 import locationIcon from "../../assets/icons/location-icon.svg";
 
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
 interface LocationHeaderProps {
   distance: number;
-  onDistanceChange: (value: number) => void;
+  onDistanceChange: (val: number) => void;
+  onLocationSelect: (lat: number, lng: number) => void;
 }
 
 const LocationHeader: React.FC<LocationHeaderProps> = ({
   distance,
   onDistanceChange,
+  onLocationSelect,
 }) => {
-  const handleSliderChange = (val: number) => {
-    onDistanceChange(val);
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        searchQuery
+      )}`
+    );
+    const data = await res.json();
+    if (data?.length) {
+      const { lat, lon } = data[0];
+      setMarkerPos([+lat, +lon]);
+    }
+  };
+  const applyLocation = () => {
+    if (markerPos) {
+      onLocationSelect(markerPos[0], markerPos[1]);
+      setIsOpen(false);
+    }
   };
 
   return (
-    <Flex direction="column" mb={6}>
-      <Flex align="center" gap={2} mb={2}>
-        <Image src={locationIcon} alt="Location" w={6} />
-        <Text fontSize="xl" fontWeight="thin" color="gray.700">
-          A {distance} km de tu ubicación
-        </Text>
-      </Flex>
-
-      {/* Slider para modificar la distancia */}
-      <Slider
-        aria-label="distance-slider"
-        min={0}
-        max={100}
-        step={5}
-        value={distance}
-        onChange={handleSliderChange}
-        colorScheme="teal"
+    <>
+      <Box
+        bg="white"
+        p={4}
+        borderRadius="lg"
+        boxShadow="sm"
+        mb={6}
       >
-        <SliderTrack>
-          <SliderFilledTrack />
-        </SliderTrack>
-        <SliderThumb boxSize={5} />
-      </Slider>
-    </Flex>
+        <Flex align="center" wrap="wrap" gap={2} mb={4}>
+          <Image src={locationIcon} alt="Location" w={6} />
+          <Text fontSize="lg" fontWeight="medium" color="gray.700">
+            A <Text as="span" fontWeight="bold">{distance}</Text> km de tu ubicación
+          </Text>
+          <Button
+            size="sm"
+            variant="outline"
+            colorScheme="teal"
+            ml="auto"
+            onClick={() => setIsOpen(true)}
+          >
+            Cambiar ubicación
+          </Button>
+        </Flex>
+
+        <Slider
+          aria-label="distance-slider"
+          min={0}
+          max={100}
+          step={5}
+          value={distance}
+          onChange={onDistanceChange}
+          colorScheme="teal"
+        >
+          <SliderTrack bg="gray.200">
+            <SliderFilledTrack bg="teal.500" />
+          </SliderTrack>
+          <SliderThumb boxSize={5} bg="teal.500" />
+        </Slider>
+      </Box>
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="2xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Selecciona ubicación</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Flex gap={2} mb={4}>
+              <Input
+                placeholder="Busca una ciudad..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                flex="1"
+                borderColor="gray.300"
+              />
+              <Button colorScheme="teal" onClick={handleSearch}>
+                Buscar
+              </Button>
+            </Flex>
+            <Box h="400px" borderRadius="md" overflow="hidden">
+              <MapContainer
+                center={markerPos ?? [20, 0]}
+                zoom={markerPos ? 12 : 2}
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {markerPos && (
+                  <Marker position={markerPos}>
+                    <Popup>Ubicación seleccionada</Popup>
+                  </Marker>
+                )}
+              </MapContainer>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="teal"
+              mr={3}
+              onClick={applyLocation}
+              isDisabled={!markerPos}
+            >
+              Usar ubicación
+            </Button>
+            <Button variant="ghost" onClick={() => setIsOpen(false)}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 };
 

@@ -36,7 +36,7 @@ const Donations: React.FC = () => {
       setLoading(true);
       const data = await fetchDonations();
       if (user) {
-        const filtered = data.filter((donation) => donation.usuario === user);
+        const filtered = data.filter((donation) => donation.usuario === user.username);
         setUserDonations(filtered);
       }
       setDonations(data);

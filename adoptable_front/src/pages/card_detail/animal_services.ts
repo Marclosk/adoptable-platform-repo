@@ -3,10 +3,11 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/api/",
+  withCredentials: true,           // para enviar siempre la cookie de sesión
 });
 
 // Si la geolocalización falla, pedimos todos los animales
-export const getAllAnimals = async () => {
+export const getAllAnimals = async (): Promise<any[]> => {
   try {
     const response = await api.get("animals/");
     return response.data;
@@ -17,7 +18,11 @@ export const getAllAnimals = async () => {
 };
 
 // Cuando sí tenemos lat, lng y distancia
-export const getAnimals = async (distance: number, userLat: number, userLng: number) => {
+export const getAnimals = async (
+  distance: number,
+  userLat: number,
+  userLng: number
+): Promise<any[]> => {
   try {
     const response = await api.get(
       `animals/?distance=${distance}&user_lat=${userLat}&user_lng=${userLng}`

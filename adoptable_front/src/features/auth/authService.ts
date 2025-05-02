@@ -1,4 +1,4 @@
-// authService.ts
+// src/features/auth/authService.ts
 import axios from "axios";
 import { getCSRFToken } from "./session/token";
 
@@ -8,14 +8,20 @@ const API_URL_login = "http://localhost:8000/users/login/";
 const API_URL_register = "http://localhost:8000/users/register/";
 const API_URL_logout = "http://localhost:8000/users/logout/";
 
+export interface LoginResponse {
+  message: string;
+  user: { id: number; username: string; email: string };
+  role: "adoptante" | "protectora";
+}
+
 interface RegisterCredentials {
   username: string;
   email: string;
   password: string;
   first_name: string;
   last_name: string;
-  role: string; 
-  localidad?: string; 
+  role: string;
+  localidad?: string;
   shelter_name?: string;
 }
 
@@ -25,14 +31,22 @@ export const login = async ({
 }: {
   username: string;
   password: string;
-}) => {
+}): Promise<LoginResponse> => {
   try {
-    const response = await axios.post(API_URL_login, { username, password });
+    const response = await axios.post<LoginResponse>(API_URL_login, {
+      username,
+      password,
+    });
     console.log("✅ Respuesta del servidor:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error("❌ Error en login:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.detail || "Error en el servidor");
+    // Si el servidor responde con { error: "mensaje" }
+    const serverError =
+      error.response?.data?.error ||
+      error.response?.data?.detail ||
+      "Error en el servidor";
+    console.error("❌ Error en login:", serverError);
+    throw new Error(serverError);
   }
 };
 
@@ -80,13 +94,23 @@ export const register = async ({
       first_name,
       last_name,
       role,
-      localidad,    
+      localidad,
       shelter_name,
     });
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
-      throw error;
+      // Si viene un objeto { field: [errors] } lo extraemos
+      const data = error.response?.data;
+      const firstError =
+        typeof data === "object"
+          ? Object.values(data)[0]
+          : error.response?.data?.detail;
+      throw new Error(
+        Array.isArray(firstError)
+          ? firstError[0]
+          : firstError || "Error desconocido"
+      );
     } else {
       throw new Error("Error desconocido");
     }

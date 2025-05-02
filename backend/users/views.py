@@ -16,53 +16,84 @@ def register_view(request):
     role = request.data.get("role", "adoptante")
     localidad = request.data.get("localidad", "")
 
-
     serializer = RegisterSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        
-        # Si es protectora, ponemos is_active = False, 
-        # enviamos un correo a marclosquino2@gmail.com
-        if role == "protectora":
-            send_mail(
-                subject="Solicitud de registro de protectora",
-                message=f"La protectora {user.username} (email: {user.email}) solicita registrarse. Localidad: {localidad}",
-                from_email="no-reply@miapp.com",
-                recipient_list=["marclosquino2@gmail.com"],
-            )
-            user.is_active = False
-            user.save()
-
-            return Response(
-                {"message": "Solicitud de protectora enviada. Espera aprobación."},
-                status=status.HTTP_201_CREATED,
-            )
-
-        # Si es adoptante, simplemente creamos el perfil adoptante, etc.
-        return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
-    else:
-        print("[DEBUG] serializer.errors:", serializer.errors)  # <--- Añade esto
+    if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user = serializer.save()
 
-@permission_classes([AllowAny])
+    if role == "protectora":
+        # marcamos al usuario como staff (protectora)
+        user.is_staff = True
+        # y desactivamos hasta que el admin lo apruebe
+        user.is_active = False
+        user.save()
+
+        # mandamos el mail de notificación
+        send_mail(
+            subject="Solicitud de registro de protectora",
+            message=(
+              f"La protectora {user.username} (email: {user.email}) "
+              f"solicita registrarse. Localidad: {localidad}"
+            ),
+            from_email="no-reply@miapp.com",
+            recipient_list=["marclosquino2@gmail.com"],
+        )
+
+        return Response(
+            {"message": "Solicitud de protectora enviada. Espera aprobación."},
+            status=status.HTTP_201_CREATED,
+        )
+
+    # PARA ADOPTANTE: nos aseguramos de que NO sea staff y siga activo
+    user.is_staff = False
+    user.is_active = True
+    user.save()
+
+    return Response(
+        {"message": "Usuario creado correctamente!"},
+        status=status.HTTP_201_CREATED
+    )
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     """
-    Vista para iniciar sesión con nombre de usuario y contraseña.
+    Login: además de iniciar sesión, devuelve el usuario y el rol al frontend.
     """
-    if request.method == 'POST':
-        username = request.data.get('username')
-        password = request.data.get('password')
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)  
-            return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    user = authenticate(request, username=username, password=password)
+    if user is None:
+        return Response(
+            {"error": "Credenciales inválidas"},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    # Solo cuentas activas
+    if not user.is_active:
+        return Response(
+            {"error": "Tu cuenta está pendiente de aprobación."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    login(request, user)
+
+    # Serializamos el usuario
+    user_data = UserSerializer(user).data
+
+    # Determinamos el rol (por ejemplo usando is_staff o un campo en el perfil)
+    role = "protectora" if user.is_staff else "adoptante"
+
+    return Response(
+        {
+            "message": "Login successful!",
+            "user": user_data,
+            "role": role
+        },
+        status=status.HTTP_200_OK
+    )
 
 @permission_classes([AllowAny])
 @api_view(['POST'])

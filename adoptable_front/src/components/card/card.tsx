@@ -1,5 +1,12 @@
+// src/components/card/card.tsx
 import React from "react";
-import { Box, Text, Image, Link } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  Image,
+  Link as ChakraLink, // renombrado
+} from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom"; // import de React-Router
 
 interface Dog {
   id: number;
@@ -14,13 +21,7 @@ interface DogCardsProps {
 
 const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
   return (
-    <Box
-      display="flex"
-      flexWrap="wrap"
-      justifyContent="center"
-      gap={6}
-      mt={4}
-    >
+    <Box display="flex" flexWrap="wrap" justifyContent="center" gap={6} mt={4}>
       {dogs.map((dog) => (
         <Box
           key={dog.id}
@@ -32,7 +33,11 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
           transition="transform 0.2s"
           _hover={{ transform: "scale(1.05)", cursor: "pointer" }}
         >
-          <Link href={`/card_detail/${dog.id}`}>
+          <ChakraLink
+            as={RouterLink} // client-side routing
+            to={`/card_detail/${dog.id}`} // prop `to` en lugar de `href`
+            _hover={{ textDecoration: "none" }} // opcional para quitar subrayado
+          >
             <Image
               src={
                 dog.imageUrl ||
@@ -40,8 +45,8 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
               }
               alt={dog.name}
               width="100%"
-              height="200px"        // Altura fija para todas las imágenes
-              objectFit="cover"     // Recorta la imagen sin deformarla
+              height="200px"
+              objectFit="cover"
             />
             <Box p={4}>
               <Text fontWeight="bold" fontSize="lg" mb={1} color="gray.800">
@@ -51,7 +56,7 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
                 {dog.city}
               </Text>
             </Box>
-          </Link>
+          </ChakraLink>
         </Box>
       ))}
     </Box>

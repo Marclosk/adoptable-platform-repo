@@ -1,8 +1,9 @@
+// src/features/auth/Login.tsx
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginSuccess, loginFailure } from "../authSlice";
-import { login } from "../authService";
+import { login, LoginResponse } from "../authService";
 import { checkSession } from "../session/checkSession";
 import {
   Box,
@@ -17,7 +18,6 @@ import {
   FormErrorMessage,
   Flex,
 } from "@chakra-ui/react";
-import { getCSRFToken } from "../../../pages/profile/user_services";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -27,41 +27,29 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  // Si ya hay sesión válida, vamos al dashboard
   useEffect(() => {
-    const checkAndRedirect = async () => {
-      const sessionValid = await checkSession();
-      if (sessionValid) {
-        navigate("/dashboard");
-      }
-    };
-
-    checkAndRedirect();
+    (async () => {
+      if (await checkSession()) navigate("/dashboard");
+    })();
   }, [navigate]);
 
-  const validatePassword = (password: string) => {
+  const validatePassword = (pwd: string) => {
     const regex =
       /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+={}[\]|\\:;"'<>,.?/`~-]{8,}$/;
-    return regex.test(password);
+    return regex.test(pwd);
   };
 
   const handleLogin = async () => {
     setPasswordError("");
-
-    if (!username && !password) {
-      setPasswordError("Los campos están vacíos");
-      return;
-    }
-
     if (!username) {
       setPasswordError("El campo nombre de usuario está vacío");
       return;
     }
-
     if (!password) {
       setPasswordError("El campo contraseña está vacío");
       return;
     }
-
     if (!validatePassword(password)) {
       setPasswordError(
         "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
@@ -71,39 +59,36 @@ const Login = () => {
 
     try {
       console.log("Intentando iniciar sesión...");
-      await login({ username, password });
+      const data: LoginResponse = await login({ username, password });
+
+      // guardamos user y role en Redux
       dispatch(
         loginSuccess({
-          user: username,
-          token: getCSRFToken(),
+          user: data.user,
+          role: data.role,
         })
       );
-      navigate("/dashboard");
-    } catch (err) {
-      if (err instanceof Error) {
-        dispatch(loginFailure(err.message));
-        console.error("Error durante el inicio de sesión:");
-        console.error(err.message);
-        setPasswordError("Credenciales invalidas.");
+
+      // redirigimos según rol
+      if (data.role === "protectora") {
+        navigate("/dashboard");
       } else {
-        const unknownError = "Error desconocido durante el inicio de sesión.";
-        dispatch(loginFailure(unknownError));
-        console.error(unknownError);
+        navigate("/dashboard");
       }
+    } catch (err: any) {
+      dispatch(loginFailure(err.message));
+      console.error("Error durante el inicio de sesión:", err.message);
+      setPasswordError("Credenciales inválidas.");
     } finally {
       console.log("Fin del proceso de inicio de sesión.");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleLogin();
-    }
+    if (e.key === "Enter") handleLogin();
   };
 
-  const goToRegister = () => {
-    navigate("/register");
-  };
+  const goToRegister = () => navigate("/register");
 
   return (
     <Box
@@ -114,12 +99,11 @@ const Login = () => {
       bg="#DDD2B5"
     >
       <Card
-        maxWidth="400px"
-        width="full"
+        maxW="400px"
+        w="full"
         boxShadow="lg"
         borderRadius="md"
         bg="white"
-        borderColor="teal.300"
         p="6"
       >
         <CardBody>
@@ -128,14 +112,12 @@ const Login = () => {
           </Heading>
 
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
-            Bienvenido a nuestra plataforma de adopción de perros. Conéctate
-            para encontrar a tu nuevo amigo peludo.
+            Bienvenido a nuestra plataforma de adopción de perros.
           </Text>
 
           <FormControl mb="4">
             <FormLabel>Nombre de usuario</FormLabel>
             <Input
-              type="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Nombre de usuario"
@@ -161,7 +143,7 @@ const Login = () => {
           <Button
             colorScheme="teal"
             onClick={handleLogin}
-            width="full"
+            w="full"
             size="lg"
             mb="6"
           >

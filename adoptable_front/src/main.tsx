@@ -6,6 +6,8 @@ import { store } from "./redux/store";
 import App from "./App";
 import GlobalStyles from "./styles/global/globalStyles";
 import theme from "./theme/theme";
+import "leaflet/dist/leaflet.css";
+
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

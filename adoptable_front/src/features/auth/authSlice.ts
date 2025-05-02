@@ -1,21 +1,22 @@
+// src/features/auth/authSlice.ts
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
-  user: string | null; 
-  token: string | null;
+  user: { id: number; username: string; email: string } | null;
+  role: "adoptante" | "protectora" | null;
   error: string | null;
 }
 
-const loadState = (): AuthState => {
-  try {
-    const savedState = localStorage.getItem("authState");
-    return savedState ? JSON.parse(savedState) : { user: null, token: null, error: null };
-  } catch (error) {
-    return { user: null, token: null, error: null };
-  }
-};
-
-const initialState: AuthState = loadState();
+// Intentamos hidratar desde localStorage
+const saved = localStorage.getItem("authState");
+const initialState: AuthState = saved
+  ? JSON.parse(saved)
+  : {
+      user: null,
+      role: null,
+      error: null,
+    };
 
 const authSlice = createSlice({
   name: "auth",
@@ -23,24 +24,34 @@ const authSlice = createSlice({
   reducers: {
     loginSuccess: (
       state,
-      action: PayloadAction<{ user: any; token: string }>
+      action: PayloadAction<{
+        user: { id: number; username: string; email: string };
+        role: "adoptante" | "protectora";
+      }>
     ) => {
       state.user = action.payload.user;
-      state.token = action.payload.token;
+      state.role = action.payload.role;
       state.error = null;
-      localStorage.setItem("authState", JSON.stringify(state));
+      // Guardamos solo lo esencial
+      localStorage.setItem(
+        "authState",
+        JSON.stringify({
+          user: state.user,
+          role: state.role,
+        })
+      );
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
-      state.user = null;
-      state.token = null;
+      state.user  = null;
+      state.role  = null;
       localStorage.removeItem("authState");
     },
     logoutSuccess: (state) => {
-      state.user = null;
-      state.token = null;
+      state.user  = null;
+      state.role  = null;
       state.error = null;
-      localStorage.removeItem("authState"); 
+      localStorage.removeItem("authState");
     },
   },
 });
