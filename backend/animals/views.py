@@ -1,11 +1,15 @@
 # views.py
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from .models import Animal
 from .serializers import AnimalSerializer
 from .signals import haversine_distance
+from .permissions import IsOwnerOrAdmin
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     serializer_class = AnimalSerializer
+    permission_classes = [IsAuthenticated]  # sólo usuarios autenticados pueden crear
+
 
     def get_queryset(self):
         queryset = Animal.objects.all()
@@ -42,3 +46,4 @@ class AnimalListCreateView(generics.ListCreateAPIView):
 class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Animal.objects.all()
     serializer_class = AnimalSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]

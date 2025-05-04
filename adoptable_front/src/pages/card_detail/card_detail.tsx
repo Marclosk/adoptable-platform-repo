@@ -1,3 +1,4 @@
+// src/pages/card_detail/AnimalDetail.tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -12,13 +13,23 @@ import {
   Icon,
   VStack,
   HStack,
+  FormControl,
+  FormLabel,
+  Select,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, CheckCircleIcon } from "@chakra-ui/icons";
-import { getAnimalById } from "./animal_services";
+import { useToast } from "@chakra-ui/react";
+import {
+  getAnimalById,
+  deleteAnimal,
+  getAdopters,
+  adoptAnimal,
+} from "./animal_services";
 import Layout from "../../components/layout";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
+import { RootState } from "../../redux/store";
 
 interface Animal {
   id: number;
@@ -32,55 +43,108 @@ interface Animal {
   weight: string;
   size: string;
   activity: string;
-  characteristics: string[];
+  characteristics: string[] | { [key: string]: any };
   shelter: string;
   since: string;
   vaccinated: boolean;
   sterilized: boolean;
   microchipped: boolean;
   dewormed: boolean;
+  owner?: number | null;
+  adopter?: number | null;
+  adopter_username?: string;
+}
+
+interface Adopter {
+  id: number;
+  username: string;
 }
 
 const CardDetail: React.FC = () => {
-  const dispatch = useDispatch();
   const { id } = useParams<{ id: string }>();
+  const toast = useToast();
   const navigate = useNavigate();
-  const [animal, setAnimal] = useState<Animal | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const dispatch = useDispatch();
 
+  const { user: authUser, role } = useSelector((s: RootState) => s.auth);
+
+  const [animal, setAnimal] = useState<Animal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [adopters, setAdopters] = useState<Adopter[]>([]);
+  const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
+
+  // fetch animal details
   useEffect(() => {
-    const fetchAnimal = async () => {
+    (async () => {
       try {
         const data = await getAnimalById(Number(id));
         setAnimal(data);
-      } catch (error) {
-        console.error("Error al cargar los detalles del animal:", error);
+      } catch (err) {
+        console.error("Error cargando animal:", err);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchAnimal();
+    })();
   }, [id]);
+
+  // if owner & not adopted, load adopters list
+  useEffect(() => {
+    if (
+      animal &&
+      role === "protectora" &&
+      authUser?.id === animal.owner &&
+      animal.adopter == null
+    ) {
+      (async () => {
+        try {
+          const list = await getAdopters();
+          setAdopters(list);
+        } catch (err) {
+          console.error("Error cargando adoptantes:", err);
+        }
+      })();
+    }
+  }, [animal, role, authUser]);
 
   const handleLogout = async () => {
     try {
       await logout();
       dispatch(logoutSuccess());
       navigate("/login");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+    } catch {
+      /* no-op */
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!animal) return;
+    try {
+      await deleteAnimal(animal.id);
+      toast({ title: "Animal eliminado", status: "success" });
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast({ title: err.message || "Error al eliminar", status: "error" });
+    }
+  };
+
+  const handleAdopt = async () => {
+    if (!animal || !selectedAdopter) return;
+    try {
+      const updated = await adoptAnimal(animal.id, selectedAdopter);
+      setAnimal(updated);
+      toast({ title: "Animal marcado como adoptado", status: "success" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error al adoptar", status: "error" });
     }
   };
 
   if (loading) {
     return (
-      <Flex justify="center" align="center" minHeight="60vh">
+      <Flex justify="center" align="center" minH="60vh">
         <Spinner size="xl" color="blue.500" />
       </Flex>
     );
   }
-
   if (!animal) {
     return (
       <Box textAlign="center" mt="20">
@@ -91,9 +155,16 @@ const CardDetail: React.FC = () => {
     );
   }
 
+  const chars: string[] = Array.isArray(animal.characteristics)
+    ? animal.characteristics
+    : Object.keys(animal.characteristics || {});
+
+  const canDelete =
+    role === "admin" || (role === "protectora" && authUser?.id === animal.owner);
+
   return (
     <Layout handleLogout={handleLogout}>
-      <Flex justify="center" p={6} bg="gray.100">
+      <Flex direction="column" align="center" p={6} bg="gray.100">
         <Box
           maxW="900px"
           w="full"
@@ -103,7 +174,6 @@ const CardDetail: React.FC = () => {
           overflow="hidden"
           p={6}
         >
-          {/* Botón de volver */}
           <Button
             leftIcon={<ArrowBackIcon />}
             variant="ghost"
@@ -114,19 +184,17 @@ const CardDetail: React.FC = () => {
           </Button>
 
           <Flex direction={{ base: "column", md: "row" }} gap={6}>
-            {/* Sección de imágenes */}
             <Box flex="1">
               <Image
                 src={animal.imageUrl || "https://via.placeholder.com/400"}
                 alt={animal.name}
-                width="100%"
-                height="350px"
+                w="100%"
+                h="350px"
                 objectFit="cover"
                 borderRadius="md"
               />
             </Box>
 
-            {/* Sección de información */}
             <Box flex="2">
               <Text fontSize="3xl" fontWeight="bold" color="blue.600">
                 {animal.name}
@@ -135,7 +203,6 @@ const CardDetail: React.FC = () => {
                 📍 {animal.city}
               </Text>
 
-              {/* Datos generales */}
               <Flex wrap="wrap" gap={4} mb={4}>
                 <Badge colorScheme="blue">{animal.species}</Badge>
                 <Badge colorScheme="green">{animal.age}</Badge>
@@ -144,19 +211,21 @@ const CardDetail: React.FC = () => {
                 <Badge colorScheme="orange">{animal.activity}</Badge>
               </Flex>
 
-              {/* Características */}
               <Text fontWeight="bold" mb={2}>
                 ¿Cómo soy?
               </Text>
               <HStack wrap="wrap" spacing={2} mb={4}>
-                {Object.keys(animal.characteristics).map((char, index) => (
-                  <Badge key={index} colorScheme="teal">
-                    {char}
-                  </Badge>
-                ))}
+                {chars.length ? (
+                  chars.map((c, i) => (
+                    <Badge key={i} colorScheme="teal">
+                      {c}
+                    </Badge>
+                  ))
+                ) : (
+                  <Text color="gray.500">Sin características</Text>
+                )}
               </HStack>
 
-              {/* Estado de salud */}
               <Text fontWeight="bold" mb={2}>
                 Me entregan:
               </Text>
@@ -189,7 +258,6 @@ const CardDetail: React.FC = () => {
 
               <Divider my={4} />
 
-              {/* Información protectora */}
               <Text fontSize="lg" fontWeight="bold" mb={1}>
                 🏠 {animal.shelter}
               </Text>
@@ -197,11 +265,10 @@ const CardDetail: React.FC = () => {
                 En la protectora desde el {animal.since}
               </Text>
 
-              {/* Botón de adoptar */}
               <Button
                 mt={4}
                 colorScheme="blue"
-                width="full"
+                w="full"
                 fontSize="lg"
                 borderRadius="full"
               >
@@ -209,6 +276,54 @@ const CardDetail: React.FC = () => {
               </Button>
             </Box>
           </Flex>
+
+          {/* si es protectora dueña y aún no hay adoptante, asignar */}
+          {role === "protectora" &&
+            authUser?.id === animal.owner &&
+            animal.adopter == null && (
+              <Box mt={6}>
+                <FormControl>
+                  <FormLabel>Selecciona adoptante</FormLabel>
+                  <Select
+                    placeholder="Seleccione..."
+                    value={selectedAdopter}
+                    onChange={(e) =>
+                      setSelectedAdopter(
+                        e.target.value ? Number(e.target.value) : ""
+                      )
+                    }
+                  >
+                    {adopters.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.username}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  onClick={handleAdopt}
+                  isDisabled={!selectedAdopter}
+                >
+                  Marcar como adoptado
+                </Button>
+              </Box>
+            )}
+
+          {/* si ya hay adoptante, mostramos quién */}
+          {animal.adopter_username && (
+            <Text mt={6} fontWeight="bold">
+              Adoptado por: {animal.adopter_username}
+            </Text>
+          )}
+
+          {/* botón eliminar (owner o admin) */}
+          {canDelete && (
+            <Button colorScheme="red" mt={6} w="full" onClick={handleDelete}>
+              Eliminar animal
+            </Button>
+          )}
         </Box>
       </Flex>
     </Layout>

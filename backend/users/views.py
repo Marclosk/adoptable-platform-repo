@@ -1,13 +1,23 @@
-from rest_framework import status
+# backend/users/views.py
+from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import RegisterSerializer, UserSerializer, AdopterProfileSerializer
-from .models import AdopterProfile
 from django.core.mail import send_mail
+from django.contrib.auth.models import User
+
+from .serializers import (
+    AdopterListSerializer,
+    RegisterSerializer,
+    UserSerializer,
+    AdopterProfileSerializer,
+)
+from .models import AdopterProfile
+from animals.models import Animal
+from animals.serializers import AnimalSerializer
 
 
 @api_view(['POST'])
@@ -33,8 +43,8 @@ def register_view(request):
         send_mail(
             subject="Solicitud de registro de protectora",
             message=(
-              f"La protectora {user.username} (email: {user.email}) "
-              f"solicita registrarse. Localidad: {localidad}"
+                f"La protectora {user.username} (email: {user.email}) "
+                f"solicita registrarse. Localidad: {localidad}"
             ),
             from_email="no-reply@miapp.com",
             recipient_list=["marclosquino2@gmail.com"],
@@ -54,6 +64,7 @@ def register_view(request):
         {"message": "Usuario creado correctamente!"},
         status=status.HTTP_201_CREATED
     )
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -83,7 +94,7 @@ def login_view(request):
     # Serializamos el usuario
     user_data = UserSerializer(user).data
 
-    # Determinamos el rol (por ejemplo usando is_staff o un campo en el perfil)
+    # Determinamos el rol
     role = "protectora" if user.is_staff else "adoptante"
 
     return Response(
@@ -95,68 +106,98 @@ def login_view(request):
         status=status.HTTP_200_OK
     )
 
-@permission_classes([AllowAny])
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def logout_view(request):
     """
     Vista para cerrar sesión.
     """
-    if request.method == 'POST':
-        logout(request)
-        
-        response = Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
-        
-        response.delete_cookie('sessionid', path='/')
-        response.delete_cookie('csrftoken', path='/')
-        
-        return response
+    logout(request)
+    response = Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
+    response.delete_cookie('sessionid', path='/')
+    response.delete_cookie('csrftoken', path='/')
+    return response
+
 
 @api_view(['GET'])
-@permission_classes([AllowAny]) 
+@permission_classes([AllowAny])
 def check_session(request):
     """
     Verifica si el usuario ha iniciado sesión correctamente.
     """
     if request.user.is_authenticated:
         return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)
-
     return Response({"message": "Session is invalid, please log in."}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     """
-    Obtiene la información del perfil del usuario autenticado.
+    Devuelve el perfil completo del usuario autenticado, con:
+    - Campos de UserSerializer
+    - role ('protectora' si is_staff, 'adoptante' si no)
+    - Para adoptantes: avatar, location, phone_number, bio, favorites y adopted dinámico
+    - Para protectoras: listas en_adopcion y adopted dinámicas
     """
-    try:
-        profile = request.user.profile 
-        serializer = AdopterProfileSerializer(profile)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    except AdopterProfile.DoesNotExist:
-        return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+    user = request.user
+    user_data = UserSerializer(user).data
+    role = "protectora" if user.is_staff else "adoptante"
+    user_data['role'] = role
+
+    if not user.is_staff:
+        # perfil adoptante
+        try:
+            profile = user.profile
+        except AdopterProfile.DoesNotExist:
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        profile_data = AdopterProfileSerializer(profile).data
+        # animales que este usuario ha adoptado
+        adopted_qs = Animal.objects.filter(adopter=user)
+        profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
+
+        return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
+    else:
+        # perfil protectora
+        en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
+        adopted_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
+
+        return Response({
+            **user_data,
+            "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
+            "adopted": AnimalSerializer(adopted_qs, many=True).data,
+        }, status=status.HTTP_200_OK)
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def update_profile(request):
     """
-    Permite al usuario actualizar su perfil, incluyendo la carga de un avatar.
+    Actualiza el perfil del adoptante (avatar, location, phone_number, bio).
+    Tras guardar, devuelve el mismo payload que get_profile.
     """
+    user = request.user
     try:
-        profile = request.user.profile 
-        
-        # Establece el parser para que maneje datos de formulario y archivos
-        parser_classes = (MultiPartParser, FormParser)
-        
-        # Usar el serializer para manejar tanto los datos como los archivos
-        serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        profile = user.profile
     except AdopterProfile.DoesNotExist:
         return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        # después de actualizar, devolvemos todo el perfil
+        return get_profile(request)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class AdopterListView(generics.ListAPIView):
+    """
+    GET /api/users/adopters/
+    Lista todos los usuarios activos que no sean staff (i.e. adoptantes).
+    """
+    queryset = User.objects.filter(is_staff=False, is_active=True)
+    serializer_class = AdopterListSerializer
+    permission_classes = [AllowAny]

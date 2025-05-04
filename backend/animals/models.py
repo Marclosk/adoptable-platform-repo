@@ -38,9 +38,24 @@ class Animal(models.Model):
     # Características del animal (opcional)
     characteristics = models.JSONField(blank=True, null=True, default=dict)
 
-    # Información sobre la protectora
-    shelter = models.CharField(max_length=150, default='Protectora desconocida')
-    since = models.DateField(default=timezone.now)
+    # Quién creó este animal: solo esa protectora podrá borrarlo
+    owner = models.ForeignKey(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="animals",
+        null=True,          
+        blank=True,
+        help_text="Usuario/protectora que creó este registro"
+    )
+    adopter = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        related_name="adopted_animals",
+        null=True,
+        blank=True,
+        help_text="Usuario que ha adoptado este animal"
+    )
+    since = models.DateField(default=timezone.localdate)
 
     # Estado de salud
     vaccinated = models.BooleanField(default=False)

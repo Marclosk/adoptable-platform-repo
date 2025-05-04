@@ -12,7 +12,8 @@ import {
   AlertTitle,
   AlertDescription,
 } from "@chakra-ui/react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../features/auth/authSlice";
 import { logout } from "../features/auth/authService";
@@ -23,7 +24,7 @@ import DogCards from "../components/card/card";
 import { getAnimals, getAllAnimals } from "./card_detail/animal_services";
 import { fetchCSRFToken } from "./profile/user_services";
 
-interface Dog {
+export interface Dog {
   id: number;
   name: string;
   city: string;
@@ -33,6 +34,7 @@ interface Dog {
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const userRole = useSelector((state: RootState) => state.auth.role);
 
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
   const [distance, setDistance] = useState<number>(30);
@@ -141,6 +143,7 @@ const Dashboard: React.FC = () => {
             onLocationSelect={(lat, lng) => {
               setUserLat(lat);
               setUserLng(lng);
+              setLocationAvailable(true); 
             }}
           />
 
@@ -153,6 +156,21 @@ const Dashboard: React.FC = () => {
           )}
         </VStack>
       </Box>
+
+      {userRole === "protectora" && (
+        <Button
+          colorScheme="teal"
+          position="fixed"
+          bottom={8}
+          right={8}
+          borderRadius="full"
+          boxShadow="md"
+          size="lg"
+          onClick={() => navigate("/add-animal")}
+        >
+          + Añadir perro
+        </Button>
+      )}
     </Layout>
   );
 };

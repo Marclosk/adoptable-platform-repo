@@ -4,7 +4,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
   user: { id: number; username: string; email: string } | null;
-  role: "adoptante" | "protectora" | null;
+  // Ahora incluimos "admin" en el union type
+  role: "adoptante" | "protectora" | "admin" | null;
   error: string | null;
 }
 
@@ -26,7 +27,8 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         user: { id: number; username: string; email: string };
-        role: "adoptante" | "protectora";
+        // Permitimos también "admin" al hacer login
+        role: "adoptante" | "protectora" | "admin";
       }>
     ) => {
       state.user = action.payload.user;

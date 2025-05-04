@@ -9,6 +9,7 @@ import CardDetail from "./pages/card_detail/card_detail";
 import Profile from "./pages/profile/profile";
 import Donations from "./pages/donations/donations";
 import ContactPage from "./pages/contact/contact";
+import AddAnimal from "./pages/animal/add_animal";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -34,6 +35,7 @@ const App = () => {
         <Route path="/perfil" element={<Profile />} />
         <Route path="/donacions" element={<Donations />} />
         <Route path="/contacte" element={<ContactPage />} />
+        <Route path="/add-animal" element={<AddAnimal />} />
       </Routes>
     </Router>
   );
