@@ -1,4 +1,3 @@
-// src/components/navbar/NavbarSuperior.tsx
 import React, { useEffect, useState } from "react";
 import {
   Flex,
@@ -21,7 +20,6 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // Al montar, recuperamos la foto de perfil (si existe)
     const loadProfile = async () => {
       try {
         const profile = await getProfile();
@@ -29,7 +27,6 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
           setAvatarUrl(profile.avatar);
         }
       } catch (err) {
-        // Si falla la petición, no hacemos nada y se mostrará el icono por defecto
         console.error("No se pudo cargar avatar en navbar:", err);
       }
     };
@@ -50,10 +47,6 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
       </Heading>
 
       <Menu>
-        {/* 
-          Usamos un Button variante ghost para contener el Avatar,
-          de modo que al hacer click abra el menú.
-        */}
         <MenuButton
           as={Button}
           variant="ghost"
@@ -62,9 +55,9 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
           cursor="pointer"
         >
           <Avatar
-            size="sm"                // ~32px, mismo tamaño que tu icono anterior
-            src={avatarUrl}          // si avatarUrl es undefined, Avatar usará el icono de fallback
-            icon={<FaUserCircle />}  // icono de fallback
+            size="sm"                
+            src={avatarUrl}          
+            icon={<FaUserCircle />}  
           />
         </MenuButton>
 

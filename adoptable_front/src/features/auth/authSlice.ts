@@ -1,15 +1,11 @@
-// src/features/auth/authSlice.ts
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
   user: { id: number; username: string; email: string } | null;
-  // Ahora incluimos "admin" en el union type
   role: "adoptante" | "protectora" | "admin" | null;
   error: string | null;
 }
 
-// Intentamos hidratar desde localStorage
 const saved = localStorage.getItem("authState");
 const initialState: AuthState = saved
   ? JSON.parse(saved)
@@ -27,14 +23,12 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         user: { id: number; username: string; email: string };
-        // Permitimos también "admin" al hacer login
         role: "adoptante" | "protectora" | "admin";
       }>
     ) => {
       state.user = action.payload.user;
       state.role = action.payload.role;
       state.error = null;
-      // Guardamos solo lo esencial
       localStorage.setItem(
         "authState",
         JSON.stringify({

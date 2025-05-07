@@ -1,4 +1,3 @@
-# models.py
 from django.db import models
 from django.contrib.auth.models import User
 from app.storages import PrivateMediaStorage
@@ -10,7 +9,7 @@ class AdopterProfile(models.Model):
         storage=PrivateMediaStorage(),
         upload_to="profile_images/",
         blank=True,
-        null=True  # Para que pueda estar vacío
+        null=True 
     )
     
     location = models.CharField(max_length=100, blank=True, null=True)

@@ -1,5 +1,4 @@
-// src/pages/profile/Profile.tsx
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +25,12 @@ import {
   Wrap,
   Image,
   HStack,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 import { getProfile, updateProfile } from "./user_services";
@@ -35,13 +40,14 @@ const Profile: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
   const { user: authUser, role } = useSelector(
     (state: RootState) => state.auth
   );
 
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-
   const [formData, setFormData] = useState<{
     avatar: File | null;
     location: string;
@@ -54,6 +60,13 @@ const Profile: React.FC = () => {
     bio: "",
   });
   const [preview, setPreview] = useState<string>("");
+
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [petToUnadopt, setPetToUnadopt] = useState<{
+    id: number;
+    name: string;
+    adopter: string;
+  } | null>(null);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -138,20 +151,25 @@ const Profile: React.FC = () => {
     navigate(`/card_detail/${animalId}`);
   };
 
-  const handleUnadopt = async (
-    animalId: number,
-    animalName: string,
-    adopterUsername: string
-  ) => {
-    const confirmed = window.confirm(
-      `¿Confirmas que el animal "${animalName}" ya no está adoptado por ${adopterUsername}?`
-    );
-    if (!confirmed) return;
+  const openUnadoptDialog = (id: number, name: string, adopter: string) => {
+    setPetToUnadopt({ id, name, adopter });
+    setIsAlertOpen(true);
+  };
+
+  const closeUnadoptDialog = () => {
+    setIsAlertOpen(false);
+    setPetToUnadopt(null);
+  };
+
+  const confirmUnadopt = async () => {
+    if (!petToUnadopt) return;
     try {
-      await unadoptAnimal(animalId);
+      await unadoptAnimal(petToUnadopt.id);
       toast({
-        title: `Animal "${animalName}" desadoptado`,
+        title: `Animal "${petToUnadopt.name}" desadoptado`,
         status: "success",
+        duration: 3000,
+        isClosable: true,
       });
       fetchProfile();
     } catch (err: any) {
@@ -159,15 +177,19 @@ const Profile: React.FC = () => {
       toast({
         title: err.message || "Error al desadoptar",
         status: "error",
+        duration: 3000,
+        isClosable: true,
       });
+    } finally {
+      closeUnadoptDialog();
     }
   };
 
   if (!profile) {
     return (
       <Center height="100vh">
-        <Spinner size="xl" color="teal.500" />
-        <Text mt={4} color="teal.500" fontSize="xl">
+        <Spinner size="xl" color="teal.400" />
+        <Text mt={4} color="teal.400" fontSize="xl">
           Cargando tu perfil...
         </Text>
       </Center>
@@ -178,18 +200,19 @@ const Profile: React.FC = () => {
     <Layout handleLogout={handleLogout}>
       <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
         <VStack spacing={8} align="center">
-          {/* Tarjeta de perfil */}
           <Box
             bg="white"
-            boxShadow="lg"
-            p={6}
+            boxShadow="md"
+            p={8}
             borderRadius="lg"
             w="100%"
-            maxW="900px"
+            maxW="800px"
+            borderTop="4px solid"
+            borderTopColor="teal.400"
           >
             {isEditing ? (
-              <VStack spacing={5} align="stretch">
-                <Heading size="lg" textAlign="center">
+              <VStack spacing={6} align="stretch">
+                <Heading size="lg" color="teal.600" textAlign="center">
                   Editar Perfil
                 </Heading>
                 <FormControl>
@@ -200,11 +223,12 @@ const Profile: React.FC = () => {
                     onChange={handleFileChange}
                   />
                   {preview && (
-                    <Image
+                    <Avatar
                       src={preview}
                       boxSize="100px"
-                      borderRadius="full"
                       mt={2}
+                      border="2px solid"
+                      borderColor="teal.200"
                     />
                   )}
                 </FormControl>
@@ -214,6 +238,7 @@ const Profile: React.FC = () => {
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
+                    focusBorderColor="teal.300"
                   />
                 </FormControl>
                 <FormControl>
@@ -222,6 +247,7 @@ const Profile: React.FC = () => {
                     name="phone_number"
                     value={formData.phone_number}
                     onChange={handleChange}
+                    focusBorderColor="teal.300"
                   />
                 </FormControl>
                 <FormControl>
@@ -230,29 +256,52 @@ const Profile: React.FC = () => {
                     name="bio"
                     value={formData.bio}
                     onChange={handleChange}
+                    focusBorderColor="teal.300"
                   />
                 </FormControl>
                 <HStack justify="center" spacing={4}>
-                  <Button colorScheme="blue" onClick={handleSave}>
+                  <Button colorScheme="teal" onClick={handleSave}>
                     Guardar cambios
                   </Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button
+                    variant="outline"
+                    colorScheme="teal"
+                    onClick={() => setIsEditing(false)}
+                  >
                     Cancelar
                   </Button>
                 </HStack>
               </VStack>
             ) : (
-              <VStack spacing={4} align="center">
-                <Avatar size="xl" src={preview} name={profile.username} />
-                <Heading size="lg">{profile.username}</Heading>
-                <Text>{profile.location || "Ubicación no especificada"}</Text>
-                <Text>{profile.phone_number || "Teléfono no disponible"}</Text>
-                <Text textAlign="center" maxW="600px">
+              <VStack spacing={6} align="center">
+                <Avatar
+                  size="2xl"
+                  src={preview}
+                  name={profile.username}
+                  border="2px solid"
+                  borderColor="teal.200"
+                />
+                <Heading size="xl" color="teal.600">
+                  {profile.username}
+                </Heading>
+                <Text fontSize="md" color="gray.600">
+                  {profile.location || "Ubicación no especificada"}
+                </Text>
+                <Text fontSize="md" color="gray.600">
+                  {profile.phone_number || "Teléfono no disponible"}
+                </Text>
+                <Text
+                  textAlign="center"
+                  maxW="600px"
+                  color="gray.700"
+                  fontSize="lg"
+                >
                   {profile.bio || "Sin biografía aún."}
                 </Text>
                 <Button
                   leftIcon={<EditIcon />}
                   variant="outline"
+                  colorScheme="teal"
                   size="sm"
                   onClick={() => setIsEditing(true)}
                 >
@@ -262,39 +311,32 @@ const Profile: React.FC = () => {
             )}
           </Box>
 
-          {/* Secciones según rol */}
           {role === "adoptante" && (
             <>
-              {/* Favoritos */}
               <Box
                 bg="white"
-                boxShadow="lg"
+                boxShadow="md"
                 p={6}
                 borderRadius="lg"
                 w="100%"
-                maxW="900px"
+                maxW="800px"
               >
-                <Heading size="md" mb={4} textAlign="center">
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
                   Favoritos
                 </Heading>
-                <Wrap justify="center" spacing={4}>
-                  {profile.favorites && profile.favorites.length > 0 ? (
+                <Wrap justify="center" spacing={3}>
+                  {profile.favorites?.length > 0 ? (
                     profile.favorites.map((fav: any) => (
                       <Tag
                         key={fav.id}
-                        size="lg"
-                        variant="solid"
-                        colorScheme="blue"
+                        size="md"
+                        variant="subtle"
+                        colorScheme="teal"
                         cursor="pointer"
                         onClick={() => goToAnimal(fav.id)}
                       >
                         <TagLabel>{fav.name}</TagLabel>
-                        <TagCloseButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // eliminar favorito si lo implementas
-                          }}
-                        />
+                        <TagCloseButton onClick={(e) => e.stopPropagation()} />
                       </Tag>
                     ))
                   ) : (
@@ -303,36 +345,30 @@ const Profile: React.FC = () => {
                 </Wrap>
               </Box>
 
-              {/* Adoptados */}
               <Box
                 bg="white"
-                boxShadow="lg"
+                boxShadow="md"
                 p={6}
                 borderRadius="lg"
                 w="100%"
-                maxW="900px"
+                maxW="800px"
               >
-                <Heading size="md" mb={4} textAlign="center">
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
                   Adoptados
                 </Heading>
-                <Wrap justify="center" spacing={4}>
-                  {profile.adopted && profile.adopted.length > 0 ? (
+                <Wrap justify="center" spacing={3}>
+                  {profile.adopted?.length > 0 ? (
                     profile.adopted.map((pet: any) => (
                       <Tag
                         key={pet.id}
-                        size="lg"
-                        variant="solid"
+                        size="md"
+                        variant="subtle"
                         colorScheme="green"
                         cursor="pointer"
                         onClick={() => goToAnimal(pet.id)}
                       >
                         <TagLabel>{pet.name}</TagLabel>
-                        <TagCloseButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // deshacer adopción desde perfil de adoptante si lo deseas
-                          }}
-                        />
+                        <TagCloseButton onClick={(e) => e.stopPropagation()} />
                       </Tag>
                     ))
                   ) : (
@@ -347,26 +383,25 @@ const Profile: React.FC = () => {
 
           {role === "protectora" && (
             <>
-              {/* En adopción */}
               <Box
                 bg="white"
-                boxShadow="lg"
+                boxShadow="md"
                 p={6}
                 borderRadius="lg"
                 w="100%"
-                maxW="900px"
+                maxW="800px"
               >
-                <Heading size="md" mb={4} textAlign="center">
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
                   En adopción
                 </Heading>
-                <Wrap justify="center" spacing={4}>
-                  {profile.en_adopcion && profile.en_adopcion.length > 0 ? (
+                <Wrap justify="center" spacing={3}>
+                  {profile.en_adopcion?.length > 0 ? (
                     profile.en_adopcion.map((a: any) => (
                       <Tag
                         key={a.id}
-                        size="lg"
-                        variant="solid"
-                        colorScheme="blue"
+                        size="md"
+                        variant="subtle"
+                        colorScheme="orange"
                         cursor="pointer"
                         onClick={() => goToAnimal(a.id)}
                       >
@@ -379,25 +414,24 @@ const Profile: React.FC = () => {
                 </Wrap>
               </Box>
 
-              {/* Adoptados con opción de desadoptar */}
               <Box
                 bg="white"
-                boxShadow="lg"
+                boxShadow="md"
                 p={6}
                 borderRadius="lg"
                 w="100%"
-                maxW="900px"
+                maxW="800px"
               >
-                <Heading size="md" mb={4} textAlign="center">
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
                   Adoptados
                 </Heading>
-                <Wrap justify="center" spacing={4}>
-                  {profile.adopted && profile.adopted.length > 0 ? (
+                <Wrap justify="center" spacing={3}>
+                  {profile.adopted?.length > 0 ? (
                     profile.adopted.map((pet: any) => (
                       <Tag
                         key={pet.id}
-                        size="lg"
-                        variant="solid"
+                        size="md"
+                        variant="subtle"
                         colorScheme="green"
                       >
                         <HStack spacing={2}>
@@ -409,7 +443,7 @@ const Profile: React.FC = () => {
                           </TagLabel>
                           <TagCloseButton
                             onClick={() =>
-                              handleUnadopt(
+                              openUnadoptDialog(
                                 pet.id,
                                 pet.name,
                                 pet.adopter_username
@@ -428,6 +462,33 @@ const Profile: React.FC = () => {
               </Box>
             </>
           )}
+
+
+          <AlertDialog
+            isOpen={isAlertOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={closeUnadoptDialog}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                  Confirmar desadopción
+                </AlertDialogHeader>
+                <AlertDialogBody>
+                  {petToUnadopt &&
+                    `¿Estás seguro de que "${petToUnadopt.name}" ya no está adoptado por ${petToUnadopt.adopter}?`}
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={closeUnadoptDialog}>
+                    Cancelar
+                  </Button>
+                  <Button colorScheme="red" onClick={confirmUnadopt} ml={3}>
+                    Sí, desadoptar
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
         </VStack>
       </Box>
     </Layout>

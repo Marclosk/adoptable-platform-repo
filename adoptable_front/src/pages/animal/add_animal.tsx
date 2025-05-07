@@ -1,4 +1,3 @@
-// src/pages/AddAnimal.tsx
 import React, { useState } from "react";
 import {
   Box,
@@ -39,7 +38,6 @@ const AddAnimal: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
-  // 1️⃣ Estado del formulario
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -60,7 +58,7 @@ const AddAnimal: React.FC = () => {
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 2️⃣ Handlers
+
   const onChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -83,7 +81,7 @@ const AddAnimal: React.FC = () => {
     setLocation([lat, lng]);
   };
 
-  // 3️⃣ Submit
+
   const handleSubmit = async () => {
     if (!form.name || !image || !form.city || !location) {
       toast({
@@ -94,11 +92,11 @@ const AddAnimal: React.FC = () => {
     }
 
     const data = new FormData();
-    // Campos string
+
     Object.entries(form).forEach(([k, v]) => data.append(k, String(v)));
-    // Imagen
+
     data.append("image", image);
-    // Lat/Lng
+
     data.append("latitude", String(location[0]));
     data.append("longitude", String(location[1]));
 

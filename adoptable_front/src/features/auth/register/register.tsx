@@ -227,7 +227,6 @@ const Register: React.FC = () => {
             Selecciona tu tipo de cuenta y rellena los campos requeridos.
           </Text>
 
-          {/* Error global de servidor */}
           {serverError && (
             <Alert status="error" mb={4}>
               <AlertIcon />
@@ -249,7 +248,6 @@ const Register: React.FC = () => {
             </Select>
           </FormControl>
 
-          {/* Email */}
           <FormControl isInvalid={!!emailError} mb="4">
             <FormLabel>Email</FormLabel>
             <Input
@@ -262,7 +260,6 @@ const Register: React.FC = () => {
             {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
           </FormControl>
 
-          {/* Contraseña */}
           <FormControl isInvalid={!!passwordError} mb="4">
             <FormLabel>Contraseña</FormLabel>
             <Input
@@ -277,7 +274,6 @@ const Register: React.FC = () => {
             )}
           </FormControl>
 
-          {/* Confirmar contraseña */}
           <FormControl isInvalid={!!confirmPasswordError} mb="6">
             <FormLabel>Confirmar Contraseña</FormLabel>
             <Input
@@ -292,7 +288,6 @@ const Register: React.FC = () => {
             )}
           </FormControl>
 
-          {/* Adoptante */}
           {role === "adoptante" && (
             <>
               <FormControl isInvalid={!!usernameError} mb="4">
@@ -333,7 +328,6 @@ const Register: React.FC = () => {
             </>
           )}
 
-          {/* Protectora */}
           {role === "protectora" && (
             <>
               <FormControl mb="4">

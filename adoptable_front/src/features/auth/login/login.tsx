@@ -1,4 +1,3 @@
-// src/features/auth/Login.tsx
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +26,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  // Si ya hay sesión válida, vamos al dashboard
   useEffect(() => {
     (async () => {
       if (await checkSession()) navigate("/dashboard");
@@ -61,7 +59,7 @@ const Login = () => {
       console.log("Intentando iniciar sesión...");
       const data: LoginResponse = await login({ username, password });
 
-      // guardamos user y role en Redux
+
       dispatch(
         loginSuccess({
           user: data.user,
@@ -69,7 +67,7 @@ const Login = () => {
         })
       );
 
-      // redirigimos según rol
+
       if (data.role === "protectora") {
         navigate("/dashboard");
       } else {

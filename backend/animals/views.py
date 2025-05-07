@@ -1,4 +1,4 @@
-# views.py
+
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .models import Animal
@@ -8,7 +8,7 @@ from .permissions import IsOwnerOrAdmin
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     serializer_class = AnimalSerializer
-    permission_classes = [IsAuthenticated]  # sólo usuarios autenticados pueden crear
+    permission_classes = [IsAuthenticated] 
 
 
     def get_queryset(self):

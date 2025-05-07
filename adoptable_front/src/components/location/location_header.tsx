@@ -1,4 +1,3 @@
-// src/components/location/location_header.tsx
 import React, { useState } from "react";
 import {
   Box,

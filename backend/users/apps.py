@@ -1,4 +1,3 @@
-# apps.py
 from django.apps import AppConfig
 
 class UsersConfig(AppConfig):
@@ -6,4 +5,4 @@ class UsersConfig(AppConfig):
     name = 'users'
 
     def ready(self):
-        import users.signals  # Importa aquí tu archivo de señales
+        import users.signals 

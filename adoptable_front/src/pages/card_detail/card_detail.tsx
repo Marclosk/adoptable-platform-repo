@@ -1,5 +1,4 @@
-// src/pages/card_detail/AnimalDetail.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -16,15 +15,18 @@ import {
   FormControl,
   FormLabel,
   Select,
+  useToast,
 } from "@chakra-ui/react";
-import { ArrowBackIcon, CheckCircleIcon } from "@chakra-ui/icons";
-import { useToast } from "@chakra-ui/react";
+import { ArrowBackIcon, CheckCircleIcon, StarIcon } from "@chakra-ui/icons";
 import {
   getAnimalById,
   deleteAnimal,
   getAdopters,
   adoptAnimal,
+  addFavorite,
+  removeFavorite,
 } from "./animal_services";
+import { getProfile } from "../profile/user_services";
 import Layout from "../../components/layout";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutSuccess } from "../../features/auth/authSlice";
@@ -65,29 +67,46 @@ const CardDetail: React.FC = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const { user: authUser, role } = useSelector((s: RootState) => s.auth);
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
   const [adopters, setAdopters] = useState<Adopter[]>([]);
   const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  // fetch animal details
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getAnimalById(Number(id));
-        setAnimal(data);
-      } catch (err) {
-        console.error("Error cargando animal:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchAnimal = useCallback(async () => {
+    try {
+      const data = await getAnimalById(Number(id));
+      setAnimal(data);
+    } catch (err) {
+      console.error("Error cargando animal:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  // if owner & not adopted, load adopters list
+  const fetchFavorites = useCallback(async () => {
+    if (role !== "adoptante" || !animal) return;
+    try {
+      const profile = await getProfile();
+      setIsFavorite(
+        Array.isArray(profile.favorites) &&
+          profile.favorites.some((f: any) => f.id === animal.id)
+      );
+    } catch (err) {
+      console.error("Error al obtener favoritos:", err);
+    }
+  }, [animal, role]);
+
+  useEffect(() => {
+    fetchAnimal();
+  }, [fetchAnimal]);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
+
   useEffect(() => {
     if (
       animal &&
@@ -112,7 +131,7 @@ const CardDetail: React.FC = () => {
       dispatch(logoutSuccess());
       navigate("/login");
     } catch {
-      /* no-op */
+      toast({ title: "Error al cerrar sesión", status: "error" });
     }
   };
 
@@ -138,6 +157,23 @@ const CardDetail: React.FC = () => {
     }
   };
 
+  const toggleFavorite = async () => {
+    if (!animal) return;
+    try {
+      if (isFavorite) {
+        await removeFavorite(animal.id);
+        toast({ title: "Quitado de favoritos", status: "info" });
+      } else {
+        await addFavorite(animal.id);
+        toast({ title: "Añadido a favoritos", status: "success" });
+      }
+      setIsFavorite(!isFavorite);
+    } catch (err: any) {
+      console.error("Error al actualizar favorito:", err);
+      toast({ title: "No se pudo actualizar favorito", status: "error" });
+    }
+  };
+
   if (loading) {
     return (
       <Flex justify="center" align="center" minH="60vh">
@@ -160,7 +196,8 @@ const CardDetail: React.FC = () => {
     : Object.keys(animal.characteristics || {});
 
   const canDelete =
-    role === "admin" || (role === "protectora" && authUser?.id === animal.owner);
+    role === "admin" ||
+    (role === "protectora" && authUser?.id === animal.owner);
 
   return (
     <Layout handleLogout={handleLogout}>
@@ -174,14 +211,25 @@ const CardDetail: React.FC = () => {
           overflow="hidden"
           p={6}
         >
-          <Button
-            leftIcon={<ArrowBackIcon />}
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            mb={4}
-          >
-            Volver
-          </Button>
+          <HStack justify="space-between" mb={4}>
+            <Button
+              leftIcon={<ArrowBackIcon />}
+              variant="ghost"
+              onClick={() => navigate(-1)}
+            >
+              Volver
+            </Button>
+            {role === "adoptante" && (
+              <Button
+                leftIcon={<StarIcon />}
+                colorScheme={isFavorite ? "yellow" : "teal"}
+                variant={isFavorite ? "solid" : "outline"}
+                onClick={toggleFavorite}
+              >
+                {isFavorite ? "Favorito" : "Añadir favorito"}
+              </Button>
+            )}
+          </HStack>
 
           <Flex direction={{ base: "column", md: "row" }} gap={6}>
             <Box flex="1">
@@ -264,20 +312,9 @@ const CardDetail: React.FC = () => {
               <Text fontSize="sm" color="gray.500">
                 En la protectora desde el {animal.since}
               </Text>
-
-              <Button
-                mt={4}
-                colorScheme="blue"
-                w="full"
-                fontSize="lg"
-                borderRadius="full"
-              >
-                ¡Quiero adoptarlo!
-              </Button>
             </Box>
           </Flex>
 
-          {/* si es protectora dueña y aún no hay adoptante, asignar */}
           {role === "protectora" &&
             authUser?.id === animal.owner &&
             animal.adopter == null && (
@@ -311,14 +348,12 @@ const CardDetail: React.FC = () => {
               </Box>
             )}
 
-          {/* si ya hay adoptante, mostramos quién */}
           {animal.adopter_username && (
             <Text mt={6} fontWeight="bold">
               Adoptado por: {animal.adopter_username}
             </Text>
           )}
 
-          {/* botón eliminar (owner o admin) */}
           {canDelete && (
             <Button colorScheme="red" mt={6} w="full" onClick={handleDelete}>
               Eliminar animal

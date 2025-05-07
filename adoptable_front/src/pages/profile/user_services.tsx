@@ -13,21 +13,17 @@ export const fetchCSRFToken = async () => {
   }
 };
 
-export const getCSRFToken = () => {
-  const csrfCookie = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("csrftoken="));
-
-  return csrfCookie ? csrfCookie.split("=")[1] : "";
+export const getCSRFToken = (): string => {
+  const match = document.cookie.match(/csrftoken=([^;]+)/);
+  return match ? match[1] : "";
 };
 
-export const getProfile = async () => {
+export const getProfile = async (): Promise<any> => {
   try {
-    const token = localStorage.getItem("token");
     const response = await axios.get(`${API_URL}/profile/`, {
       withCredentials: true,
       headers: {
-        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCSRFToken(),
       },
     });
     console.log("Perfil:", response.data);
@@ -41,18 +37,18 @@ export const getProfile = async () => {
   }
 };
 
-export const updateProfile = async (profileData: FormData) => {
+export const updateProfile = async (profileData: FormData): Promise<any> => {
   try {
-    const token = localStorage.getItem("token");
-    const csrfToken = getCSRFToken(); 
-
-    const response = await axios.put(`${API_URL}/profile/update/`, profileData, {
-      withCredentials: true,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "X-CSRFToken": csrfToken, 
-      },
-    });
+    const response = await axios.put(
+      `${API_URL}/profile/update/`,
+      profileData,
+      {
+        withCredentials: true,
+        headers: {
+          "X-CSRFToken": getCSRFToken(),
+        },
+      }
+    );
     return response.data;
   } catch (error: any) {
     console.error(

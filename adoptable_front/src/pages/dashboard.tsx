@@ -1,4 +1,3 @@
-// src/pages/dashboard.tsx
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -46,7 +45,6 @@ const Dashboard: React.FC = () => {
 
   fetchCSRFToken();
 
-  // 1) Verificar sesión
   useEffect(() => {
     (async () => {
       const valid = await checkSession();
@@ -58,7 +56,6 @@ const Dashboard: React.FC = () => {
     })();
   }, [navigate]);
 
-  // 2) Pedir geolocalización
   const requestLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -74,7 +71,6 @@ const Dashboard: React.FC = () => {
   };
   useEffect(requestLocation, []);
 
-  // 3) Cargar la lista de perros (filtrada o no)
   useEffect(() => {
     (async () => {
       setLoading(true);

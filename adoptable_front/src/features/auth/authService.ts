@@ -1,4 +1,3 @@
-// src/features/auth/authService.ts
 import axios from "axios";
 import { getCSRFToken } from "./session/token";
 
@@ -40,7 +39,6 @@ export const login = async ({
     console.log("✅ Respuesta del servidor:", response.data);
     return response.data;
   } catch (error: any) {
-    // Si el servidor responde con { error: "mensaje" }
     const serverError =
       error.response?.data?.error ||
       error.response?.data?.detail ||
@@ -100,7 +98,6 @@ export const register = async ({
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
-      // Si viene un objeto { field: [errors] } lo extraemos
       const data = error.response?.data;
       const firstError =
         typeof data === "object"

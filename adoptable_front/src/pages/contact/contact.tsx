@@ -75,7 +75,6 @@ const ContactPage: React.FC = () => {
         isClosable: true,
       });
 
-      // Limpiar campos
       setName("");
       setEmail("");
       setMessage("");

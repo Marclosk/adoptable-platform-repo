@@ -1,12 +1,11 @@
-// src/components/card/card.tsx
 import React from "react";
 import {
   Box,
   Text,
   Image,
-  Link as ChakraLink, // renombrado
+  Link as ChakraLink, 
 } from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom"; // import de React-Router
+import { Link as RouterLink } from "react-router-dom"; 
 
 interface Dog {
   id: number;
@@ -34,9 +33,9 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
           _hover={{ transform: "scale(1.05)", cursor: "pointer" }}
         >
           <ChakraLink
-            as={RouterLink} // client-side routing
-            to={`/card_detail/${dog.id}`} // prop `to` en lugar de `href`
-            _hover={{ textDecoration: "none" }} // opcional para quitar subrayado
+            as={RouterLink} 
+            to={`/card_detail/${dog.id}`} 
+            _hover={{ textDecoration: "none" }} 
           >
             <Image
               src={

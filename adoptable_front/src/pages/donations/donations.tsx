@@ -83,9 +83,9 @@ const Donations: React.FC = () => {
 
   return (
     <Layout handleLogout={handleLogout}>
-      {/* Contenedor principal con fondo gris */}
+
       <Box bg="gray.50" minH="100vh" py={8} px={{ base: 4, md: 8 }}>
-        {/* Sección de donación */}
+
         <Box
           maxW="600px"
           mx="auto"
@@ -131,7 +131,7 @@ const Donations: React.FC = () => {
           </VStack>
         </Box>
 
-        {/* Sección con las donaciones lado a lado */}
+
         <Box maxW="1200px" mx="auto" px={6} pb={8}>
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -139,7 +139,7 @@ const Donations: React.FC = () => {
             justify="center"
             align="start"
           >
-            {/* Últimas Donaciones */}
+
             <Box
               flex="1"
               bg="white"
@@ -176,7 +176,7 @@ const Donations: React.FC = () => {
               )}
             </Box>
 
-            {/* Tus Donaciones (solo si el usuario está logueado) */}
+
             {user && (
               <Box
                 flex="1"

@@ -59,7 +59,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.is_active = False
             user.is_staff = True
             user.save()
-            # aquí podrías crear el perfil de protectora
         return user
 
 class AnimalSerializer(serializers.ModelSerializer):
