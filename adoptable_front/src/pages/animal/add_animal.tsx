@@ -1,3 +1,4 @@
+// src/pages/animal/AddAnimal.tsx
 import React, { useState } from "react";
 import {
   Box,
@@ -12,12 +13,12 @@ import {
   useToast,
   Flex,
   VStack,
-  Spinner,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/layout";
 import LocationHeader from "../../components/location/location_header";
-import { addAnimal } from "./../card_detail/animal_services";
+import { addAnimal } from "../card_detail/animal_services";
+import Loader from "../../components/loader/loader";
 
 const GENDERS = [
   { value: "male", label: "Macho" },
@@ -58,7 +59,6 @@ const AddAnimal: React.FC = () => {
   const [location, setLocation] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(false);
 
-
   const onChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -81,7 +81,6 @@ const AddAnimal: React.FC = () => {
     setLocation([lat, lng]);
   };
 
-
   const handleSubmit = async () => {
     if (!form.name || !image || !form.city || !location) {
       toast({
@@ -92,11 +91,8 @@ const AddAnimal: React.FC = () => {
     }
 
     const data = new FormData();
-
     Object.entries(form).forEach(([k, v]) => data.append(k, String(v)));
-
     data.append("image", image);
-
     data.append("latitude", String(location[0]));
     data.append("longitude", String(location[1]));
 
@@ -117,10 +113,9 @@ const AddAnimal: React.FC = () => {
     <Layout handleLogout={() => navigate("/login")}>
       <Box maxW="600px" mx="auto" py={8}>
         <Heading mb={6}>Añadir nuevo perro</Heading>
+
         {loading ? (
-          <Flex justify="center">
-            <Spinner />
-          </Flex>
+          <Loader />
         ) : (
           <VStack spacing={4} align="stretch">
             <FormControl isRequired>

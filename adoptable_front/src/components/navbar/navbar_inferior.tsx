@@ -16,29 +16,44 @@ const NavbarInferior: React.FC = () => {
     { src: homeIcon, label: "Principal", path: "/dashboard" },
     { src: dogIcon, label: "Dogder", path: "/dogder" },
     { src: profileIcon, label: "Perfil", path: "/perfil" },
-    { src: donationsIcon, label: "Donacions", path: "/donacions" },
-    { src: contactIcon, label: "Contacte", path: "/contacte" },
+    { src: donationsIcon, label: "Donaciones", path: "/donacions" },
+    { src: contactIcon, label: "Contacto", path: "/contacte" },
   ];
 
   return (
-    <Flex as="nav" bg="#C3B898" p="4" justify="space-evenly" align="center">
-      {menuItems.map((item, index) => (
-        <Button
-          key={index}
-          variant="link"
-          color="white"
-          onClick={() => {
-            if (location.pathname !== item.path) {
-              navigate(item.path);
-            }
-          }}
-        >
-          <Flex align="center" gap="2" flexDirection="column">
-            <Image src={item.src} alt={item.label} w="6" />
+    <Flex
+      as="nav"
+      bg="teal.600"
+      p="2"
+      justify="space-around"
+      align="center"
+      boxShadow="md"
+    >
+      {menuItems.map((item) => {
+        const isActive = location.pathname === item.path;
+        return (
+          <Button
+            key={item.path}
+            variant="ghost"
+            color={isActive ? "white" : "teal.100"}
+            onClick={() => {
+              if (!isActive) navigate(item.path);
+            }}
+            _hover={{ color: "white", bg: "teal.700" }}
+            flexDirection="column"
+            fontSize="xs"
+          >
+            <Image
+              src={item.src}
+              alt={item.label}
+              boxSize="5"
+              mb="1"
+              filter={isActive ? "none" : "brightness(0) invert(1)"}
+            />
             <Text>{item.label}</Text>
-          </Flex>
-        </Button>
-      ))}
+          </Button>
+        );
+      })}
     </Flex>
   );
 };

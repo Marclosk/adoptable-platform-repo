@@ -1,17 +1,40 @@
-import React from "react";
+// src/components/card/card.tsx
+
+import React, { useEffect } from "react";
 import {
+  SimpleGrid,
+  LinkBox,
+  LinkOverlay,
+  AspectRatio,
+  Image,
   Box,
   Text,
-  Image,
-  Link as ChakraLink, 
+  Badge,
+  HStack,
+  VStack,
+  useColorModeValue,
+  Icon,
 } from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom"; 
+import { Link as RouterLink } from "react-router-dom";
+import {
+  FaDog,
+  FaMapMarkerAlt,
+  FaBirthdayCake,
+  FaRulerCombined,
+  FaHeartbeat,
+} from "react-icons/fa";
+import { GiDogHouse } from "react-icons/gi";
 
 interface Dog {
   id: number;
   name: string;
   city: string;
   imageUrl: string;
+  species: string;
+  age: string;
+  breed: string;
+  size: string;
+  activity: string;
 }
 
 interface DogCardsProps {
@@ -19,46 +42,76 @@ interface DogCardsProps {
 }
 
 const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
+  // Para debug en consola:
+  useEffect(() => {
+    console.debug("🔍 [DEBUG] DogCards received dogs:", dogs);
+  }, [dogs]);
+
+  const cardBg = useColorModeValue("white", "gray.700");
+  const shadow = useColorModeValue("md", "dark-lg");
+  // Pon aquí tu imagen por defecto en public/images/default_image.jpg
+  const fallback = "/images/default_image.jpg";
+
   return (
-    <Box display="flex" flexWrap="wrap" justifyContent="center" gap={6} mt={4}>
+    <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8}>
       {dogs.map((dog) => (
-        <Box
+        <LinkBox
           key={dog.id}
-          bg="white"
-          borderRadius="md"
+          bg={cardBg}
+          borderRadius="lg"
           overflow="hidden"
-          boxShadow="md"
-          maxW="280px"
-          transition="transform 0.2s"
-          _hover={{ transform: "scale(1.05)", cursor: "pointer" }}
+          boxShadow={shadow}
+          transition="all 0.3s"
+          _hover={{ transform: "translateY(-4px)", boxShadow: "xl" }}
         >
-          <ChakraLink
-            as={RouterLink} 
-            to={`/card_detail/${dog.id}`} 
-            _hover={{ textDecoration: "none" }} 
-          >
+          <AspectRatio ratio={4 / 3}>
             <Image
-              src={
-                dog.imageUrl ||
-                "https://images.unsplash.com/photo-1560807707-8cc77767d783"
-              }
+              src={dog.imageUrl || fallback}
               alt={dog.name}
-              width="100%"
-              height="200px"
               objectFit="cover"
+              fallbackSrc={fallback}
             />
-            <Box p={4}>
-              <Text fontWeight="bold" fontSize="lg" mb={1} color="gray.800">
-                {dog.name}
+          </AspectRatio>
+
+          <Box p={4}>
+            <VStack align="start" spacing={2}>
+              <LinkOverlay
+                as={RouterLink}
+                to={`/card_detail/${dog.id}`}
+                _hover={{ textDecoration: "none" }}
+              >
+                <Text fontSize="2xl" fontWeight="bold" color="teal.600">
+                  <Icon as={FaDog} mr={2} /> {dog.name}
+                </Text>
+              </LinkOverlay>
+
+              <HStack spacing={3} wrap="wrap">
+                <Badge variant="subtle" colorScheme="orange">
+                  <Icon as={GiDogHouse} mr={1} /> {dog.species}
+                </Badge>
+                <Badge variant="subtle" colorScheme="pink">
+                  <Icon as={FaBirthdayCake} mr={1} /> {dog.age}
+                </Badge>
+                <Badge variant="subtle" colorScheme="cyan">
+                  <Icon as={FaRulerCombined} mr={1} /> {dog.size}
+                </Badge>
+                <Badge variant="subtle" colorScheme="red">
+                  <Icon as={FaHeartbeat} mr={1} /> {dog.activity}
+                </Badge>
+              </HStack>
+
+              <Text fontSize="sm" color="gray.500">
+                <Icon as={FaMapMarkerAlt} mr={1} /> {dog.city}
               </Text>
-              <Text color="gray.600" fontSize="sm">
-                {dog.city}
+
+              <Text fontSize="sm" color="gray.600" noOfLines={2}>
+                Raza: {dog.breed}
               </Text>
-            </Box>
-          </ChakraLink>
-        </Box>
+            </VStack>
+          </Box>
+        </LinkBox>
       ))}
-    </Box>
+    </SimpleGrid>
   );
 };
 

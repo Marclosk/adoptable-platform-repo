@@ -1,3 +1,5 @@
+// src/components/layout/Footer.tsx
+
 import React from "react";
 import {
   Box,
@@ -7,127 +9,141 @@ import {
   IconButton,
   VStack,
   HStack,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
 
 const Footer: React.FC = () => {
+  // escogemos un fondo contrastado respecto al dashboard (teal oscuro)
+  const bg = "teal.700";
+  const linkColor = "whiteAlpha.900";
+  const iconBg = useColorModeValue("whiteAlpha.900", "gray.700");
+  const iconColor = useColorModeValue("teal.700", "teal.300");
+
   return (
-    <Box bg="#DDD2B5" color="white" py="6" mt="auto">
+    <Box as="footer" bg={bg} color="whiteAlpha.900" py={8} mt="auto">
       <Flex
-        maxWidth="1200px"
+        maxW="1200px"
         mx="auto"
-        px="6"
+        px={{ base: 4, md: 6 }}
         direction={{ base: "column", md: "row" }}
         justify="space-between"
         align={{ base: "center", md: "flex-start" }}
+        wrap="wrap"
       >
-
-        <VStack align="start" spacing="4" mb={{ base: 6, md: 0 }}>
-          <Text fontSize="xl" fontWeight="bold">
+        {/* Branding */}
+        <VStack align="start" spacing={4} mb={{ base: 8, md: 0 }}>
+          <Text fontSize="2xl" fontWeight="bold" color="white">
             AdoptAble
           </Text>
-          <Text fontSize="sm" color="white">
+          <Text fontSize="sm" color="whiteAlpha.700">
             Connecting pets with loving homes.
           </Text>
         </VStack>
 
+        {/* Navegación */}
         <HStack
-          spacing="8"
+          spacing={{ base: 8, md: 16 }}
           align={{ base: "center", md: "flex-start" }}
           wrap="wrap"
         >
-          <VStack align="start" spacing="2">
-            <Text fontSize="md" fontWeight="semibold" color="white">
+          <VStack align="start" spacing={2}>
+            <Text fontSize="md" fontWeight="semibold">
               Navegación
             </Text>
-            <Link href="/" _hover={{ textDecoration: "underline" }}>
+            <Link href="/" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Inicio
             </Link>
-            <Link href="/dogder" _hover={{ textDecoration: "underline" }}>
+            <Link href="/dogder" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Dogder
             </Link>
-            <Link href="/perfil" _hover={{ textDecoration: "underline" }}>
+            <Link href="/perfil" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Perfil
             </Link>
-            <Link href="/donaciones" _hover={{ textDecoration: "underline" }}>
+            <Link href="/donaciones" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Donaciones
             </Link>
-            <Link href="/contacto" _hover={{ textDecoration: "underline" }}>
+            <Link href="/contacto" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Contacto
             </Link>
           </VStack>
-          <VStack align="start" spacing="2">
-            <Text fontSize="md" fontWeight="semibold" color="white">
+
+          <VStack align="start" spacing={2}>
+            <Text fontSize="md" fontWeight="semibold">
               Ayuda
             </Text>
-            <Link href="/faq" _hover={{ textDecoration: "underline" }}>
+            <Link href="/faq" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Preguntas frecuentes
             </Link>
-            <Link href="/support" _hover={{ textDecoration: "underline" }}>
+            <Link href="/support" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Soporte
             </Link>
-            <Link href="/terms" _hover={{ textDecoration: "underline" }}>
+            <Link href="/terms" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Términos y condiciones
             </Link>
-            <Link href="/privacy" _hover={{ textDecoration: "underline" }}>
+            <Link href="/privacy" color={linkColor} _hover={{ textDecoration: "underline" }}>
               Política de privacidad
             </Link>
           </VStack>
         </HStack>
 
-        <VStack align="start" spacing="4">
-          <Text fontSize="md" fontWeight="semibold" color="white">
+        {/* Redes sociales */}
+        <VStack align="start" spacing={4} mt={{ base: 8, md: 0 }}>
+          <Text fontSize="md" fontWeight="semibold">
             Síguenos
           </Text>
-          <HStack spacing="4">
+          <HStack spacing={4}>
             <IconButton
               as="a"
               href="https://facebook.com"
               aria-label="Facebook"
               icon={<FaFacebook />}
-              bg="white"
-              color="#DDD2B5"
+              bg={iconBg}
+              color={iconColor}
               _hover={{ bg: "teal.500", color: "white" }}
               borderRadius="full"
+              size="md"
             />
             <IconButton
               as="a"
               href="https://twitter.com"
               aria-label="Twitter"
               icon={<FaTwitter />}
-              bg="white"
-              color="#DDD2B5"
+              bg={iconBg}
+              color={iconColor}
               _hover={{ bg: "teal.500", color: "white" }}
               borderRadius="full"
+              size="md"
             />
             <IconButton
               as="a"
               href="https://instagram.com"
               aria-label="Instagram"
               icon={<FaInstagram />}
-              bg="white"
-              color="#DDD2B5"
+              bg={iconBg}
+              color={iconColor}
               _hover={{ bg: "teal.500", color: "white" }}
               borderRadius="full"
+              size="md"
             />
             <IconButton
               as="a"
               href="https://linkedin.com"
               aria-label="LinkedIn"
               icon={<FaLinkedin />}
-              bg="white"
-              color="#DDD2B5"
+              bg={iconBg}
+              color={iconColor}
               _hover={{ bg: "teal.500", color: "white" }}
               borderRadius="full"
+              size="md"
             />
           </HStack>
         </VStack>
       </Flex>
 
-      <Box mt="8" textAlign="center" fontSize="sm" color="white">
-        <Text>
-          © {new Date().getFullYear()} AdoptAble. Todos los derechos reservados.
-        </Text>
+      {/* Copy */}
+      <Box mt={8} textAlign="center" fontSize="sm" color="whiteAlpha.700">
+        © {new Date().getFullYear()} AdoptAble. Todos los derechos reservados.
       </Box>
     </Box>
   );

@@ -8,6 +8,8 @@ from .views import (
     update_profile,
     AdopterListView,
     favorite_animal,
+    cancel_adoption_request_view,
+    adoption_request_view,
 )
 
 urlpatterns = [
@@ -26,4 +28,10 @@ urlpatterns = [
 
 
     path('favorites/<int:animal_id>/', favorite_animal, name='favorite-animal'),
+
+    path('animals/request/<int:req_id>/delete/', cancel_adoption_request_view, name='cancel-adoption-request'),
+
+    path('animals/<int:animal_id>/request/', adoption_request_view, name='adoption-request'),
+
+
 ]

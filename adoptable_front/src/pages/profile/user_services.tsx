@@ -58,3 +58,4 @@ export const updateProfile = async (profileData: FormData): Promise<any> => {
     throw error;
   }
 };
+

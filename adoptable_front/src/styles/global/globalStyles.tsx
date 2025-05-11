@@ -1,3 +1,5 @@
+// src/styles/GlobalStyles.tsx
+
 import { Global } from "@emotion/react";
 
 const GlobalStyles = () => (
@@ -7,7 +9,7 @@ const GlobalStyles = () => (
         height: 100%;
         margin: 0;
         padding: 0;
-        background-color: #DDD2B5; /* El color de fondo */
+        background-color: #F7FAFC; /* now matches the app’s light gray background */
       }
 
       #root {

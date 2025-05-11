@@ -5,9 +5,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
-from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
+from animals.models import AdoptionRequest, Animal
+from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
 from .serializers import (
     AdopterListSerializer,
     RegisterSerializer,
@@ -15,8 +17,8 @@ from .serializers import (
     AdopterProfileSerializer,
 )
 from .models import AdopterProfile
-from animals.models import Animal
-from animals.serializers import AnimalSerializer
+
+User = get_user_model()
 
 
 @api_view(['POST'])
@@ -112,33 +114,71 @@ def favorite_animal(request, animal_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def adoption_request_view(request, animal_id):
+    """
+    GET:   Lista todas las solicitudes de adopción de este animal.
+    POST:  Crea una nueva solicitud para el usuario autenticado.
+    DELETE:Cancela la solicitud del usuario autenticado para este animal.
+    """
+    user = request.user
+    animal = get_object_or_404(Animal, pk=animal_id)
+
+    if request.method == "GET":
+        qs = AdoptionRequest.objects.filter(animal=animal)
+        serializer = AdoptionRequestSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    if request.method == 'POST':
+        AdoptionRequest.objects.get_or_create(user=user, animal=animal)
+        return Response(status=status.HTTP_201_CREATED)
+
+    # DELETE
+    AdoptionRequest.objects.filter(user=user, animal=animal).delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
+    print("★ get_profile arrancó para:", request.user)
     user = request.user
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
     user_data['role'] = role
 
     if not user.is_staff:
+        # obtenemos el perfil de adoptante
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # serializamos los campos básicos de AdopterProfile
         profile_data = AdopterProfileSerializer(profile).data
+
+        # favoritos
+        fav_qs = profile.favorites.all()
+        profile_data['favorites'] = AnimalSerializer(fav_qs, many=True).data
+
+        # adoptados
         adopted_qs = Animal.objects.filter(adopter=user)
         profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
 
+        # solicitudes de adopción
+        req_qs = AdoptionRequest.objects.filter(user=user)
+        profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
+        
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
+    # perfil protectora
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
-    adopted_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
-
+    adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
     return Response({
         **user_data,
         "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
-        "adopted": AnimalSerializer(adopted_qs, many=True).data,
+        "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
     }, status=status.HTTP_200_OK)
 
 
@@ -175,7 +215,6 @@ def update_profile(request):
         profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
-
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
     return Response({
@@ -189,3 +228,12 @@ class AdopterListView(generics.ListAPIView):
     queryset = User.objects.filter(is_staff=False, is_active=True)
     serializer_class = AdopterListSerializer
     permission_classes = [AllowAny]
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def cancel_adoption_request_view(request, req_id):
+    # Borra la AdoptionRequest con pk=req_id y user=request.user
+    deleted, _ = AdoptionRequest.objects.filter(pk=req_id, user=request.user).delete()
+    if deleted:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({'detail': 'No encontrado o sin permisos'}, status=status.HTTP_404_NOT_FOUND)

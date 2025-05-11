@@ -1,20 +1,21 @@
 import axios from "axios";
 import type { Dog } from "../../pages/dashboard";
-import { getCSRFToken } from "../profile/user_services";
+import {
+  fetchCSRFToken,
+  getCSRFToken,
+  getProfile,
+} from "../profile/user_services";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/",
-  withCredentials: true, 
+  withCredentials: true,
 });
 
+// ————— Animales —————
+
 export const getAllAnimals = async (): Promise<any[]> => {
-  try {
-    const response = await api.get("api/animals/");
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener todos los animales:", error);
-    throw error;
-  }
+  const resp = await api.get("api/animals/");
+  return resp.data;
 };
 
 export const getAnimals = async (
@@ -22,59 +23,22 @@ export const getAnimals = async (
   userLat: number,
   userLng: number
 ): Promise<any[]> => {
-  try {
-    const response = await api.get(
-      `api/animals/?distance=${distance}&user_lat=${userLat}&user_lng=${userLng}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener los animales con geolocalización:", error);
-    throw error;
-  }
+  const resp = await api.get(
+    `api/animals/?distance=${distance}&user_lat=${userLat}&user_lng=${userLng}`
+  );
+  return resp.data;
 };
 
-export const getAnimalById = async (id: number) => {
-  try {
-    const response = await api.get(`api/animals/${id}/`);
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener el animal:", error);
-    throw error;
-  }
+export const getAnimalById = async (id: number): Promise<any> => {
+  const resp = await api.get(`api/animals/${id}/`);
+  return resp.data;
 };
 
 export const addAnimal = async (data: FormData): Promise<Dog> => {
-  try {
-    const response = await api.post<Dog>("api/animals/", data, {
-      headers: {
-        "X-CSRFToken": getCSRFToken(),
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    const status = error.response?.status;
-    const payload = error.response?.data;
-    console.error("Error al crear animal:", status, payload);
-
-    let message = "Error al crear el animal";
-    if (status === 400 && typeof payload === "object") {
-
-      message = Object.entries(payload)
-        .map(
-          ([field, msgs]) =>
-            `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`
-        )
-        .join(". ");
-    } else if (status === 500) {
-
-      message = "Error interno del servidor";
-    } else if (typeof payload === "string") {
-
-      message = payload;
-    }
-
-    throw new Error(message);
-  }
+  const resp = await api.post<Dog>("api/animals/", data, {
+    headers: { "X-CSRFToken": getCSRFToken() },
+  });
+  return resp.data;
 };
 
 export const deleteAnimal = async (id: number): Promise<void> => {
@@ -86,38 +50,29 @@ export const deleteAnimal = async (id: number): Promise<void> => {
 export const getAdopters = async (): Promise<
   { id: number; username: string }[]
 > => {
-  try {
-    const response = await api.get("api/users/adopters/");
-    return response.data;
-  } catch (error) {
-    console.error("Error al obtener adoptantes:", error);
-    throw error;
-  }
+  const resp = await api.get("api/users/adopters/");
+  return resp.data;
 };
 
 export const adoptAnimal = async (id: number, adopterId: number) => {
-  const response = await api.patch(
+  const resp = await api.patch(
     `api/animals/${id}/`,
     { adopter: adopterId },
     { headers: { "X-CSRFToken": getCSRFToken() } }
   );
-  return response.data;
+  return resp.data;
 };
 
 export const unadoptAnimal = async (id: number) => {
-  try {
-    const response = await api.patch(
-      `api/animals/${id}/`,
-      { adopter: null },
-      { headers: { "X-CSRFToken": getCSRFToken() } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error al desadoptar animal:", error);
-    throw error;
-  }
+  const resp = await api.patch(
+    `api/animals/${id}/`,
+    { adopter: null },
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
 };
 
+// ————— Favoritos —————
 
 export const addFavorite = async (animalId: number): Promise<void> => {
   await api.post(
@@ -131,4 +86,49 @@ export const removeFavorite = async (animalId: number): Promise<void> => {
   await api.delete(`users/favorites/${animalId}/`, {
     headers: { "X-CSRFToken": getCSRFToken() },
   });
+};
+
+// ————— Solicitudes de adopción (Adoptante) —————
+
+export interface AdoptionRequest {
+  id: number;
+  user: number;
+  animal: number;
+  created_at: string;
+  // si quieres, añade aquí otros campos que tu backend devuelva
+}
+
+/**
+ * Obtenemos del profile todas las solicitudes que he hecho.
+ */
+export const getMyAdoptionRequests = async (): Promise<AdoptionRequest[]> => {
+  const profile = await getProfile();
+  return profile.requests || [];
+};
+
+/**
+ * Hacemos POST para solicitar adopción.
+ * Devuelve el objeto AdoptionRequest creado.
+ */
+export const requestAdoption = async (
+  animalId: number
+): Promise<AdoptionRequest> => {
+  const resp = await api.post<AdoptionRequest>(
+    `api/animals/${animalId}/request/`,
+    {},
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
+};
+
+/**
+ * Cancelamos (DELETE) la solicitud que hice, usando su ID.
+ */
+export const cancelAdoptionRequest = async (
+  requestId: number
+): Promise<void> => {
+  await api.delete(
+    `users/animals/request/${requestId}/delete/`,
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
 };

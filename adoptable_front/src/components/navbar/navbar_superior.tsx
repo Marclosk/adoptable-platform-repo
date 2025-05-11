@@ -1,3 +1,5 @@
+// src/components/navbar/navbar_superior.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   Flex,
@@ -8,6 +10,8 @@ import {
   MenuItem,
   Button,
   Avatar,
+  Box,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { getProfile } from "../../pages/profile/user_services";
@@ -17,17 +21,18 @@ interface NavbarSuperiorProps {
 }
 
 const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const [avatarUrl, setAvatarUrl] = useState<string>();
+  // Elegimos un color oscuro para el texto del menú
+  const menuBg = useColorModeValue("white", "gray.800");
+  const menuColor = useColorModeValue("gray.800", "white");
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const profile = await getProfile();
-        if (profile.avatar) {
-          setAvatarUrl(profile.avatar);
-        }
-      } catch (err) {
-        console.error("No se pudo cargar avatar en navbar:", err);
+        if (profile.avatar) setAvatarUrl(profile.avatar);
+      } catch {
+        /* no-op */
       }
     };
     loadProfile();
@@ -36,33 +41,41 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
   return (
     <Flex
       as="nav"
-      bg="#DDD2B5"
+      bg="teal.500"
+      color="white"
       p="4"
       align="center"
       justify="space-between"
-      boxShadow="md"
+      boxShadow="sm"
     >
-      <Heading as="h1" size="lg" color="teal.500">
+      <Heading as="h1" size="lg" fontFamily="heading">
         AdoptAble
       </Heading>
 
       <Menu>
-        <MenuButton
-          as={Button}
-          variant="ghost"
-          p={0}
-          minW={0}
-          cursor="pointer"
-        >
+        <MenuButton as={Button} variant="ghost" p={0} minW={0}>
           <Avatar
-            size="sm"                
-            src={avatarUrl}          
-            icon={<FaUserCircle />}  
+            size="sm"
+            src={avatarUrl}
+            icon={<FaUserCircle color="white" />}
+            border="2px solid"
+            borderColor="white"
+            cursor="pointer"
           />
         </MenuButton>
 
-        <MenuList>
-          <MenuItem icon={<FaSignOutAlt />} onClick={handleLogout}>
+        <MenuList
+          bg={menuBg}
+          color={menuColor}
+          borderColor="gray.200"
+          boxShadow="md"
+          mt={1}
+        >
+          <MenuItem
+            icon={<FaSignOutAlt color={menuColor} />}
+            onClick={handleLogout}
+            _hover={{ bg: "teal.100", color: "teal.800" }}
+          >
             Logout
           </MenuItem>
         </MenuList>

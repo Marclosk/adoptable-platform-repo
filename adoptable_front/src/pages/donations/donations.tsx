@@ -1,3 +1,4 @@
+// src/pages/donations/Donations.tsx
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -8,11 +9,10 @@ import {
   Text,
   useToast,
   Select,
-  Image,
-  Spinner,
   Flex,
 } from "@chakra-ui/react";
 import Layout from "../../components/layout";
+import Loader from "../../components/loader/loader";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,7 +36,9 @@ const Donations: React.FC = () => {
       setLoading(true);
       const data = await fetchDonations();
       if (user) {
-        const filtered = data.filter((donation) => donation.usuario === user.username);
+        const filtered = data.filter(
+          (donation) => donation.usuario === user.username
+        );
         setUserDonations(filtered);
       }
       setDonations(data);
@@ -83,9 +85,7 @@ const Donations: React.FC = () => {
 
   return (
     <Layout handleLogout={handleLogout}>
-
       <Box bg="gray.50" minH="100vh" py={8} px={{ base: 4, md: 8 }}>
-
         <Box
           maxW="600px"
           mx="auto"
@@ -101,8 +101,8 @@ const Donations: React.FC = () => {
             Ayuda a los animales 🐾
           </Heading>
           <Text fontSize="md" color="gray.600" mb={6}>
-            Cada donación ayuda a alimentar, cuidar y encontrar un hogar para los
-            animales.
+            Cada donación ayuda a alimentar, cuidar y encontrar un hogar para
+            los animales.
           </Text>
           <VStack spacing={4}>
             <Select
@@ -131,7 +131,6 @@ const Donations: React.FC = () => {
           </VStack>
         </Box>
 
-
         <Box maxW="1200px" mx="auto" px={6} pb={8}>
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -139,7 +138,6 @@ const Donations: React.FC = () => {
             justify="center"
             align="start"
           >
-
             <Box
               flex="1"
               bg="white"
@@ -153,7 +151,7 @@ const Donations: React.FC = () => {
                 Últimas Donaciones
               </Heading>
               {loading ? (
-                <Spinner />
+                <Loader />
               ) : (
                 <VStack spacing={3}>
                   {donations.slice(0, 5).map((donation) => (
@@ -167,7 +165,7 @@ const Donations: React.FC = () => {
                     >
                       <Text fontWeight="bold">{donation.usuario}</Text>
                       <Text>
-                        {donation.cantidad}€ -{" "}
+                        {donation.cantidad}€ –{" "}
                         {new Date(donation.fecha).toLocaleString()}
                       </Text>
                     </Box>
@@ -175,7 +173,6 @@ const Donations: React.FC = () => {
                 </VStack>
               )}
             </Box>
-
 
             {user && (
               <Box
@@ -191,7 +188,7 @@ const Donations: React.FC = () => {
                   Tus Donaciones
                 </Heading>
                 {loading ? (
-                  <Spinner />
+                  <Loader />
                 ) : (
                   <VStack spacing={3}>
                     {userDonations.slice(0, 5).map((donation) => (
@@ -204,9 +201,7 @@ const Donations: React.FC = () => {
                         w="100%"
                       >
                         <Text fontWeight="bold">{donation.cantidad}€</Text>
-                        <Text>
-                          {new Date(donation.fecha).toLocaleString()}
-                        </Text>
+                        <Text>{new Date(donation.fecha).toLocaleString()}</Text>
                       </Box>
                     ))}
                   </VStack>

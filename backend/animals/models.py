@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from decimal import Decimal
+from django.conf import settings
 
 class Animal(models.Model):
     GENDER_CHOICES = [
@@ -69,3 +70,21 @@ class Animal(models.Model):
 
     def __str__(self):
         return self.name
+
+class AdoptionRequest(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="adoption_requests",
+        on_delete=models.CASCADE
+    )
+    animal = models.ForeignKey(
+        "animals.Animal",
+        related_name="adoption_requests",
+        on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "animal")
+        ordering = ("-created_at",)
+
