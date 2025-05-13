@@ -24,13 +24,13 @@ import { ArrowBackIcon, CheckCircleIcon, StarIcon } from "@chakra-ui/icons";
 import {
   getAnimalById,
   deleteAnimal,
-  getAdopters,
   adoptAnimal,
   addFavorite,
   removeFavorite,
   requestAdoption,
   cancelAdoptionRequest,
   getMyAdoptionRequests,
+  listAdoptionRequestsForAnimal, // <-- use this only
 } from "./animal_services";
 import { getProfile } from "../profile/user_services";
 import Layout from "../../components/layout";
@@ -83,14 +83,14 @@ const AnimalDetail: React.FC = () => {
   const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Estados de solicitud de adopción
+  // solicitud de adopción estado
   const [isRequested, setIsRequested] = useState(false);
   const [requestId, setRequestId] = useState<number | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
 
   const fallbackImage = "/images/default_image.jpg";
 
-  /** 1) Carga detalle de animal **/
+  /** 1) cargar detalle */
   const loadAnimal = useCallback(async () => {
     try {
       const data = await getAnimalById(Number(id));
@@ -104,7 +104,7 @@ const AnimalDetail: React.FC = () => {
     }
   }, [id, navigate, toast]);
 
-  /** 2) Carga favoritos del adoptante **/
+  /** 2) favoritos */
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -118,7 +118,7 @@ const AnimalDetail: React.FC = () => {
     }
   }, [animal, role]);
 
-  /** 3) Comprueba si ya solicitó este animal y mantiene el estado **/
+  /** 3) estado solicitud mantenido */
   const loadRequestStatus = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -129,25 +129,27 @@ const AnimalDetail: React.FC = () => {
         setRequestId(existing.id);
       }
     } catch (e) {
-      console.error("Error comprobando mis solicitudes:", e);
+      console.error("Error comprobando solicitudes:", e);
     }
   }, [animal, role]);
 
-  /** 4) Si soy protectora y dueña, precargo lista de adoptantes **/
-  useEffect(() => {
+  /** 4) lista solo solicitantes para la protectora */
+  const loadApplicants = useCallback(async () => {
     if (
-      animal &&
-      role === "protectora" &&
-      authUser?.id === animal.owner &&
-      animal.adopter == null
-    ) {
-      getAdopters()
-        .then(setAdopters)
-        .catch((e) => console.error("Error cargando adoptantes:", e));
+      role !== "protectora" ||
+      !animal ||
+      authUser?.id !== animal.owner ||
+      animal.adopter != null
+    )
+      return;
+    try {
+      const reqs = await listAdoptionRequestsForAnimal(animal.id);
+      setAdopters(reqs.map((r) => r.user));
+    } catch (e) {
+      console.error("Error listando solicitantes:", e);
     }
   }, [animal, role, authUser]);
 
-  /** Efectos de carga */
   useEffect(() => {
     loadAnimal();
   }, [loadAnimal]);
@@ -155,16 +157,17 @@ const AnimalDetail: React.FC = () => {
   useEffect(() => {
     loadFavorites();
     loadRequestStatus();
-  }, [loadFavorites, loadRequestStatus]);
+    loadApplicants();
+  }, [loadFavorites, loadRequestStatus, loadApplicants]);
 
-  /** logout, delete, adoptar, favoritos **/
+  /** common handlers */
   const handleLogout = async () => {
     try {
       await logout();
       dispatch(logoutSuccess());
       navigate("/login");
     } catch {
-      toast({ title: "Error al cerrar sesión", status: "error" });
+      toast({ title: "Error cerrando sesión", status: "error" });
     }
   };
 
@@ -175,38 +178,11 @@ const AnimalDetail: React.FC = () => {
       toast({ title: "Animal eliminado", status: "success" });
       navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: err.message || "Error al eliminar", status: "error" });
+      toast({ title: err.message || "Error eliminando", status: "error" });
     }
   };
 
-  const handleAdopt = async () => {
-    if (!animal || !selectedAdopter) return;
-    try {
-      const updated = await adoptAnimal(animal.id, selectedAdopter);
-      setAnimal(updated);
-      toast({ title: "Animal marcado como adoptado", status: "success" });
-    } catch (err: any) {
-      toast({ title: err.message || "Error al adoptar", status: "error" });
-    }
-  };
-
-  const toggleFavorite = async () => {
-    if (!animal) return;
-    try {
-      if (isFavorite) {
-        await removeFavorite(animal.id);
-        toast({ title: "Quitado de favoritos", status: "info" });
-      } else {
-        await addFavorite(animal.id);
-        toast({ title: "Añadido a favoritos", status: "success" });
-      }
-      setIsFavorite(!isFavorite);
-    } catch {
-      toast({ title: "Error actualizando favorito", status: "error" });
-    }
-  };
-
-  /** 5) Solicitante: pedir o cancelar **/
+  /** solicitante: toggle */
   const toggleRequest = async () => {
     if (!animal) return;
     setRequestLoading(true);
@@ -223,10 +199,39 @@ const AnimalDetail: React.FC = () => {
         setRequestId(newReq.id);
       }
     } catch (err: any) {
-      console.error("Error al procesar solicitud:", err);
+      console.error("Error solicitud:", err);
       toast({ title: "Error al procesar solicitud", status: "error" });
     } finally {
       setRequestLoading(false);
+    }
+  };
+
+  /** protectora: marcar adoptado */
+  const handleAdopt = async () => {
+    if (!animal || !selectedAdopter) return;
+    try {
+      const updated = await adoptAnimal(animal.id, selectedAdopter);
+      setAnimal(updated);
+      toast({ title: "Animal marcado como adoptado", status: "success" });
+    } catch (err: any) {
+      toast({ title: err.message || "Error al adoptar", status: "error" });
+    }
+  };
+
+  /** toggle favorito */
+  const toggleFavorite = async () => {
+    if (!animal) return;
+    try {
+      if (isFavorite) {
+        await removeFavorite(animal.id);
+        toast({ title: "Quitado de favoritos", status: "info" });
+      } else {
+        await addFavorite(animal.id);
+        toast({ title: "Añadido a favoritos", status: "success" });
+      }
+      setIsFavorite(!isFavorite);
+    } catch {
+      toast({ title: "Error actualizando favorito", status: "error" });
     }
   };
 
@@ -240,11 +245,9 @@ const AnimalDetail: React.FC = () => {
       </Box>
     );
 
-  // URL de imagen
   const urlFromImage =
     typeof animal.image === "string" ? animal.image : animal.image?.url;
-  const actualImageUrl = animal.imageUrl || urlFromImage || fallbackImage;
-
+  const imgUrl = animal.imageUrl || urlFromImage || fallbackImage;
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("lg", "dark-lg");
   const chars: string[] = Array.isArray(animal.characteristics)
@@ -262,7 +265,7 @@ const AnimalDetail: React.FC = () => {
           boxShadow={shadow}
           overflow="hidden"
         >
-          {/* Cabecera */}
+          {/* Header */}
           <HStack justify="space-between" p={4}>
             <Button
               leftIcon={<ArrowBackIcon />}
@@ -283,17 +286,17 @@ const AnimalDetail: React.FC = () => {
             )}
           </HStack>
 
-          {/* Imagen */}
+          {/* Image */}
           <AspectRatio ratio={16 / 9} maxH="350px">
             <ChakraImage
-              src={actualImageUrl}
+              src={imgUrl}
               alt={animal.name}
               objectFit="cover"
               fallbackSrc={fallbackImage}
             />
           </AspectRatio>
 
-          {/* Detalle */}
+          {/* Details */}
           <VStack align="start" spacing={4} p={6}>
             <Text fontSize="3xl" fontWeight="bold" color="teal.600">
               {animal.name}
@@ -309,7 +312,6 @@ const AnimalDetail: React.FC = () => {
               <Badge colorScheme="pink">{animal.size}</Badge>
               <Badge colorScheme="orange">{animal.activity}</Badge>
             </HStack>
-
             <Divider />
 
             <Text fontWeight="bold">¿Cómo soy?</Text>
@@ -352,7 +354,6 @@ const AnimalDetail: React.FC = () => {
                 </HStack>
               )}
             </VStack>
-
             <Divider />
 
             <Text fontSize="lg" fontWeight="bold">
@@ -377,20 +378,18 @@ const AnimalDetail: React.FC = () => {
               </Button>
             )}
 
-            {/* Protectora: seleccionar adoptante */}
+            {/* Protectora: seleccionar entre solicitantes */}
             {role === "protectora" &&
               authUser?.id === animal.owner &&
               animal.adopter == null && (
                 <Box w="full" mt={4}>
                   <FormControl>
-                    <FormLabel>Selecciona adoptante</FormLabel>
+                    <FormLabel>Solicitudes recibidas</FormLabel>
                     <Select
-                      placeholder="Seleccione..."
+                      placeholder="Selecciona solicitante"
                       value={selectedAdopter}
                       onChange={(e) =>
-                        setSelectedAdopter(
-                          e.target.value ? Number(e.target.value) : ""
-                        )
+                        setSelectedAdopter(Number(e.target.value) || "")
                       }
                     >
                       {adopters.map((u) => (
@@ -401,10 +400,10 @@ const AnimalDetail: React.FC = () => {
                     </Select>
                   </FormControl>
                   <Button
-                    mt={3}
+                    mt={2}
                     colorScheme="teal"
-                    onClick={handleAdopt}
                     isDisabled={!selectedAdopter}
+                    onClick={handleAdopt}
                     w="full"
                   >
                     Marcar como adoptado
@@ -412,14 +411,14 @@ const AnimalDetail: React.FC = () => {
                 </Box>
               )}
 
-            {/* Quién adoptó */}
+            {/* Mostrar quién adoptó */}
             {animal.adopter_username && (
               <Text fontWeight="bold" mt={4}>
                 Adoptado por: {animal.adopter_username}
               </Text>
             )}
 
-            {/* Eliminar (admin / protectora) */}
+            {/* Eliminar */}
             {(role === "admin" ||
               (role === "protectora" && authUser?.id === animal.owner)) && (
               <Button colorScheme="red" w="full" onClick={handleDelete} mt={4}>

@@ -101,9 +101,9 @@ def adoption_request_view(request, animal_id):
 # animals/views.py
 
 
-@api_view(["GET"])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_adoption_requests_for_animal(request, animal_id):
+def list_animal_requests_view(request, animal_id):
     qs = AdoptionRequest.objects.filter(animal_id=animal_id)
     serializer = AdoptionRequestSerializer(qs, many=True)
     return Response(serializer.data)
