@@ -169,7 +169,7 @@ def get_profile(request):
         # solicitudes de adopción
         req_qs = AdoptionRequest.objects.filter(user=user)
         profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
-        
+
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
     # perfil protectora
@@ -237,3 +237,15 @@ def cancel_adoption_request_view(request, req_id):
     if deleted:
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response({'detail': 'No encontrado o sin permisos'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def adoption_form_view(request):
+    profile = request.user.profile
+    if request.method == 'GET':
+        return Response({"adoption_form": profile.adoption_form})
+    # PUT
+    form_data = request.data.get("adoption_form", {})
+    profile.adoption_form = form_data
+    profile.save()
+    return Response({"adoption_form": profile.adoption_form})

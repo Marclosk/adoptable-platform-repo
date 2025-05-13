@@ -10,6 +10,7 @@ from .views import (
     favorite_animal,
     cancel_adoption_request_view,
     adoption_request_view,
+    adoption_form_view,
 )
 
 urlpatterns = [
@@ -23,6 +24,8 @@ urlpatterns = [
     path('profile/', get_profile, name='get_profile'),
     path('profile/update/', update_profile, name='update_profile'),
 
+    path('profile/adoption-form/', adoption_form_view, name='adoption-form'),
+
 
     path('adopters/', AdopterListView.as_view(), name='adopter-list'),
 
@@ -32,6 +35,8 @@ urlpatterns = [
     path('animals/request/<int:req_id>/delete/', cancel_adoption_request_view, name='cancel-adoption-request'),
 
     path('animals/<int:animal_id>/request/', adoption_request_view, name='adoption-request'),
+
+    
 
 
 ]

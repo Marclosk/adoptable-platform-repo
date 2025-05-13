@@ -1,4 +1,5 @@
 // src/pages/donations/Donations.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -10,6 +11,7 @@ import {
   useToast,
   Select,
   Flex,
+  Checkbox,
 } from "@chakra-ui/react";
 import Layout from "../../components/layout";
 import Loader from "../../components/loader/loader";
@@ -18,40 +20,52 @@ import { logout } from "../../features/auth/authService";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
-import { fetchDonations, donate, Donation } from "./donations_services";
+import {
+  fetchDonations,
+  donate,
+  Donation,
+} from "./donations_services";
 
 const Donations: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const [amount, setAmount] = useState<string>("10");
   const [customAmount, setCustomAmount] = useState<string>("");
+  const [anonymous, setAnonymous] = useState<boolean>(false);
+
   const [donations, setDonations] = useState<Donation[]>([]);
   const [userDonations, setUserDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const toast = useToast();
-  const user = useSelector((state: RootState) => state.auth.user);
 
+  // Load both public and user‐only lists
   useEffect(() => {
     const loadDonations = async () => {
       setLoading(true);
       const data = await fetchDonations();
-      if (user) {
-        const filtered = data.filter(
-          (donation) => donation.usuario === user.username
-        );
-        setUserDonations(filtered);
-      }
+      // public list
       setDonations(data);
+      // your donations list
+      if (user) {
+        setUserDonations(
+          data.filter((d) => d.usuario === user.username)
+        );
+      }
       setLoading(false);
     };
     loadDonations();
   }, [user]);
 
+  // Donation handler now takes anonymous flag
   const handleDonate = async () => {
     try {
       const token = localStorage.getItem("token") || "";
       const donationAmount = parseFloat(customAmount || amount);
-      const newDonation = await donate(donationAmount, token);
+      const newDonation = await donate(donationAmount, token, anonymous);
+
       toast({
         title: "¡Gracias por tu donación! ❤️",
         description: `Has donado ${donationAmount}€ para ayudar a los animales.`,
@@ -59,6 +73,8 @@ const Donations: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+
+      // prepend to both lists
       setDonations((prev) => [newDonation, ...prev]);
       setUserDonations((prev) => [newDonation, ...prev]);
     } catch (error) {
@@ -86,6 +102,7 @@ const Donations: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box bg="gray.50" minH="100vh" py={8} px={{ base: 4, md: 8 }}>
+        {/* Donation form */}
         <Box
           maxW="600px"
           mx="auto"
@@ -101,8 +118,7 @@ const Donations: React.FC = () => {
             Ayuda a los animales 🐾
           </Heading>
           <Text fontSize="md" color="gray.600" mb={6}>
-            Cada donación ayuda a alimentar, cuidar y encontrar un hogar para
-            los animales.
+            Cada donación ayuda a alimentar, cuidar y encontrar un hogar para los animales.
           </Text>
           <VStack spacing={4}>
             <Select
@@ -125,12 +141,24 @@ const Donations: React.FC = () => {
                 color="gray.800"
               />
             )}
-            <Button colorScheme="teal" onClick={handleDonate} size="lg">
+            <Checkbox
+              isChecked={anonymous}
+              onChange={(e) => setAnonymous(e.target.checked)}
+              colorScheme="teal"
+            >
+              Donar como Anónimo
+            </Checkbox>
+            <Button
+              colorScheme="teal"
+              onClick={handleDonate}
+              size="lg"
+            >
               Donar ❤️
             </Button>
           </VStack>
         </Box>
 
+        {/* Donation lists */}
         <Box maxW="1200px" mx="auto" px={6} pb={8}>
           <Flex
             direction={{ base: "column", md: "row" }}
@@ -138,6 +166,7 @@ const Donations: React.FC = () => {
             justify="center"
             align="start"
           >
+            {/* Public donation feed */}
             <Box
               flex="1"
               bg="white"
@@ -163,7 +192,9 @@ const Donations: React.FC = () => {
                       shadow="sm"
                       w="100%"
                     >
-                      <Text fontWeight="bold">{donation.usuario}</Text>
+                      <Text fontWeight="bold">
+                        {donation.anonimo ? "Anonimo" : donation.usuario}
+                      </Text>
                       <Text>
                         {donation.cantidad}€ –{" "}
                         {new Date(donation.fecha).toLocaleString()}
@@ -174,6 +205,7 @@ const Donations: React.FC = () => {
               )}
             </Box>
 
+            {/* Your personal donations */}
             {user && (
               <Box
                 flex="1"
@@ -200,8 +232,12 @@ const Donations: React.FC = () => {
                         shadow="sm"
                         w="100%"
                       >
-                        <Text fontWeight="bold">{donation.cantidad}€</Text>
-                        <Text>{new Date(donation.fecha).toLocaleString()}</Text>
+                        <Text fontWeight="bold">
+                          {donation.cantidad}€ {/* amount only */}
+                        </Text>
+                        <Text>
+                          {new Date(donation.fecha).toLocaleString()}
+                        </Text>
                       </Box>
                     ))}
                   </VStack>

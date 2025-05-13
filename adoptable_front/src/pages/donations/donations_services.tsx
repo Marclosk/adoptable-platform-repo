@@ -1,56 +1,53 @@
-import axios from "axios";
+// src/pages/donations/donations_services.ts
 
-const API_URL = "http://localhost:8000/api/donations/";
+import axios from "axios";
+import { fetchCSRFToken, getCSRFToken } from "../profile/user_services";
 
 export interface Donation {
-    id?: number;      
-    usuario: string;
-    cantidad: number;
-    fecha: string;    
-  }  
+  id: number;
+  usuario: string;
+  cantidad: number;
+  fecha: string;
+  anonimo: boolean;
+}
 
+const api = axios.create({
+  baseURL: "http://localhost:8000/api/",
+  withCredentials: true,
+});
 
+/**
+ * Fetch all donations (incluye anonimo flag para cada entrada)
+ */
 export const fetchDonations = async (): Promise<Donation[]> => {
-  try {
-    const response = await axios.get(`${API_URL}`, { withCredentials: true });
-    if (Array.isArray(response.data)) {
-      return response.data;
-    }
-    return [];
-  } catch (error) {
-    console.error("Error fetching donations:", error);
-    return [];
-  }
+  const resp = await api.get<Donation[]>("donations/");
+  return resp.data;
 };
 
-
+/**
+ * Make a donation.
+ * - amount: euros to donate
+ * - token: your auth Bearer token
+ * - anonimo: if true, appears as "Anonimo" in public feed
+ */
 export const donate = async (
-  donationAmount: number,
-  token: string
+  amount: number,
+  token: string,
+  anonimo: boolean
 ): Promise<Donation> => {
-  try {
-    const response = await axios.post(
-      `${API_URL}add/`,
-      { cantidad: donationAmount }, 
-      {
-        withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-CSRFToken": getCSRFToken(),
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error al hacer la donación:", error);
-    throw error;
-  }
-};
+  // Ensure CSRF cookie and header present
+  await fetchCSRFToken();
 
-
-export const getCSRFToken = (): string => {
-  const csrfCookie = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("csrftoken="));
-  return csrfCookie ? csrfCookie.split("=")[1] : "";
+  const resp = await api.post<Donation>(
+    "donations/add/",
+    { cantidad: amount, anonimo },
+    {
+      headers: {
+        "X-CSRFToken": getCSRFToken(),
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return resp.data;
 };

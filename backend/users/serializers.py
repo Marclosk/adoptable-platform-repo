@@ -72,6 +72,7 @@ class AdopterProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
     favorites = AnimalSerializer(many=True, read_only=True)
     adopted = AnimalSerializer(many=True, read_only=True)
+    adoption_form = serializers.JSONField()
 
     class Meta:
         model = AdopterProfile
@@ -79,4 +80,5 @@ class AdopterProfileSerializer(serializers.ModelSerializer):
             "user_id", "username", "email",
             "avatar", "location", "phone_number", "bio",
             "favorites", "adopted",
+            "adoption_form",
         ]

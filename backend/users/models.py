@@ -17,6 +17,7 @@ class AdopterProfile(models.Model):
     bio = models.TextField(blank=True, null=True)
     favorites = models.ManyToManyField("animals.Animal", blank=True, related_name="favorited_by")
     adopted = models.ManyToManyField("animals.Animal", blank=True, related_name="adopted_by")
+    adoption_form = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return f"Perfil de {self.user.username}"

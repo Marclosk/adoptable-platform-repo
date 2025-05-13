@@ -1,4 +1,5 @@
 // src/pages/profile/Profile.tsx
+
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -32,11 +33,21 @@ import {
   AlertDialogFooter,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
-import { getProfile, updateProfile } from "./user_services";
+import {
+  getProfile,
+  updateProfile,
+  getAdoptionForm,
+  submitAdoptionForm,
+} from "./user_services";
 import {
   unadoptAnimal,
   cancelAdoptionRequest,
+  removeFavorite,
 } from "../card_detail/animal_services";
+import {
+  AdoptionForm,
+  AdoptionFormData,
+} from "../../components/adoption_form/adoption_form";
 
 const Profile: React.FC = () => {
   const dispatch = useDispatch();
@@ -62,6 +73,7 @@ const Profile: React.FC = () => {
   });
   const [preview, setPreview] = useState<string>("");
 
+  // AlertDialog para desadoptar
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [petToUnadopt, setPetToUnadopt] = useState<{
     id: number;
@@ -69,12 +81,19 @@ const Profile: React.FC = () => {
     adopter: string;
   } | null>(null);
 
-  // Nuevo estado para confirmar cancelación de solicitud
+  // AlertDialog para cancelar solicitud
   const [requestToCancel, setRequestToCancel] = useState<{
     id: number;
     name: string;
   } | null>(null);
 
+  // Inline AdoptionForm toggle
+  const [showAdoptionForm, setShowAdoptionForm] = useState(false);
+  const [adopFormValues, setAdopFormValues] = useState<
+    Partial<AdoptionFormData>
+  >({});
+
+  // Fetch profile
   const fetchProfile = useCallback(async () => {
     try {
       const data = await getProfile();
@@ -93,11 +112,66 @@ const Profile: React.FC = () => {
     }
   }, [authUser]);
 
+  // src/pages/profile/Profile.tsx
+
+  const toggleAdoptionForm = async () => {
+    if (!showAdoptionForm) {
+      try {
+        console.log("🖱️ Cargando datos de adopción…");
+        const existing = await getAdoptionForm(); // ahora es directamente el form
+        console.log("✅ Datos recibidos:", existing);
+
+        setAdopFormValues({
+          fullName: existing.full_name || "",
+          address: existing.address || "",
+          phone: existing.phone || "",
+          email: existing.email || "",
+          motivation: existing.reason || "",
+          hasExperience: !!existing.experience,
+          experienceDescription: existing.experience || "",
+          hasOtherPets: existing.has_other_pets ? "yes" : "no",
+          otherPetTypes: existing.other_pet_types || "",
+          references: existing.references || "",
+        });
+
+        setShowAdoptionForm(true);
+      } catch (err) {
+        console.error("❌ Error al cargar formulario:", err);
+        toast({
+          title: "No se pudieron cargar los datos previos",
+          status: "error",
+        });
+      }
+    } else {
+      setShowAdoptionForm(false);
+    }
+  };
+
+  const loadAdoptionForm = useCallback(async () => {
+    try {
+      const existing = await getAdoptionForm(); // ya desenvuelto
+      setAdopFormValues({
+        fullName: existing.full_name || "",
+        address: existing.address || "",
+        phone: existing.phone || "",
+        email: existing.email || "",
+        motivation: existing.reason || "",
+        hasExperience: !!existing.experience,
+        experienceDescription: existing.experience || "",
+        hasOtherPets: existing.has_other_pets ? "yes" : "no",
+        otherPetTypes: existing.other_pet_types || "",
+        references: existing.references || "",
+      });
+    } catch (err) {
+      console.error("❌ loadAdoptionForm error", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Guardar cambios de perfil
+  // Save profile changes
   const handleSave = async () => {
     try {
       const fd = new FormData();
@@ -113,6 +187,24 @@ const Profile: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast({ title: "Error al actualizar perfil", status: "error" });
+    }
+  };
+
+  // Submit adoption form handler
+  const handleAdoptionSubmit = async (data: AdoptionFormData) => {
+    try {
+      await submitAdoptionForm({
+        full_name: data.fullName,
+        address: data.address,
+        phone: data.phone,
+        reason: data.motivation,
+        experience: data.hasExperience ? data.experienceDescription : "",
+      });
+      toast({ title: "Formulario guardado", status: "success" });
+      setShowAdoptionForm(false);
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error al guardar formulario", status: "error" });
     }
   };
 
@@ -163,10 +255,22 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Logout
   const handleLogout = async () => {
     await logout();
     dispatch(logoutSuccess());
     navigate("/login");
+  };
+
+  const handleRemoveFavorite = async (animalId: number) => {
+    try {
+      await removeFavorite(animalId);
+      toast({ title: "Favorito eliminado", status: "info" });
+      fetchProfile();
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error al eliminar favorito", status: "error" });
+    }
   };
 
   if (!profile) {
@@ -222,10 +326,7 @@ const Profile: React.FC = () => {
                     name="location"
                     value={formData.location}
                     onChange={(e) =>
-                      setFormData((f) => ({
-                        ...f,
-                        location: e.target.value,
-                      }))
+                      setFormData((f) => ({ ...f, location: e.target.value }))
                     }
                     focusBorderColor="teal.300"
                   />
@@ -294,18 +395,52 @@ const Profile: React.FC = () => {
                 >
                   {profile.bio || "Sin biografía aún."}
                 </Text>
-                <Button
-                  leftIcon={<EditIcon />}
-                  variant="outline"
-                  colorScheme="teal"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Editar perfil
-                </Button>
+                <HStack spacing={4}>
+                  <Button
+                    leftIcon={<EditIcon />}
+                    variant="outline"
+                    colorScheme="teal"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Editar perfil
+                  </Button>
+
+                  {role === "adoptante" && (
+                    <Button
+                      colorScheme="purple"
+                      size="sm"
+                      onClick={toggleAdoptionForm}
+                    >
+                      {showAdoptionForm
+                        ? "Ocultar formulario"
+                        : "Formulario adopción"}
+                    </Button>
+                  )}
+                </HStack>
               </VStack>
             )}
           </Box>
+
+          {/* Inline AdoptionForm */}
+          {role === "adoptante" && showAdoptionForm && (
+            <Box
+              bg="white"
+              boxShadow="md"
+              p={6}
+              borderRadius="lg"
+              w="100%"
+              maxW="800px"
+            >
+              <Heading size="md" color="teal.600" mb={4} textAlign="center">
+                Formulario de Adopción
+              </Heading>
+              <AdoptionForm
+                initialValues={adopFormValues}
+                onSubmit={handleAdoptionSubmit}
+              />
+            </Box>
+          )}
 
           {/* Secciones Adoptante */}
           {role === "adoptante" && (
@@ -334,7 +469,12 @@ const Profile: React.FC = () => {
                         onClick={() => navigate(`/card_detail/${fav.id}`)}
                       >
                         <TagLabel>{fav.name}</TagLabel>
-                        <TagCloseButton onClick={(e) => e.stopPropagation()} />
+                        <TagCloseButton
+                          onClick={(e) => {
+                            e.stopPropagation(); // evita el onClick del Tag
+                            handleRemoveFavorite(fav.id); // llama a tu servicio
+                          }}
+                        />
                       </Tag>
                     ))
                   ) : (
@@ -399,7 +539,9 @@ const Profile: React.FC = () => {
                         variant="subtle"
                         colorScheme="orange"
                         cursor="pointer"
-                        onClick={() => navigate(`/card_detail/${req.animal.id}`)}
+                        onClick={() =>
+                          navigate(`/card_detail/${req.animal.id}`)
+                        }
                       >
                         <TagLabel>{req.animal.name}</TagLabel>
                         <TagCloseButton
@@ -423,6 +565,7 @@ const Profile: React.FC = () => {
           {/* Secciones Protectora */}
           {role === "protectora" && (
             <>
+              {/* En adopción */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -454,6 +597,7 @@ const Profile: React.FC = () => {
                 </Wrap>
               </Box>
 
+              {/* Adoptados */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -503,7 +647,7 @@ const Profile: React.FC = () => {
             </>
           )}
 
-          {/* Diálogo Confirmar desadopción */}
+          {/* AlertDialog: Confirmar desadopción */}
           <AlertDialog
             isOpen={isAlertOpen}
             leastDestructiveRef={cancelRef}
@@ -530,7 +674,7 @@ const Profile: React.FC = () => {
             </AlertDialogOverlay>
           </AlertDialog>
 
-          {/* Diálogo Confirmar cancelar solicitud */}
+          {/* AlertDialog: Confirmar cancelar solicitud */}
           <AlertDialog
             isOpen={!!requestToCancel}
             leastDestructiveRef={cancelRef}
@@ -542,8 +686,8 @@ const Profile: React.FC = () => {
                   Cancelar solicitud
                 </AlertDialogHeader>
                 <AlertDialogBody>
-                  ¿Eliminar la solicitud de adopción de "
-                  {requestToCancel?.name}"?
+                  ¿Eliminar la solicitud de adopción de "{requestToCancel?.name}
+                  "?
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button
@@ -552,7 +696,11 @@ const Profile: React.FC = () => {
                   >
                     Cancelar
                   </Button>
-                  <Button colorScheme="orange" onClick={confirmCancelRequest} ml={3}>
+                  <Button
+                    colorScheme="orange"
+                    onClick={confirmCancelRequest}
+                    ml={3}
+                  >
                     Sí, cancelar
                   </Button>
                 </AlertDialogFooter>

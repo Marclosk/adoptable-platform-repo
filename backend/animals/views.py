@@ -107,3 +107,4 @@ def list_animal_requests_view(request, animal_id):
     qs = AdoptionRequest.objects.filter(animal_id=animal_id)
     serializer = AdoptionRequestSerializer(qs, many=True)
     return Response(serializer.data)
+

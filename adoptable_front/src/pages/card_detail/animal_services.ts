@@ -3,7 +3,6 @@
 import axios from "axios";
 import type { Dog } from "../../pages/dashboard";
 import {
-  fetchCSRFToken,
   getCSRFToken,
   getProfile,
 } from "../profile/user_services";

@@ -88,3 +88,4 @@ class AdoptionRequest(models.Model):
         unique_together = ("user", "animal")
         ordering = ("-created_at",)
 
+

@@ -33,3 +33,5 @@ class AdoptionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = AdoptionRequest
         fields = ("id", "animal", "user", "created_at")
+
+
