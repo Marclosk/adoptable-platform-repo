@@ -38,6 +38,7 @@ import {
   updateProfile,
   getAdoptionForm,
   submitAdoptionForm,
+  AdoptionFormAPI,
 } from "./user_services";
 import {
   unadoptAnimal,
@@ -118,20 +119,20 @@ const Profile: React.FC = () => {
     if (!showAdoptionForm) {
       try {
         console.log("🖱️ Cargando datos de adopción…");
-        const existing = await getAdoptionForm(); // ahora es directamente el form
+        const existing = await getAdoptionForm();
         console.log("✅ Datos recibidos:", existing);
 
         setAdopFormValues({
-          fullName: existing.full_name || "",
-          address: existing.address || "",
-          phone: existing.phone || "",
-          email: existing.email || "",
-          motivation: existing.reason || "",
-          hasExperience: !!existing.experience,
-          experienceDescription: existing.experience || "",
-          hasOtherPets: existing.has_other_pets ? "yes" : "no",
-          otherPetTypes: existing.other_pet_types || "",
-          references: existing.references || "",
+          fullName:            existing.full_name,
+          address:             existing.address,
+          phone:               existing.phone,
+          email:               existing.email,
+          motivation:          existing.reason,
+          hasExperience:       existing.experience !== "",
+          experienceDescription: existing.experience,
+          hasOtherPets:        existing.has_other_pets ? "yes" : "no",
+          otherPetTypes:       existing.other_pet_types,
+          references:          existing.references,
         });
 
         setShowAdoptionForm(true);
@@ -190,23 +191,36 @@ const Profile: React.FC = () => {
     }
   };
 
-  // Submit adoption form handler
-  const handleAdoptionSubmit = async (data: AdoptionFormData) => {
-    try {
-      await submitAdoptionForm({
-        full_name: data.fullName,
-        address: data.address,
-        phone: data.phone,
-        reason: data.motivation,
-        experience: data.hasExperience ? data.experienceDescription : "",
-      });
-      toast({ title: "Formulario guardado", status: "success" });
-      setShowAdoptionForm(false);
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error al guardar formulario", status: "error" });
-    }
-  };
+// Profile.tsx (o donde esté definido)
+
+const handleAdoptionSubmit = async (data: AdoptionFormData) => {
+  try {
+    // construimos el objeto EXACTO que espera el backend
+    const payload: AdoptionFormAPI = {
+      full_name:       data.fullName,
+      address:         data.address,
+      phone:           data.phone,
+      email:           data.email,
+      reason:          data.motivation,
+      experience:      data.hasExperience
+                          ? data.experienceDescription
+                          : "",
+      has_other_pets:  data.hasOtherPets === "yes",
+      other_pet_types: data.hasOtherPets === "yes"
+                          ? data.otherPetTypes
+                          : "",
+      references:      data.references,
+    };
+
+    await submitAdoptionForm(payload);
+    toast({ title: "Formulario guardado", status: "success" });
+    setShowAdoptionForm(false);
+  } catch (err) {
+    console.error("Error al guardar formulario:", err);
+    toast({ title: "Error al guardar formulario", status: "error" });
+  }
+};
+
 
   // Desadoptar
   const openUnadoptDialog = (id: number, name: string, adopter: string) => {

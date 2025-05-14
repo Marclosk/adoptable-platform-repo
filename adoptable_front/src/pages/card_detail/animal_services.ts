@@ -2,10 +2,7 @@
 
 import axios from "axios";
 import type { Dog } from "../../pages/dashboard";
-import {
-  getCSRFToken,
-  getProfile,
-} from "../profile/user_services";
+import { getCSRFToken, getProfile } from "../profile/user_services";
 
 const api = axios.create({
   baseURL: "http://localhost:8000/",
@@ -146,15 +143,23 @@ export const getMyAdoptionRequests = async (): Promise<AdoptionRequest[]> => {
 };
 
 /**
- * Creo una nueva solicitud para este animal.
+ * Creo una nueva solicitud para este animal,
+ * enviando junto los datos de mi formulario de adopción.
  */
 export const requestAdoption = async (
-  animalId: number
+  animalId: number,
+  formData: Record<string, any>
 ): Promise<AdoptionRequest> => {
+  const payload = { adoption_form: formData };
   const resp = await api.post<AdoptionRequest>(
     `api/animals/${animalId}/request/`,
-    {},
-    { headers: { "X-CSRFToken": getCSRFToken() } }
+    payload,
+    {
+      headers: {
+        "X-CSRFToken": getCSRFToken(),
+        "Content-Type": "application/json",
+      },
+    }
   );
   return resp.data;
 };
@@ -165,10 +170,9 @@ export const requestAdoption = async (
 export const cancelAdoptionRequest = async (
   requestId: number
 ): Promise<void> => {
-  await api.delete(
-    `users/animals/request/${requestId}/delete/`,
-    { headers: { "X-CSRFToken": getCSRFToken() } }
-  );
+  await api.delete(`users/animals/request/${requestId}/delete/`, {
+    headers: { "X-CSRFToken": getCSRFToken() },
+  });
 };
 
 /**

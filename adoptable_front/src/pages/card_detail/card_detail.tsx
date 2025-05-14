@@ -1,6 +1,6 @@
 // src/pages/animal/AnimalDetail.tsx
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -19,6 +19,12 @@ import {
   Select,
   useToast,
   useColorModeValue,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, CheckCircleIcon, StarIcon } from "@chakra-ui/icons";
 import {
@@ -30,9 +36,12 @@ import {
   requestAdoption,
   cancelAdoptionRequest,
   getMyAdoptionRequests,
-  listAdoptionRequestsForAnimal, // <-- use this only
+  listAdoptionRequestsForAnimal,
 } from "./animal_services";
+// al inicio de src/pages/animal/AnimalDetail.tsx
+import type { AdoptionFormFromAPI } from "../profile/user_services";
 import { getProfile } from "../profile/user_services";
+import { getAdoptionForm } from "../profile/user_services";
 import Layout from "../../components/layout";
 import Loader from "../../components/loader/loader";
 import { useDispatch, useSelector } from "react-redux";
@@ -87,6 +96,9 @@ const AnimalDetail: React.FC = () => {
   const [isRequested, setIsRequested] = useState(false);
   const [requestId, setRequestId] = useState<number | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
+  // para el AlertDialog de formulario incompleto
+  const [isFormAlertOpen, setIsFormAlertOpen] = useState(false);
+  const formAlertCancelRef = useRef<HTMLButtonElement>(null);
 
   const fallbackImage = "/images/default_image.jpg";
 
@@ -108,10 +120,15 @@ const AnimalDetail: React.FC = () => {
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
-      const profile = await getProfile();
+      const profile = await getAdoptionForm(); // reusar getProfile si quieres, pero form tiene favoritos?
+      // si getProfile trae favoritos:
+      // const profile = await getProfile();
+      // setIsFavorite(profile.favorites?.some((f: any) => f.id === animal.id));
+      // en ausencia de favoritos en form, mantenemos la lógica anterior:
+      const prof = await getProfile();
       setIsFavorite(
-        Array.isArray(profile.favorites) &&
-          profile.favorites.some((f: any) => f.id === animal.id)
+        Array.isArray(prof.favorites) &&
+          prof.favorites.some((f: any) => f.id === animal.id)
       );
     } catch (e) {
       console.error("Error cargando favoritos:", e);
@@ -182,25 +199,62 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  /** solicitante: toggle */
-  const toggleRequest = async () => {
+  // dentro de AnimalDetail.tsx
+
+  /** solicitante: enviar solicitud junto con el formulario */
+  /** solicitante: enviar solicitud junto con el formulario (con logs de debug) */
+  const handleAdoptionRequest = async () => {
     if (!animal) return;
     setRequestLoading(true);
+
     try {
-      if (isRequested && requestId) {
-        await cancelAdoptionRequest(requestId);
-        toast({ title: "Solicitud cancelada", status: "info" });
-        setIsRequested(false);
-        setRequestId(null);
-      } else {
-        const newReq = await requestAdoption(animal.id);
-        toast({ title: "Solicitud enviada", status: "success" });
-        setIsRequested(true);
-        setRequestId(newReq.id);
+      console.log("🛠️ handleAdoptionRequest: arrancando debug…");
+
+      // 1) recuperar formulario ya completado
+      const form: AdoptionFormFromAPI = await getAdoptionForm();
+      console.log("🛠️ form raw from backend:", form);
+
+      // 2) campos obligatorios
+      const requiredFields: (keyof AdoptionFormFromAPI)[] = [
+        "full_name",
+        "address",
+        "phone",
+        "email",
+        "reason",
+      ];
+      const missing = requiredFields.filter((field) => {
+        const val = form[field];
+        const isEmpty =
+          val === undefined ||
+          val === null ||
+          (typeof val === "string" && val.trim() === "");
+        if (isEmpty) {
+          console.warn(`🛠️ Campo faltante o vacío: ${field} = '${val}'`);
+        }
+        return isEmpty;
+      });
+
+      console.log("🛠️ Campos faltantes detectados:", missing);
+
+      if (missing.length > 0) {
+        setIsFormAlertOpen(true);
+        return;
       }
+
+      // 3) todo ok → enviamos la solicitud con el form
+      const newReq = await requestAdoption(animal.id, form);
+      console.log("🛠️ Nueva request result:", newReq);
+
+      toast({ title: "Solicitud enviada", status: "success" });
+      setIsRequested(true);
+      setRequestId(newReq.id);
     } catch (err: any) {
-      console.error("Error solicitud:", err);
-      toast({ title: "Error al procesar solicitud", status: "error" });
+      console.error("🛠️ Error en handleAdoptionRequest:", err);
+      if (err.response?.status === 404) {
+        setIsFormAlertOpen(true);
+      } else {
+        toast({ title: "Error al solicitar adopción", status: "error" });
+      }
     } finally {
       setRequestLoading(false);
     }
@@ -368,7 +422,7 @@ const AnimalDetail: React.FC = () => {
               <Button
                 colorScheme="purple"
                 variant={isRequested ? "solid" : "outline"}
-                onClick={toggleRequest}
+                onClick={handleAdoptionRequest}
                 isDisabled={isRequested}
                 isLoading={requestLoading}
                 w="full"
@@ -428,6 +482,41 @@ const AnimalDetail: React.FC = () => {
           </VStack>
         </Box>
       </Flex>
+      <AlertDialog
+        isOpen={isFormAlertOpen}
+        leastDestructiveRef={formAlertCancelRef}
+        onClose={() => setIsFormAlertOpen(false)}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Formulario incompleto
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Para solicitar una adopción debes completar primero tu formulario
+              de adopción en tu perfil.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button
+                ref={formAlertCancelRef}
+                onClick={() => setIsFormAlertOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="teal"
+                onClick={() => {
+                  setIsFormAlertOpen(false);
+                  navigate("/perfil");
+                }}
+                ml={3}
+              >
+                Ir al perfil
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Layout>
   );
 };

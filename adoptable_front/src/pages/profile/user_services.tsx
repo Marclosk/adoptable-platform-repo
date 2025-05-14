@@ -63,27 +63,29 @@ export const updateProfile = async (profileData: FormData): Promise<any> => {
 
 /** ——— Formulario general de adopción ——— **/
 
-export interface AdoptionFormFromAPI {
+export interface AdoptionFormAPI {
   full_name: string;
   address: string;
   phone: string;
-  email?: string;
+  email: string;
   reason: string;
-  experience?: string;
-  has_other_pets?: boolean;
-  other_pet_types?: string;
-  references?: string;
+  experience: string;
+  has_other_pets: boolean;
+  other_pet_types: string;
+  references: string;
 }
 
-export const getAdoptionForm = async (): Promise<AdoptionFormFromAPI> => {
+/**
+ * Recupera el formulario de adopción completo (todos los campos)
+ */
+export const getAdoptionForm = async (): Promise<AdoptionFormAPI> => {
   try {
     const response = await axios.get<{
-      adoption_form: AdoptionFormFromAPI;
+      adoption_form: AdoptionFormAPI;
     }>(`${API_URL}/profile/adoption-form/`, {
       withCredentials: true,
       headers: { "X-CSRFToken": getCSRFToken() },
     });
-    // ahora devolvemos sólo el objeto adoption_form
     return response.data.adoption_form;
   } catch (error: any) {
     console.error(
@@ -94,26 +96,25 @@ export const getAdoptionForm = async (): Promise<AdoptionFormFromAPI> => {
   }
 };
 
-// Envía o crea el formulario de adopción del usuario
+/**
+ * Envía o crea el formulario de adopción del usuario,
+ * incluyendo todos los campos en JSON.
+ */
 export const submitAdoptionForm = async (
-  formData: Record<string, any>
-): Promise<any> => {
-  // envolvemos los campos en { adoption_form: ... }
+  formData: AdoptionFormAPI
+): Promise<AdoptionFormAPI> => {
   const payload = { adoption_form: formData };
-
   try {
-    const response = await axios.post(
-      `${API_URL}/profile/adoption-form/`,
-      payload,
-      {
-        withCredentials: true,
-        headers: {
-          "X-CSRFToken": getCSRFToken(),
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
+    const response = await axios.post<{
+      adoption_form: AdoptionFormAPI;
+    }>(`${API_URL}/profile/adoption-form/`, payload, {
+      withCredentials: true,
+      headers: {
+        "X-CSRFToken": getCSRFToken(),
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data.adoption_form;
   } catch (error: any) {
     console.error(
       "Error enviando formulario de adopción:",
