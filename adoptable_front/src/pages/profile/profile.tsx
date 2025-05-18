@@ -579,37 +579,41 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
           {/* Secciones Protectora */}
           {role === "protectora" && (
             <>
-              {/* En adopción */}
-              <Box
-                bg="white"
-                boxShadow="md"
-                p={6}
-                borderRadius="lg"
-                w="100%"
-                maxW="800px"
-              >
-                <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  En adopción
-                </Heading>
-                <Wrap justify="center" spacing={3}>
-                  {profile.en_adopcion?.length > 0 ? (
-                    profile.en_adopcion.map((a: any) => (
-                      <Tag
-                        key={a.id}
-                        size="md"
-                        variant="subtle"
-                        colorScheme="orange"
-                        cursor="pointer"
-                        onClick={() => navigate(`/card_detail/${a.id}`)}
-                      >
-                        <TagLabel>{a.name}</TagLabel>
-                      </Tag>
-                    ))
-                  ) : (
-                    <Text color="gray.500">No tienes perros en adopción.</Text>
-                  )}
-                </Wrap>
-              </Box>
+          {/* En adopción */}
+          <Box
+            bg="white"
+            boxShadow="md"
+            p={6}
+            borderRadius="lg"
+            w="100%"
+            maxW="800px"
+          >
+            <Heading size="md" color="teal.600" mb={4} textAlign="center">
+              En adopción
+            </Heading>
+            <Wrap justify="center" spacing={3}>
+              {profile.en_adopcion?.length > 0 ? (
+                profile.en_adopcion.map((a: any) => (
+                  <Tag
+                    key={a.id}
+                    size="md"
+                    variant="subtle"
+                    colorScheme="orange"
+                    cursor="pointer"
+                    onClick={() =>
+                      navigate(`/animals/${a.id}/requests`)
+                    }
+                  >
+                    <TagLabel>{a.name}</TagLabel>
+                  </Tag>
+                ))
+              ) : (
+                <Text color="gray.500">
+                  No tienes perros en adopción.
+                </Text>
+              )}
+            </Wrap>
+          </Box>
 
               {/* Adoptados */}
               <Box

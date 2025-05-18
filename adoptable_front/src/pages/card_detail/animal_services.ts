@@ -9,11 +9,26 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// src/pages/card_detail/animal_services.ts
+
 export interface AdoptionRequest {
   id: number;
   user: { id: number; username: string };
   created_at: string;
+  // JSON con todo el formulario que envió el adoptante
+  form_data: {
+    full_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    reason: string;
+    experience: string;
+    has_other_pets: boolean;
+    other_pet_types: string;
+    references: string;
+  };
 }
+
 
 /** ————— Animales ————— **/
 
@@ -173,6 +188,19 @@ export const cancelAdoptionRequest = async (
   await api.delete(`users/animals/request/${requestId}/delete/`, {
     headers: { "X-CSRFToken": getCSRFToken() },
   });
+};
+
+/**
+ * Rechaza (borra) la solicitud de adopción de `username` para `animalId`.
+ */
+export const cancelAdoptionRequestForUser = async (
+  animalId: number,
+  username: string
+): Promise<void> => {
+  await api.delete(
+    `api/animals/${animalId}/requests/${username}/delete/`,
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
 };
 
 /**

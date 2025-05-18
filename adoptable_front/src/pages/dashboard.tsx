@@ -1,6 +1,6 @@
 // src/pages/dashboard/Dashboard.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,12 @@ import {
   FormControl,
   FormLabel,
   useDisclosure,
+  Fade,
+  SimpleGrid,
+  Skeleton,
+  SkeletonText,
+  AspectRatio,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { FiFilter } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,7 +38,6 @@ import { getAnimals, getAllAnimals } from "./card_detail/animal_services";
 import { fetchCSRFToken } from "./profile/user_services";
 import Loader from "../components/loader/loader";
 
-// Nuestro tipo de perro para DogCards
 export interface Dog {
   id: number;
   name: string;
@@ -48,7 +53,7 @@ export interface Dog {
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const userRole = useSelector((state: RootState) => state.auth.role);
+  const userRole = useSelector((s: RootState) => s.auth.role);
 
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
   const [distance, setDistance] = useState<number>(30);
@@ -60,15 +65,57 @@ const Dashboard: React.FC = () => {
   const [filteredDogs, setFilteredDogs] = useState<Dog[]>([]);
   const [loadingDogs, setLoadingDogs] = useState<boolean>(true);
 
-  // Estados de filtros
-  const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(new Set());
+  // control de skeleton mínimo 600ms
+  const [showSkeleton, setShowSkeleton] = useState(true);
+  const loaderStart = useRef(Date.now());
+  useEffect(() => {
+    if (loadingDogs) {
+      loaderStart.current = Date.now();
+      setShowSkeleton(true);
+    } else {
+      const elapsed = Date.now() - loaderStart.current;
+      const remaining = 600 - elapsed;
+      if (remaining > 0) {
+        const t = setTimeout(() => setShowSkeleton(false), remaining);
+        return () => clearTimeout(t);
+      } else {
+        setShowSkeleton(false);
+      }
+    }
+  }, [loadingDogs]);
+
+  // control de precarga de imágenes
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  useEffect(() => {
+    if (!loadingDogs) {
+      const urls = filteredDogs.map((d) => d.imageUrl || "");
+      if (urls.length === 0) {
+        setImagesLoaded(true);
+        return;
+      }
+      let loadedCount = 0;
+      urls.forEach((url) => {
+        const img = new window.Image();
+        img.src = url;
+        img.onload = img.onerror = () => {
+          loadedCount++;
+          if (loadedCount === urls.length) {
+            setImagesLoaded(true);
+          }
+        };
+      });
+    }
+  }, [filteredDogs, loadingDogs]);
+
+  // filtros y buscador
+  const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(
+    new Set()
+  );
   const [sizeFilters, setSizeFilters] = useState<Set<string>>(new Set());
-  const [activityFilters, setActivityFilters] = useState<Set<string>>(new Set());
-
-  // Único buscador para los tres grupos
+  const [activityFilters, setActivityFilters] = useState<Set<string>>(
+    new Set()
+  );
   const [filterQuery, setFilterQuery] = useState("");
-
-  // useDisclosure para manejar apertura/cierre del panel de filtros
   const { isOpen, onToggle } = useDisclosure();
 
   useEffect(() => {
@@ -95,6 +142,7 @@ const Dashboard: React.FC = () => {
   };
   useEffect(requestLocation, []);
 
+  // carga de datos
   useEffect(() => {
     (async () => {
       setLoadingDogs(true);
@@ -105,7 +153,7 @@ const Dashboard: React.FC = () => {
           raw = await getAnimals(distance, userLat, userLng);
         else raw = [];
 
-        const mapped: Dog[] = raw.map((d) => ({
+        const mapped = raw.map((d) => ({
           id: d.id,
           name: d.name,
           city: d.city,
@@ -116,7 +164,6 @@ const Dashboard: React.FC = () => {
           size: d.size,
           activity: d.activity,
         }));
-
         setAllDogs(mapped);
       } catch (err) {
         console.error("Error cargando perros:", err);
@@ -126,26 +173,20 @@ const Dashboard: React.FC = () => {
     })();
   }, [distance, userLat, userLng, locationAvailable]);
 
-  // Aplica los filtros seleccionados
+  // aplicar filtros
   useEffect(() => {
     let list = allDogs;
-    if (speciesFilters.size > 0) {
+    if (speciesFilters.size)
       list = list.filter((d) => speciesFilters.has(d.species));
-    }
-    if (sizeFilters.size > 0) {
+    if (sizeFilters.size)
       list = list.filter((d) => sizeFilters.has(d.size));
-    }
-    if (activityFilters.size > 0) {
+    if (activityFilters.size)
       list = list.filter((d) => activityFilters.has(d.activity));
-    }
     setFilteredDogs(list);
   }, [allDogs, speciesFilters, sizeFilters, activityFilters]);
 
   if (isSessionValid === null) {
     return <Loader message="Verificando sesión..." />;
-  }
-  if (loadingDogs) {
-    return <Loader message="Cargando perros..." />;
   }
 
   const handleLogout = async () => {
@@ -154,19 +195,20 @@ const Dashboard: React.FC = () => {
     navigate("/login");
   };
 
-  // Listas únicas para cada filtro
   const uniqueSpecies = Array.from(new Set(allDogs.map((d) => d.species)));
   const uniqueSizes = Array.from(new Set(allDogs.map((d) => d.size)));
-  const uniqueActivities = Array.from(new Set(allDogs.map((d) => d.activity)));
+  const uniqueActivities = Array.from(
+    new Set(allDogs.map((d) => d.activity))
+  );
 
   const toggleSet = (
     set: Set<string>,
-    setter: React.Dispatch<Set<string>>,
-    value: string
+    fn: React.Dispatch<Set<string>>,
+    val: string
   ) => {
-    const newSet = new Set(set);
-    newSet.has(value) ? newSet.delete(value) : newSet.add(value);
-    setter(newSet);
+    const nxt = new Set(set);
+    nxt.has(val) ? nxt.delete(val) : nxt.add(val);
+    fn(nxt);
   };
 
   const clearAll = () => {
@@ -176,20 +218,26 @@ const Dashboard: React.FC = () => {
     setFilterQuery("");
   };
 
+  const cardBg = useColorModeValue("white", "gray.700");
+  const shadow = useColorModeValue("md", "dark-lg");
+
+  // Sólo quitamos el skeleton cuando imágenes y tiempo mínimo estén completos
+  const showCards = !showSkeleton && imagesLoaded && !loadingDogs;
+
   return (
     <Layout handleLogout={handleLogout}>
-      <Box minH="100vh" bg="#F7FAFC" p={6}>
+      <Box minH="100vh" bg="#F7FAFC" p={[4, 6, 8]}>
         <VStack spacing={6} align="stretch">
           {!locationAvailable && (
-            <Alert status="warning" variant="left-accent" borderRadius="md">
+            <Alert status="warning" variant="left-accent" borderRadius="lg">
               <AlertIcon />
               <Box flex="1">
                 <AlertTitle>Ubicación no disponible</AlertTitle>
-                <AlertDescription display="block">
+                <AlertDescription>
                   Activa la geolocalización o ingresa manualmente tu ciudad.
                 </AlertDescription>
               </Box>
-              <Button size="sm" colorScheme="teal" onClick={requestLocation} ml={4}>
+              <Button size="sm" onClick={requestLocation}>
                 Reintentar
               </Button>
             </Alert>
@@ -205,91 +253,90 @@ const Dashboard: React.FC = () => {
             }}
           />
 
-          <HStack justify="space-between">
-            <Text fontSize="lg" fontWeight="semibold">
-              Filtrar resultados
-            </Text>
-            <Button leftIcon={<FiFilter />} variant="outline" onClick={onToggle}>
-              {isOpen ? "Ocultar filtros" : "Mostrar filtros"}
-            </Button>
-          </HStack>
-
-          <Collapse in={isOpen} animateOpacity>
-            <Box bg="white" p={4} borderRadius="md" boxShadow="md" mb={4}>
-              <VStack align="start" spacing={6}>
-                {/* Buscador único */}
+          <Box bg="white" p={4} borderRadius="lg" boxShadow="base">
+            <HStack justify="space-between" mb={4}>
+              <Text fontSize="lg" fontWeight="semibold">
+                Filtrar resultados
+              </Text>
+              <Button
+                size="sm"
+                leftIcon={<FiFilter />}
+                variant="outline"
+                onClick={onToggle}
+              >
+                {isOpen ? "Ocultar filtros" : "Mostrar filtros"}
+              </Button>
+            </HStack>
+            <Collapse in={isOpen} animateOpacity>
+              <VStack align="start" spacing={4}>
                 <FormControl>
                   <FormLabel>Buscar etiquetas</FormLabel>
                   <Input
-                    placeholder="Escribe para filtrar especies, tamaños y actividades..."
+                    placeholder="Escribe para filtrar..."
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                   />
                 </FormControl>
 
-                {/* Etiqueta para Especies */}
-                <Text fontWeight="bold">Especies</Text>
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueSpecies
-                    .filter((sp) =>
-                      sp.toLowerCase().includes(filterQuery.toLowerCase())
+                    .filter((s) =>
+                      s.toLowerCase().includes(filterQuery.toLowerCase())
                     )
-                    .map((sp) => (
+                    .map((s) => (
                       <Tag
-                        key={sp}
+                        key={s}
                         size="md"
-                        variant={speciesFilters.has(sp) ? "solid" : "subtle"}
+                        variant={speciesFilters.has(s) ? "solid" : "subtle"}
                         colorScheme="teal"
                         cursor="pointer"
                         onClick={() =>
-                          toggleSet(speciesFilters, setSpeciesFilters, sp)
+                          toggleSet(speciesFilters, setSpeciesFilters, s)
                         }
                       >
-                        {sp}
+                        {s}
                       </Tag>
                     ))}
                 </HStack>
 
-                {/* Etiqueta para Tamaños */}
-                <Text fontWeight="bold">Tamaños</Text>
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueSizes
-                    .filter((sz) =>
-                      sz.toLowerCase().includes(filterQuery.toLowerCase())
+                    .filter((s) =>
+                      s.toLowerCase().includes(filterQuery.toLowerCase())
                     )
-                    .map((sz) => (
+                    .map((s) => (
                       <Tag
-                        key={sz}
+                        key={s}
                         size="md"
-                        variant={sizeFilters.has(sz) ? "solid" : "subtle"}
+                        variant={sizeFilters.has(s) ? "solid" : "subtle"}
                         colorScheme="purple"
                         cursor="pointer"
-                        onClick={() => toggleSet(sizeFilters, setSizeFilters, sz)}
+                        onClick={() =>
+                          toggleSet(sizeFilters, setSizeFilters, s)
+                        }
                       >
-                        {sz}
+                        {s}
                       </Tag>
                     ))}
                 </HStack>
 
-                {/* Etiqueta para Actividad */}
-                <Text fontWeight="bold">Actividad</Text>
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueActivities
-                    .filter((ac) =>
-                      ac.toLowerCase().includes(filterQuery.toLowerCase())
+                    .filter((a) =>
+                      a.toLowerCase().includes(filterQuery.toLowerCase())
                     )
-                    .map((ac) => (
+                    .map((a) => (
                       <Tag
-                        key={ac}
+                        key={a}
                         size="md"
-                        variant={activityFilters.has(ac) ? "solid" : "subtle"}
+                        variant={activityFilters.has(a) ? "solid" : "subtle"}
                         colorScheme="orange"
                         cursor="pointer"
                         onClick={() =>
-                          toggleSet(activityFilters, setActivityFilters, ac)
+                          toggleSet(activityFilters, setActivityFilters, a)
                         }
                       >
-                        {ac}
+                        {a}
                       </Tag>
                     ))}
                 </HStack>
@@ -298,10 +345,34 @@ const Dashboard: React.FC = () => {
                   Limpiar filtros
                 </Button>
               </VStack>
-            </Box>
-          </Collapse>
+            </Collapse>
+          </Box>
 
-          <DogCards dogs={filteredDogs} />
+          {/* Si aún no estamos listos, mostramos skeletons con el tamaño real de las cards */}
+          {!showCards ? (
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8}>
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <Box
+                  key={idx}
+                  bg={cardBg}
+                  borderRadius="lg"
+                  boxShadow={shadow}
+                  overflow="hidden"
+                >
+                  <AspectRatio ratio={4 / 3}>
+                    <Skeleton height="100%" />
+                  </AspectRatio>
+                  <Box p={4}>
+                    <SkeletonText noOfLines={4} spacing="4" />
+                  </Box>
+                </Box>
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Fade in={showCards}>
+              <DogCards dogs={filteredDogs} />
+            </Fade>
+          )}
         </VStack>
       </Box>
 
@@ -309,10 +380,10 @@ const Dashboard: React.FC = () => {
         <Button
           colorScheme="teal"
           position="fixed"
-          bottom={8}
-          right={8}
+          bottom={6}
+          right={6}
           borderRadius="full"
-          boxShadow="md"
+          boxShadow="lg"
           size="lg"
           onClick={() => navigate("/add-animal")}
         >

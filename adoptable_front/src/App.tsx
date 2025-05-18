@@ -1,7 +1,10 @@
+// src/App.tsx
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "./features/auth/authSlice";
+
 import Login from "./features/auth/login/login";
 import Register from "./features/auth/register/register";
 import Dashboard from "./pages/dashboard";
@@ -10,14 +13,16 @@ import Profile from "./pages/profile/profile";
 import Donations from "./pages/donations/donations";
 import ContactPage from "./pages/contact/contact";
 import AddAnimal from "./pages/animal/add_animal";
+import AnimalRequests from "./pages/protectora/animal_requests";  // nueva página
+        // componente que verifica role
 
 const App = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const savedAuthState = localStorage.getItem("authState");
-    if (savedAuthState) {
-      const { user, token } = JSON.parse(savedAuthState);
+    const saved = localStorage.getItem("authState");
+    if (saved) {
+      const { user, token } = JSON.parse(saved);
       if (user && token) {
         dispatch(loginSuccess({ user, token }));
       }
@@ -27,15 +32,18 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/login" Component={Login} />
-        <Route path="/dashboard" Component={Dashboard} />
-        <Route path="/" Component={Login} />
-        <Route path="/register" Component={Register} />
-        <Route path="/card_detail/:id" Component={CardDetail} />
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/card_detail/:id" element={<CardDetail />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/donacions" element={<Donations />} />
         <Route path="/contacte" element={<ContactPage />} />
         <Route path="/add-animal" element={<AddAnimal />} />
+        <Route path="/animals/:id/requests" element={<AnimalRequests />}/>
+
       </Routes>
     </Router>
   );

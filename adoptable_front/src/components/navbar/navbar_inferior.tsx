@@ -1,9 +1,13 @@
+// src/components/navbar/NavbarInferior.tsx
+
 import React from "react";
 import { Flex, Button, Image, Text } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../redux/store";
 
 import homeIcon from "../../assets/icons/home-icon.svg";
-import dogIcon from "../../assets/icons/dog-icon.svg";
+import dashboardIcon from "../../assets/icons/dashboard-icon.svg";
 import profileIcon from "../../assets/icons/profile-icon.svg";
 import donationsIcon from "../../assets/icons/donations-icon.svg";
 import contactIcon from "../../assets/icons/contact-icon.svg";
@@ -11,10 +15,16 @@ import contactIcon from "../../assets/icons/contact-icon.svg";
 const NavbarInferior: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const role = useSelector((s: RootState) => s.auth.role);
 
-  const menuItems = [
+  const menuItems: { src: string; label: string; path: string }[] = [
     { src: homeIcon, label: "Principal", path: "/dashboard" },
-    { src: dogIcon, label: "Dogder", path: "/dogder" },
+    // Sólo para protectora o admin mostramos Dashboard
+    ...(role === "protectora"
+      ? [{ src: dashboardIcon, label: "Panel", path: "/protectora/dashboard" }]
+      : role === "admin"
+      ? [{ src: dashboardIcon, label: "Admin", path: "/admin/dashboard" }]
+      : []),
     { src: profileIcon, label: "Perfil", path: "/perfil" },
     { src: donationsIcon, label: "Donaciones", path: "/donacions" },
     { src: contactIcon, label: "Contacto", path: "/contacte" },

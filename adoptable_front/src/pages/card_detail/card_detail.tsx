@@ -39,7 +39,7 @@ import {
   listAdoptionRequestsForAnimal,
 } from "./animal_services";
 // al inicio de src/pages/animal/AnimalDetail.tsx
-import type { AdoptionFormFromAPI } from "../profile/user_services";
+import type { AdoptionFormAPI } from "../profile/user_services";
 import { getProfile } from "../profile/user_services";
 import { getAdoptionForm } from "../profile/user_services";
 import Layout from "../../components/layout";
@@ -120,11 +120,7 @@ const AnimalDetail: React.FC = () => {
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
-      const profile = await getAdoptionForm(); // reusar getProfile si quieres, pero form tiene favoritos?
-      // si getProfile trae favoritos:
-      // const profile = await getProfile();
-      // setIsFavorite(profile.favorites?.some((f: any) => f.id === animal.id));
-      // en ausencia de favoritos en form, mantenemos la lógica anterior:
+      const profile = await getAdoptionForm();
       const prof = await getProfile();
       setIsFavorite(
         Array.isArray(prof.favorites) &&
@@ -211,11 +207,11 @@ const AnimalDetail: React.FC = () => {
       console.log("🛠️ handleAdoptionRequest: arrancando debug…");
 
       // 1) recuperar formulario ya completado
-      const form: AdoptionFormFromAPI = await getAdoptionForm();
+      const form: AdoptionFormAPI = await getAdoptionForm();
       console.log("🛠️ form raw from backend:", form);
 
       // 2) campos obligatorios
-      const requiredFields: (keyof AdoptionFormFromAPI)[] = [
+      const requiredFields: (keyof AdoptionFormAPI)[] = [
         "full_name",
         "address",
         "phone",
@@ -229,7 +225,7 @@ const AnimalDetail: React.FC = () => {
           val === null ||
           (typeof val === "string" && val.trim() === "");
         if (isEmpty) {
-          console.warn(`🛠️ Campo faltante o vacío: ${field} = '${val}'`);
+          console.warn(`🛠️ Campo faltante o vacío: ${String(field)} = '${val}'`);
         }
         return isEmpty;
       });

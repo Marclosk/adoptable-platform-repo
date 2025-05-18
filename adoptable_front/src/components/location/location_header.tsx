@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -18,14 +18,15 @@ import {
   ModalCloseButton,
   Input,
 } from "@chakra-ui/react";
-import locationIcon from "../../assets/icons/location-icon.svg";
-
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import locationIcon from "../../assets/icons/location-icon.svg";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// Configuración de iconos Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -47,6 +48,12 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
+  const [localDistance, setLocalDistance] = useState(distance);
+
+  // Sincronizar localDistance si cambia desde fuera
+  useEffect(() => {
+    setLocalDistance(distance);
+  }, [distance]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -61,6 +68,7 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
       setMarkerPos([+lat, +lon]);
     }
   };
+
   const applyLocation = () => {
     if (markerPos) {
       onLocationSelect(markerPos[0], markerPos[1]);
@@ -70,17 +78,15 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
 
   return (
     <>
-      <Box
-        bg="white"
-        p={4}
-        borderRadius="lg"
-        boxShadow="sm"
-        mb={6}
-      >
+      <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" mb={6}>
         <Flex align="center" wrap="wrap" gap={2} mb={4}>
           <Image src={locationIcon} alt="Location" w={6} />
           <Text fontSize="lg" fontWeight="medium" color="gray.700">
-            A <Text as="span" fontWeight="bold">{distance}</Text> km de tu ubicación
+            A{" "}
+            <Text as="span" fontWeight="bold">
+              {localDistance}
+            </Text>{" "}
+            km de tu ubicación
           </Text>
           <Button
             size="sm"
@@ -98,8 +104,9 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
           min={0}
           max={100}
           step={5}
-          value={distance}
-          onChange={onDistanceChange}
+          value={localDistance}
+          onChange={(val) => setLocalDistance(val)}
+          onChangeEnd={(val) => onDistanceChange(val)}
           colorScheme="teal"
         >
           <SliderTrack bg="gray.200">
