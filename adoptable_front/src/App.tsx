@@ -13,8 +13,8 @@ import Profile from "./pages/profile/profile";
 import Donations from "./pages/donations/donations";
 import ContactPage from "./pages/contact/contact";
 import AddAnimal from "./pages/animal/add_animal";
-import AnimalRequests from "./pages/protectora/animal_requests";  // nueva página
-        // componente que verifica role
+import AnimalRequests from "./pages/protectora/animal_requests";  
+import ProtectoraDashboard from "./pages/boards/protectora_dashboard";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -43,6 +43,7 @@ const App = () => {
         <Route path="/contacte" element={<ContactPage />} />
         <Route path="/add-animal" element={<AddAnimal />} />
         <Route path="/animals/:id/requests" element={<AnimalRequests />}/>
+        <Route path="/protectora/dashboard" element={<ProtectoraDashboard />}/>
 
       </Routes>
     </Router>

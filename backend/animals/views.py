@@ -4,9 +4,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
 
 from .models import Animal, AdoptionRequest
-from .serializers import AnimalSerializer, AdoptionRequestSerializer
+from .serializers import AnimalSerializer, AdoptionRequestSerializer, ProtectoraAnimalSerializer
 from .signals import haversine_distance
 from .permissions import IsOwnerOrAdmin
 
@@ -156,3 +157,40 @@ def reject_adoption_request_view(request, animal_id, username):
 
     AdoptionRequest.objects.filter(animal=animal, user=user).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def protectora_metrics(request):
+    """
+    GET /api/animals/protectora/metrics/
+    Métricas clave para la protectora autenticada.
+    """
+    user = request.user
+
+    total_animals = Animal.objects.filter(owner=user).count()
+    # todas las solicitudes pendientes (independientemente de animal)
+    pending_requests = AdoptionRequest.objects.filter(animal__owner=user).count()
+    # adopciones completadas: animales de la protectora con adopter != null
+    completed_adoptions = Animal.objects.filter(owner=user, adopter__isnull=False).count()
+
+    return Response({
+        "total_animals": total_animals,
+        "pending_requests": pending_requests,
+        "completed_adoptions": completed_adoptions,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def protectora_animals(request):
+    """
+    GET /api/animals/protectora/animals/
+    Lista de animales de la protectora con cuenta de solicitudes pendientes.
+    """
+    user = request.user
+
+    qs = Animal.objects.filter(owner=user).annotate(
+        pending_requests=Count('adoption_requests')
+    )
+    serialized = ProtectoraAnimalSerializer(qs, many=True)
+    return Response(serialized.data)

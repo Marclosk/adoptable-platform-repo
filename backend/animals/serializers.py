@@ -34,3 +34,10 @@ class AdoptionRequestSerializer(serializers.ModelSerializer):
         # incluimos form_data en la representación
         fields = ("id", "animal", "user", "created_at", "form_data")
         read_only_fields = ("id", "animal", "user", "created_at")
+
+class ProtectoraAnimalSerializer(serializers.ModelSerializer):
+    pending_requests = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Animal
+        fields = ["id", "name", "pending_requests"]

@@ -223,3 +223,37 @@ export const listAdoptionRequestsForAnimal = async (
     throw err;
   }
 };
+
+/**
+ * Lista los animales de la protectora con su número de solicitudes pendientes.
+ */
+export interface ProtectoraAnimal {
+  id: number;
+  name: string;
+  pending_requests: number;
+}
+
+export const getProtectoraAnimals = async (): Promise<ProtectoraAnimal[]> => {
+  const resp = await api.get<ProtectoraAnimal[]>(
+    "api/animals/protectora/animals/",
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
+};
+
+/**
+ * Obtiene las métricas de la protectora:
+ *  - total_animals
+ *  - pending_requests
+ *  - completed_adoptions
+ */
+export const getProtectoraMetrics = async (): Promise<{
+  total_animals: number;
+  pending_requests: number;
+  completed_adoptions: number;
+}> => {
+  const resp = await api.get("api/animals/protectora/metrics/", {
+    headers: { "X-CSRFToken": getCSRFToken() },
+  });
+  return resp.data;
+};
