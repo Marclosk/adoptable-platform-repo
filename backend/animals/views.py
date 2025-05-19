@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
+from django.db.models.functions import TruncMonth
 
 from .models import Animal, AdoptionRequest
 from .serializers import AnimalSerializer, AdoptionRequestSerializer, ProtectoraAnimalSerializer
@@ -185,12 +186,89 @@ def protectora_metrics(request):
 def protectora_animals(request):
     """
     GET /api/animals/protectora/animals/
-    Lista de animales de la protectora con cuenta de solicitudes pendientes.
+    Lista de animales de la protectora que están EN ADOPCIÓN
+    (owner=request.user y adopter IS NULL), con cuenta de solicitudes pendientes.
     """
     user = request.user
 
-    qs = Animal.objects.filter(owner=user).annotate(
-        pending_requests=Count('adoption_requests')
+    qs = (
+        Animal.objects
+        .filter(owner=user, adopter__isnull=True)          
+        .annotate(pending_requests=Count('adoption_requests'))
     )
     serialized = ProtectoraAnimalSerializer(qs, many=True)
     return Response(serialized.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def protectora_adopted_animals(request):
+    """
+    GET /api/animals/protectora/adopted/
+    Lista de animales de la protectora que están ADOPTADOS
+    (owner=request.user y adopter IS NOT NULL), con cuenta de solicitudes recibidas.
+    """
+    user = request.user
+    qs = (
+        Animal.objects
+        .filter(owner=user, adopter__isnull=False)
+        .annotate(pending_requests=Count("adoption_requests"))
+    )
+    serialized = ProtectoraAnimalSerializer(qs, many=True)
+    return Response(serialized.data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def protectora_metrics_view(request):
+    """
+    GET /api/protectora/metrics/
+    Devuelve las métricas principales para el dashboard de la protectora.
+    """
+    user = request.user
+    total = Animal.objects.filter(owner=user).count()
+    pending = AdoptionRequest.objects.filter(animal__owner=user).count()
+    completed = Animal.objects.filter(owner=user, adopter__isnull=False).count()
+    return Response({
+        "total_animals": total,
+        "pending_requests": pending,
+        "completed_adoptions": completed,
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def monthly_adoptions_view(request):
+    """
+    GET /api/protectora/monthly-adoptions/
+    Devuelve el número de adopciones completadas por mes (últimos 12 meses).
+    Usa updated_at de Animal cuando se marcó como adoptado.
+    """
+    user = request.user
+    qs = (
+        Animal.objects.filter(owner=user, adopter__isnull=False)
+        .annotate(month=TruncMonth("updated_at"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")  # ascendente
+    )
+    data = [
+        {"month": entry["month"].strftime("%b"), "count": entry["count"]}
+        for entry in qs
+    ]
+    return Response(data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def top_requested_animals_view(request):
+    """
+    GET /api/protectora/top-requested/
+    Devuelve los 5 animales de la protectora con más solicitudes de adopción.
+    """
+    user = request.user
+    qs = (
+        Animal.objects.filter(owner=user)
+        .annotate(req_count=Count("adoption_requests"))
+        .order_by("-req_count")[:5]
+    )
+    data = [{"name": a.name, "count": a.req_count} for a in qs]
+    return Response(data)

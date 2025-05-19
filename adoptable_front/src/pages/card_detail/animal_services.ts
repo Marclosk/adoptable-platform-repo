@@ -1,4 +1,4 @@
-// src/services/animal_services.ts
+// src/pages/card_detail/animal_services.ts
 
 import axios from "axios";
 import type { Dog } from "../../pages/dashboard";
@@ -9,13 +9,12 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// src/pages/card_detail/animal_services.ts
+/** ————— Interfaces ————— **/
 
 export interface AdoptionRequest {
   id: number;
   user: { id: number; username: string };
   created_at: string;
-  // JSON con todo el formulario que envió el adoptante
   form_data: {
     full_name: string;
     address: string;
@@ -29,6 +28,32 @@ export interface AdoptionRequest {
   };
 }
 
+export interface ProtectoraAnimal {
+  id: number;
+  name: string;
+  pending_requests: number;
+}
+
+
+export interface ProtectoraAdoptedAnimal extends ProtectoraAnimal {
+  adopter_username: string;
+}
+
+export interface ProtectoraMetrics {
+  total_animals: number;
+  pending_requests: number;
+  completed_adoptions: number;
+}
+
+export interface MonthlyAdoption {
+  month: string;
+  count: number;
+}
+
+export interface TopRequested {
+  name: string;
+  count: number;
+}
 
 /** ————— Animales ————— **/
 
@@ -75,24 +100,24 @@ export const addAnimal = async (data: FormData): Promise<Dog> => {
     });
     return response.data;
   } catch (error: any) {
-    const status = error.response?.status;
-    const payload = error.response?.data;
-    console.error("Error al crear animal:", status, payload);
-
+    console.error(
+      "Error al crear animal:",
+      error.response?.status,
+      error.response?.data
+    );
     let message = "Error al crear el animal";
-    if (status === 400 && typeof payload === "object") {
-      message = Object.entries(payload)
+    if (error.response?.data && typeof error.response.data === "object") {
+      message = Object.entries(error.response.data)
         .map(
           ([field, msgs]) =>
             `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`
         )
         .join(". ");
-    } else if (status === 500) {
+    } else if (error.response?.status === 500) {
       message = "Error interno del servidor";
-    } else if (typeof payload === "string") {
-      message = payload;
+    } else if (typeof error.response?.data === "string") {
+      message = error.response.data;
     }
-
     throw new Error(message);
   }
 };
@@ -104,26 +129,21 @@ export const deleteAnimal = async (id: number): Promise<void> => {
 };
 
 export const adoptAnimal = async (id: number, adopterId: number) => {
-  const response = await api.patch(
+  const resp = await api.patch(
     `api/animals/${id}/`,
     { adopter: adopterId },
     { headers: { "X-CSRFToken": getCSRFToken() } }
   );
-  return response.data;
+  return resp.data;
 };
 
 export const unadoptAnimal = async (id: number) => {
-  try {
-    const response = await api.patch(
-      `api/animals/${id}/`,
-      { adopter: null },
-      { headers: { "X-CSRFToken": getCSRFToken() } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error al desadoptar animal:", error);
-    throw error;
-  }
+  const resp = await api.patch(
+    `api/animals/${id}/`,
+    { adopter: null },
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
 };
 
 /** ————— Favoritos ————— **/
@@ -144,9 +164,6 @@ export const removeFavorite = async (animalId: number): Promise<void> => {
 
 /** ————— Solicitudes de adopción ————— **/
 
-/**
- * Para el perfil de usuario: trae todas las solicitudes que yo he hecho.
- */
 export const getMyAdoptionRequests = async (): Promise<AdoptionRequest[]> => {
   try {
     const profile = await getProfile();
@@ -157,10 +174,6 @@ export const getMyAdoptionRequests = async (): Promise<AdoptionRequest[]> => {
   }
 };
 
-/**
- * Creo una nueva solicitud para este animal,
- * enviando junto los datos de mi formulario de adopción.
- */
 export const requestAdoption = async (
   animalId: number,
   formData: Record<string, any>
@@ -179,9 +192,6 @@ export const requestAdoption = async (
   return resp.data;
 };
 
-/**
- * Cancelo (elimino) una solicitud que ya hice.
- */
 export const cancelAdoptionRequest = async (
   requestId: number
 ): Promise<void> => {
@@ -190,22 +200,15 @@ export const cancelAdoptionRequest = async (
   });
 };
 
-/**
- * Rechaza (borra) la solicitud de adopción de `username` para `animalId`.
- */
 export const cancelAdoptionRequestForUser = async (
   animalId: number,
   username: string
 ): Promise<void> => {
-  await api.delete(
-    `api/animals/${animalId}/requests/${username}/delete/`,
-    { headers: { "X-CSRFToken": getCSRFToken() } }
-  );
+  await api.delete(`api/animals/${animalId}/requests/${username}/delete/`, {
+    headers: { "X-CSRFToken": getCSRFToken() },
+  });
 };
 
-/**
- * Sólo para protectora: lista las solicitudes de adopción hechas para un animal.
- */
 export const listAdoptionRequestsForAnimal = async (
   animalId: number
 ): Promise<AdoptionRequest[]> => {
@@ -224,14 +227,7 @@ export const listAdoptionRequestsForAnimal = async (
   }
 };
 
-/**
- * Lista los animales de la protectora con su número de solicitudes pendientes.
- */
-export interface ProtectoraAnimal {
-  id: number;
-  name: string;
-  pending_requests: number;
-}
+/** ————— Protectora: animales y métricas ————— **/
 
 export const getProtectoraAnimals = async (): Promise<ProtectoraAnimal[]> => {
   const resp = await api.get<ProtectoraAnimal[]>(
@@ -241,19 +237,36 @@ export const getProtectoraAnimals = async (): Promise<ProtectoraAnimal[]> => {
   return resp.data;
 };
 
-/**
- * Obtiene las métricas de la protectora:
- *  - total_animals
- *  - pending_requests
- *  - completed_adoptions
- */
-export const getProtectoraMetrics = async (): Promise<{
-  total_animals: number;
-  pending_requests: number;
-  completed_adoptions: number;
-}> => {
-  const resp = await api.get("api/animals/protectora/metrics/", {
-    headers: { "X-CSRFToken": getCSRFToken() },
-  });
+export const getProtectoraAdoptedAnimals = async (): Promise<
+  ProtectoraAdoptedAnimal[]
+> => {
+  const resp = await api.get<ProtectoraAdoptedAnimal[]>(
+    "api/animals/protectora/adopted/",
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
+};
+
+export const getProtectoraMetrics = async (): Promise<ProtectoraMetrics> => {
+  const resp = await api.get<ProtectoraMetrics>(
+    "api/animals/protectora/metrics/",
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
+};
+
+export const getMonthlyAdoptions = async (): Promise<MonthlyAdoption[]> => {
+  const resp = await api.get<MonthlyAdoption[]>(
+    "api/animals/protectora/monthly-adoptions/",
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
+  return resp.data;
+};
+
+export const getTopRequestedAnimals = async (): Promise<TopRequested[]> => {
+  const resp = await api.get<TopRequested[]>(
+    "api/animals/protectora/top-requested/",
+    { headers: { "X-CSRFToken": getCSRFToken() } }
+  );
   return resp.data;
 };

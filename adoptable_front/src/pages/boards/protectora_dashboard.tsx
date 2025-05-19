@@ -6,9 +6,6 @@ import {
   Flex,
   Heading,
   SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
   Icon,
   Spinner,
   Text,
@@ -27,19 +24,23 @@ import {
   FaClipboardList,
   FaCheckCircle,
   FaChevronRight,
-  FaPercentage,
-  FaChartLine,
-  FaChartBar,
 } from "react-icons/fa";
 import Layout from "../../components/layout";
 import { useNavigate } from "react-router-dom";
+
 import {
   getProtectoraMetrics,
   getProtectoraAnimals,
+  getProtectoraAdoptedAnimals,
   ProtectoraAnimal,
+  ProtectoraAdoptedAnimal,
+  getMonthlyAdoptions,
+  getTopRequestedAnimals,
+  ProtectoraMetrics as MetricsAPI,
+  MonthlyAdoption,
+  TopRequested,
 } from "../card_detail/animal_services";
 
-// imports de Recharts
 import {
   PieChart,
   Pie,
@@ -56,79 +57,53 @@ import {
   Bar,
 } from "recharts";
 
-interface ProtectoraMetrics {
-  total_animals: number;
-  pending_requests: number;
-  completed_adoptions: number;
-}
-
-const COLORS = ["#38A169", "#ED8936", "#4FD1C5"]; // verde, naranja, turquesa
+const COLORS = ["#38A169", "#ED8936", "#4FD1C5"];
 
 const ProtectoraDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<ProtectoraMetrics>({
+  const [metrics, setMetrics] = useState<MetricsAPI>({
     total_animals: 0,
     pending_requests: 0,
     completed_adoptions: 0,
   });
-  const [animals, setAnimals] = useState<ProtectoraAnimal[]>([]);
-
-  // Datos de ejemplo para gráficas (reemplaza con fetch real)
-  const [monthlyAdoptions, setMonthlyAdoptions] = useState<
-    { month: string; count: number }[]
+  const [availableAnimals, setAvailableAnimals] = useState<ProtectoraAnimal[]>(
+    []
+  );
+  const [adoptedAnimals, setAdoptedAnimals] = useState<
+    ProtectoraAdoptedAnimal[]
   >([]);
-  const [topRequested, setTopRequested] = useState<
-    { name: string; count: number }[]
-  >([]);
+  const [monthlyAdoptions, setMonthlyAdoptions] = useState<MonthlyAdoption[]>(
+    []
+  );
+  const [topRequested, setTopRequested] = useState<TopRequested[]>([]);
 
   useEffect(() => {
-    async function loadAll() {
+    (async () => {
       setLoading(true);
       try {
-        const [m, a] = await Promise.all([
+        const [m, avail, adopted, monthly, top] = await Promise.all([
           getProtectoraMetrics(),
           getProtectoraAnimals(),
+          getProtectoraAdoptedAnimals(),
+          getMonthlyAdoptions(),
+          getTopRequestedAnimals(),
         ]);
         setMetrics(m);
-        setAnimals(a);
-
-        // simula datos de gráficas
-        setMonthlyAdoptions([
-          { month: "Ene", count: 2 },
-          { month: "Feb", count: 4 },
-          { month: "Mar", count: 3 },
-          { month: "Abr", count: 5 },
-          { month: "May", count: 6 },
-          { month: "Jun", count: 4 },
-          { month: "Jul", count: 7 },
-          { month: "Ago", count: 5 },
-          { month: "Sep", count: 8 },
-          { month: "Oct", count: 6 },
-          { month: "Nov", count: 9 },
-          { month: "Dic", count: 7 },
-        ]);
-        setTopRequested([
-          { name: "Fido", count: 12 },
-          { name: "Luna", count: 9 },
-          { name: "Nala", count: 7 },
-          { name: "Rex", count: 5 },
-          { name: "Milo", count: 3 },
-        ]);
-      } catch (err) {
-        console.error(err);
+        setAvailableAnimals(avail);
+        setAdoptedAnimals(adopted);
+        setMonthlyAdoptions(monthly);
+        setTopRequested(top);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
-    }
-    loadAll();
+    })();
   }, []);
 
   const { total_animals, pending_requests, completed_adoptions } = metrics;
-  const adoptionRate =
-    total_animals > 0 ? (completed_adoptions / total_animals) * 100 : 0;
-
   const bg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
 
@@ -152,7 +127,7 @@ const ProtectoraDashboard: React.FC = () => {
         {/* Estadísticas generales */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center">
+            <Flex align="center" mb={2}>
               <Icon as={FaPaw} boxSize={6} color="teal.500" mr={3} />
               <Text fontSize="lg" fontWeight="medium">
                 Total de animales
@@ -162,10 +137,14 @@ const ProtectoraDashboard: React.FC = () => {
               {total_animals}
             </Text>
           </Box>
-
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center">
-              <Icon as={FaClipboardList} boxSize={6} color="orange.500" mr={3} />
+            <Flex align="center" mb={2}>
+              <Icon
+                as={FaClipboardList}
+                boxSize={6}
+                color="orange.500"
+                mr={3}
+              />
               <Text fontSize="lg" fontWeight="medium">
                 Solicitudes pendientes
               </Text>
@@ -174,9 +153,8 @@ const ProtectoraDashboard: React.FC = () => {
               {pending_requests}
             </Text>
           </Box>
-
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center">
+            <Flex align="center" mb={2}>
               <Icon as={FaCheckCircle} boxSize={6} color="green.500" mr={3} />
               <Text fontSize="lg" fontWeight="medium">
                 Adopciones completadas
@@ -200,16 +178,28 @@ const ProtectoraDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
+                  key={`${completed_adoptions}-${pending_requests}-${
+                    total_animals - completed_adoptions
+                  }`}
                   data={[
                     { name: "Adoptados", value: completed_adoptions },
                     { name: "Pendientes", value: pending_requests },
-                    { name: "Disponibles", value: total_animals - completed_adoptions },
+                    {
+                      name: "Disponibles",
+                      value: total_animals - completed_adoptions,
+                    },
                   ]}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={40}
-                  outerRadius={80}
-                  label
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={2}
+                  label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
+                  labelLine={false}
+                  isAnimationActive={true}
+                  animationBegin={0}
+                  animationDuration={800}
+                  animationEasing="ease-in-out"
                 >
                   {[
                     completed_adoptions,
@@ -220,12 +210,23 @@ const ProtectoraDashboard: React.FC = () => {
                   ))}
                 </Pie>
                 <RechartsTooltip />
-                <Legend />
+                <Legend
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                  iconType="square"
+                  formatter={(value) => String(value)}
+                  wrapperStyle={{
+                    top: "50%",
+                    right: 0,
+                    transform: "translateY(-50%)",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </Box>
 
-          {/* LineChart mensual */}
+          {/* LineChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
               Adopciones mensuales
@@ -233,11 +234,11 @@ const ProtectoraDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart
                 data={monthlyAdoptions}
-                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                key={monthlyAdoptions.map((d) => d.count).join(",")}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
+                <YAxis allowDecimals={false} />
                 <RechartsTooltip />
                 <Line
                   type="monotone"
@@ -245,12 +246,16 @@ const ProtectoraDashboard: React.FC = () => {
                   stroke="#38A169"
                   strokeWidth={2}
                   dot
+                  isAnimationActive={true}
+                  animationBegin={0}
+                  animationDuration={800}
+                  animationEasing="ease-in-out"
                 />
               </LineChart>
             </ResponsiveContainer>
           </Box>
 
-          {/* BarChart top solicitados */}
+          {/* BarChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
               Animales más solicitados
@@ -258,13 +263,27 @@ const ProtectoraDashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={topRequested}
-                margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+                margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
+                key={topRequested.map((d) => d.count).join(",")}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                  height={60}
+                />
+                <YAxis allowDecimals={false} />
                 <RechartsTooltip />
-                <Bar dataKey="count" fill="#3182CE" />
+                <Bar
+                  dataKey="count"
+                  fill="#3182CE"
+                  isAnimationActive={true}
+                  animationBegin={0}
+                  animationDuration={800}
+                  animationEasing="ease-in-out"
+                />
               </BarChart>
             </ResponsiveContainer>
           </Box>
@@ -272,8 +291,8 @@ const ProtectoraDashboard: React.FC = () => {
 
         <Divider mb={8} />
 
-        {/* Tabla detallada */}
-        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
+        {/* Tabla detallada: Animales en adopción */}
+        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
           <Heading size="md" mb={4}>
             Animales en adopción
           </Heading>
@@ -286,7 +305,7 @@ const ProtectoraDashboard: React.FC = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {animals.map((a) => (
+              {availableAnimals.map((a) => (
                 <Tr key={a.id}>
                   <Td>{a.name}</Td>
                   <Td isNumeric>{a.pending_requests}</Td>
@@ -295,9 +314,7 @@ const ProtectoraDashboard: React.FC = () => {
                       size="sm"
                       variant="outline"
                       rightIcon={<FaChevronRight />}
-                      onClick={() =>
-                        navigate(`/protectora/animal/${a.id}/requests`)
-                      }
+                      onClick={() => navigate(`/animals/${a.id}/requests`)}
                     >
                       Ver
                     </Button>
@@ -306,9 +323,48 @@ const ProtectoraDashboard: React.FC = () => {
               ))}
             </Tbody>
           </Table>
-          {!animals.length && (
+          {availableAnimals.length === 0 && (
             <Text textAlign="center" mt={4} color="gray.500">
               No tienes animales en adopción.
+            </Text>
+          )}
+        </Box>
+
+        {/* Tabla detallada: Animales adoptados */}
+        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
+          <Heading size="md" mb={4}>
+            Animales adoptados
+          </Heading>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Nombre</Th>
+                <Th>Adoptado por</Th>
+                <Th textAlign="right">Acciones</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {adoptedAnimals.map((a) => (
+                <Tr key={a.id}>
+                  <Td>{a.name}</Td>
+                  <Td>{a.adopter_username}</Td>
+                  <Td textAlign="right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      rightIcon={<FaChevronRight />}
+                      onClick={() => navigate(`/animals/${a.id}/requests`)}
+                    >
+                      Ver
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+          {adoptedAnimals.length === 0 && (
+            <Text textAlign="center" mt={4} color="gray.500">
+              No tienes animales adoptados.
             </Text>
           )}
         </Box>
