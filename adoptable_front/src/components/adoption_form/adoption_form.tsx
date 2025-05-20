@@ -1,4 +1,4 @@
-// src/components/AdoptionForm.tsx
+// src/components/adoption_form/AdoptionForm.tsx
 
 import React, { useState, useEffect } from "react";
 import {
@@ -13,6 +13,7 @@ import {
   Button,
   FormErrorMessage,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 
 export interface AdoptionFormData {
   fullName: string;
@@ -36,6 +37,8 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
   initialValues = {},
   onSubmit,
 }) => {
+  const { t } = useTranslation();
+
   const [form, setForm] = useState<AdoptionFormData>({
     fullName: initialValues.fullName ?? "",
     address: initialValues.address ?? "",
@@ -56,7 +59,6 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
     Partial<Record<keyof AdoptionFormData, boolean>>
   >({});
 
-  // whenever initialValues changes, reset form state (and clear errors/touched)
   useEffect(() => {
     setForm({
       fullName: initialValues.fullName ?? "",
@@ -74,62 +76,60 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
     setTouched({});
   }, [initialValues]);
 
-  // simple validators with guards
   const validators: Record<
     keyof AdoptionFormData,
     (value: any, all: AdoptionFormData) => string | null
   > = {
     fullName: (v) => {
-      const str = typeof v === "string" ? v.trim() : "";
-      return !str ? "Nombre es obligatorio" : null;
+      const str = (v as string).trim();
+      return !str ? t("error_fullName_required") : null;
     },
     address: (v) => {
-      const str = typeof v === "string" ? v.trim() : "";
-      return !str ? "Dirección es obligatoria" : null;
+      const str = (v as string).trim();
+      return !str ? t("error_address_required") : null;
     },
     phone: (v) => {
-      const str = typeof v === "string" ? v.trim() : "";
-      if (!str) return "Teléfono es obligatorio";
-      if (!/^\+?[0-9\s\-]{7,15}$/.test(str)) return "Teléfono no válido";
+      const str = (v as string).trim();
+      if (!str) return t("error_phone_required");
+      if (!/^\+?[0-9\s\-]{7,15}$/.test(str)) return t("error_phone_invalid");
       return null;
     },
     email: (v) => {
-      const str = typeof v === "string" ? v.trim() : "";
-      if (!str) return "Email es obligatorio";
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) return "Email no válido";
+      const str = (v as string).trim();
+      if (!str) return t("error_email_required");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str))
+        return t("error_email_invalid");
       return null;
     },
     hasExperience: () => null,
     experienceDescription: (v, all) => {
       if (all.hasExperience) {
-        const str = typeof v === "string" ? v.trim() : "";
-        return !str ? "Describe tu experiencia" : null;
+        const str = (v as string).trim();
+        return !str ? t("error_experienceDescription_required") : null;
       }
       return null;
     },
     hasOtherPets: () => null,
     otherPetTypes: (v, all) => {
       if (all.hasOtherPets === "yes") {
-        const str = typeof v === "string" ? v.trim() : "";
-        return !str ? "Indica tipo de otras mascotas" : null;
+        const str = (v as string).trim();
+        return !str ? t("error_otherPetTypes_required") : null;
       }
       return null;
     },
     references: () => null,
     motivation: (v) => {
-      const str = typeof v === "string" ? v.trim() : "";
-      return !str ? "Motivación es obligatoria" : null;
+      const str = (v as string).trim();
+      return !str ? t("error_motivation_required") : null;
     },
   };
 
-  // validate a single field
   const validateField = (field: keyof AdoptionFormData) => {
-    const error = validators[field](form[field], form);
-    setErrors((e) => ({ ...e, [field]: error || undefined }));
-    return !error;
+    const err = validators[field](form[field], form);
+    setErrors((e) => ({ ...e, [field]: err || undefined }));
+    return !err;
   };
 
-  // validate all
   const validateAll = () => {
     const newErrors: typeof errors = {};
     let valid = true;
@@ -144,7 +144,6 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
     return valid;
   };
 
-  // handlers
   const handleChange =
     (field: keyof AdoptionFormData) =>
     (
@@ -176,7 +175,6 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateAll()) {
-      // mark all as touched to show errors
       const allTouched: typeof touched = {};
       (Object.keys(validators) as Array<keyof AdoptionFormData>).forEach(
         (f) => {
@@ -189,19 +187,14 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
     onSubmit(form);
   };
 
-  // disable if any errors or required empty
   const isFormValid =
     Object.values(errors).every((e) => !e) &&
     ["fullName", "address", "phone", "email", "motivation"].every((k) => {
       const v = form[k as keyof AdoptionFormData];
       return typeof v === "string" && v.trim() !== "";
     }) &&
-    (!form.hasExperience ||
-      (typeof form.experienceDescription === "string" &&
-        form.experienceDescription.trim() !== "")) &&
-    (form.hasOtherPets === "no" ||
-      (typeof form.otherPetTypes === "string" &&
-        form.otherPetTypes.trim() !== ""));
+    (!form.hasExperience || form.experienceDescription.trim() !== "") &&
+    (form.hasOtherPets === "no" || form.otherPetTypes.trim() !== "");
 
   return (
     <Box bg="white" p={6} borderRadius="md" boxShadow="md">
@@ -211,12 +204,12 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
             isRequired
             isInvalid={!!errors.fullName && touched.fullName}
           >
-            <FormLabel>Nombre completo</FormLabel>
+            <FormLabel>{t("form_fullName_label")}</FormLabel>
             <Input
               value={form.fullName}
               onChange={handleChange("fullName")}
               onBlur={handleBlur("fullName")}
-              placeholder="Tu nombre completo"
+              placeholder={t("form_fullName_placeholder")}
             />
             <FormErrorMessage>{errors.fullName}</FormErrorMessage>
           </FormControl>
@@ -225,35 +218,35 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
             isRequired
             isInvalid={!!errors.address && touched.address}
           >
-            <FormLabel>Dirección</FormLabel>
+            <FormLabel>{t("form_address_label")}</FormLabel>
             <Input
               value={form.address}
               onChange={handleChange("address")}
               onBlur={handleBlur("address")}
-              placeholder="Tu dirección"
+              placeholder={t("form_address_placeholder")}
             />
             <FormErrorMessage>{errors.address}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.phone && touched.phone}>
-            <FormLabel>Teléfono</FormLabel>
+            <FormLabel>{t("form_phone_label")}</FormLabel>
             <Input
               value={form.phone}
               onChange={handleChange("phone")}
               onBlur={handleBlur("phone")}
-              placeholder="Tu número de teléfono"
+              placeholder={t("form_phone_placeholder")}
             />
             <FormErrorMessage>{errors.phone}</FormErrorMessage>
           </FormControl>
 
           <FormControl isRequired isInvalid={!!errors.email && touched.email}>
-            <FormLabel>Email</FormLabel>
+            <FormLabel>{t("form_email_label")}</FormLabel>
             <Input
               type="email"
               value={form.email}
               onChange={handleChange("email")}
               onBlur={handleBlur("email")}
-              placeholder="Tu correo electrónico"
+              placeholder={t("form_email_placeholder")}
             />
             <FormErrorMessage>{errors.email}</FormErrorMessage>
           </FormControl>
@@ -263,7 +256,7 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
               isChecked={form.hasExperience}
               onChange={handleChange("hasExperience")}
             >
-              ¿Tienes experiencia cuidando animales?
+              {t("form_hasExperience_label")}
             </Checkbox>
           </FormControl>
 
@@ -274,12 +267,12 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
               }
               isRequired
             >
-              <FormLabel>Describe tu experiencia</FormLabel>
+              <FormLabel>{t("form_experienceDescription_label")}</FormLabel>
               <Textarea
                 value={form.experienceDescription}
                 onChange={handleChange("experienceDescription")}
                 onBlur={handleBlur("experienceDescription")}
-                placeholder="Ej.: años con perros, voluntariado, etc."
+                placeholder={t("form_experienceDescription_placeholder")}
               />
               <FormErrorMessage>
                 {errors.experienceDescription}
@@ -291,14 +284,14 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
             isRequired
             isInvalid={!!errors.hasOtherPets && touched.hasOtherPets}
           >
-            <FormLabel>¿Tienes otras mascotas?</FormLabel>
+            <FormLabel>{t("form_hasOtherPets_label")}</FormLabel>
             <Select
               value={form.hasOtherPets}
               onChange={handleChange("hasOtherPets")}
               onBlur={handleBlur("hasOtherPets")}
             >
-              <option value="no">No</option>
-              <option value="yes">Sí</option>
+              <option value="no">{t("no")}</option>
+              <option value="yes">{t("si")}</option>
             </Select>
             <FormErrorMessage>{errors.hasOtherPets}</FormErrorMessage>
           </FormControl>
@@ -308,23 +301,23 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
               isInvalid={!!errors.otherPetTypes && touched.otherPetTypes}
               isRequired
             >
-              <FormLabel>¿De qué tipo?</FormLabel>
+              <FormLabel>{t("form_otherPetTypes_label")}</FormLabel>
               <Input
                 value={form.otherPetTypes}
                 onChange={handleChange("otherPetTypes")}
                 onBlur={handleBlur("otherPetTypes")}
-                placeholder="Ej.: 2 gatos y 1 conejo"
+                placeholder={t("form_otherPetTypes_placeholder")}
               />
               <FormErrorMessage>{errors.otherPetTypes}</FormErrorMessage>
             </FormControl>
           )}
 
           <FormControl>
-            <FormLabel>Referencias</FormLabel>
+            <FormLabel>{t("form_references_label")}</FormLabel>
             <Textarea
               value={form.references}
               onChange={handleChange("references")}
-              placeholder="Nombre y contacto de alguna referencia"
+              placeholder={t("form_references_placeholder")}
             />
           </FormControl>
 
@@ -332,12 +325,12 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
             isRequired
             isInvalid={!!errors.motivation && touched.motivation}
           >
-            <FormLabel>Motivación</FormLabel>
+            <FormLabel>{t("form_motivation_label")}</FormLabel>
             <Textarea
               value={form.motivation}
               onChange={handleChange("motivation")}
               onBlur={handleBlur("motivation")}
-              placeholder="¿Por qué quieres adoptar un animal?"
+              placeholder={t("form_motivation_placeholder")}
             />
             <FormErrorMessage>{errors.motivation}</FormErrorMessage>
           </FormControl>
@@ -349,7 +342,7 @@ export const AdoptionForm: React.FC<AdoptionFormProps> = ({
             mt={4}
             isDisabled={!isFormValid}
           >
-            Enviar formulario
+            {t("form_submit")}
           </Button>
         </VStack>
       </form>

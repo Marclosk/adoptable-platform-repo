@@ -1,3 +1,5 @@
+// src/pages/auth/Register.tsx
+
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -18,10 +20,12 @@ import {
   AlertIcon,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios"; 
+import axios from "axios";
 import { register } from "../authService";
+import { useTranslation } from "react-i18next";
 
 const Register: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
@@ -74,32 +78,26 @@ const Register: React.FC = () => {
     let valid = true;
 
     if (!validateEmail(email)) {
-      setEmailError("Por favor, ingresa un correo válido.");
+      setEmailError(t("error_correo_invalido"));
       valid = false;
     }
     if (!validatePassword(password)) {
-      setPasswordError(
-        "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
-      );
+      setPasswordError(t("error_password_requirements"));
       valid = false;
     }
     if (password !== confirmPassword) {
-      setConfirmPasswordError("Las contraseñas no coinciden.");
+      setConfirmPasswordError(t("error_confirm_password"));
       valid = false;
     }
 
     if (role === "adoptante") {
       if (!/^[A-Za-z0-9@.+-_]+$/.test(username)) {
-        setUsernameError(
-          "El nombre de usuario solo puede contener letras, números y @/./+/-/_"
-        );
+        setUsernameError(t("error_username_invalid"));
         valid = false;
       }
     } else {
       if (!/^[A-Za-z0-9@.+-_]+$/.test(protectoraUsername)) {
-        setProtectoraUsernameError(
-          "El nombre de usuario solo puede contener letras, números y @/./+/-/_"
-        );
+        setProtectoraUsernameError(t("error_username_invalid"));
         valid = false;
       }
     }
@@ -130,11 +128,11 @@ const Register: React.FC = () => {
       }
 
       toast({
-        title: "Registro exitoso",
+        title: t("register_success_title"),
         description:
           role === "protectora"
-            ? "Se ha enviado la solicitud de protectora. Espera aprobación."
-            : "¡Te has registrado correctamente!",
+            ? t("register_success_protectora")
+            : t("register_success_adoptante"),
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -143,58 +141,42 @@ const Register: React.FC = () => {
       navigate("/login");
     } catch (error: any) {
       console.error("❌ Error en el servidor:", error);
-    
+
       if (axios.isAxiosError(error) && error.response?.status === 400) {
         const data = error.response.data;
-        console.log("[DEBUG] error.response.data:", data);
-    
+
         if (data.username && Array.isArray(data.username)) {
           const detail = data.username[0];
-    
-          if (typeof detail === "object" && detail.string) {
-            console.log("[DEBUG] detail.string:", detail.string);
-            if (detail.string.toLowerCase().includes("already exists")) {
-              setProtectoraUsernameError("Ese nombre de usuario ya está en uso.");
-            } else {
-              setProtectoraUsernameError(detail.string);
-            }
-          } else if (typeof detail === "string") {
-            console.log("[DEBUG] detail:", detail);
-            if (detail.toLowerCase().includes("already exists")) {
-              setProtectoraUsernameError("Ese nombre de usuario ya está en uso.");
-            } else {
-              setProtectoraUsernameError(detail);
-            }
-          }
+          const msg =
+            typeof detail === "string" ? detail : (detail as any).string || "";
+          setProtectoraUsernameError(
+            msg.toLowerCase().includes("already exists")
+              ? t("error_username_taken")
+              : msg
+          );
         }
-    
+
         if (data.email && Array.isArray(data.email)) {
           const detail = data.email[0];
-          if (typeof detail === "object" && detail.string) {
-            setEmailError(detail.string);
-          } else if (typeof detail === "string") {
-            setEmailError(detail);
-          }
+          const msg =
+            typeof detail === "string" ? detail : (detail as any).string || "";
+          setEmailError(msg);
         }
-    
+
         if (data.password && Array.isArray(data.password)) {
           const detail = data.password[0];
-          if (typeof detail === "object" && detail.string) {
-            setPasswordError(detail.string);
-          } else if (typeof detail === "string") {
-            setPasswordError(detail);
-          }
+          const msg =
+            typeof detail === "string" ? detail : (detail as any).string || "";
+          setPasswordError(msg);
         }
-    
+
         if (!data.username && !data.email && !data.password) {
           setServerError(JSON.stringify(data));
         }
       } else {
-        setServerError(error.message || "Error en el servidor");
+        setServerError(error.message || t("error_server"));
       }
     }
-    
-    
   };
 
   const goBackToLogin = () => {
@@ -220,11 +202,11 @@ const Register: React.FC = () => {
       >
         <CardBody>
           <Heading as="h2" size="lg" textAlign="center" mb="6" color="teal.500">
-            Registrarse
+            {t("register_heading")}
           </Heading>
 
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
-            Selecciona tu tipo de cuenta y rellena los campos requeridos.
+            {t("register_subtitle")}
           </Text>
 
           {serverError && (
@@ -235,7 +217,7 @@ const Register: React.FC = () => {
           )}
 
           <FormControl mb="6">
-            <FormLabel>¿Eres adoptante o protectora?</FormLabel>
+            <FormLabel>{t("register_role_label")}</FormLabel>
             <Select
               value={role}
               onChange={(e) =>
@@ -243,30 +225,30 @@ const Register: React.FC = () => {
               }
               borderColor="teal.300"
             >
-              <option value="adoptante">Adoptante</option>
-              <option value="protectora">Protectora</option>
+              <option value="adoptante">{t("role_adoptante")}</option>
+              <option value="protectora">{t("role_protectora")}</option>
             </Select>
           </FormControl>
 
           <FormControl isInvalid={!!emailError} mb="4">
-            <FormLabel>Email</FormLabel>
+            <FormLabel>{t("email")}</FormLabel>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Correo electrónico"
+              placeholder={t("placeholder_email")}
               borderColor="teal.300"
             />
             {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
           </FormControl>
 
           <FormControl isInvalid={!!passwordError} mb="4">
-            <FormLabel>Contraseña</FormLabel>
+            <FormLabel>{t("password")}</FormLabel>
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
+              placeholder={t("placeholder_password")}
               borderColor="teal.300"
             />
             {passwordError && (
@@ -275,12 +257,12 @@ const Register: React.FC = () => {
           </FormControl>
 
           <FormControl isInvalid={!!confirmPasswordError} mb="6">
-            <FormLabel>Confirmar Contraseña</FormLabel>
+            <FormLabel>{t("confirm_password")}</FormLabel>
             <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmar contraseña"
+              placeholder={t("placeholder_confirm_password")}
               borderColor="teal.300"
             />
             {confirmPasswordError && (
@@ -291,12 +273,12 @@ const Register: React.FC = () => {
           {role === "adoptante" && (
             <>
               <FormControl isInvalid={!!usernameError} mb="4">
-                <FormLabel>Nombre de usuario</FormLabel>
+                <FormLabel>{t("username_label")}</FormLabel>
                 <Input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Ej. juan_perez"
+                  placeholder={t("placeholder_username")}
                   borderColor="teal.300"
                 />
                 {usernameError && (
@@ -305,23 +287,23 @@ const Register: React.FC = () => {
               </FormControl>
 
               <FormControl mb="4">
-                <FormLabel>Nombre</FormLabel>
+                <FormLabel>{t("first_name_label")}</FormLabel>
                 <Input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Tu nombre"
+                  placeholder={t("placeholder_first_name")}
                   borderColor="teal.300"
                 />
               </FormControl>
 
               <FormControl mb="6">
-                <FormLabel>Apellido</FormLabel>
+                <FormLabel>{t("last_name_label")}</FormLabel>
                 <Input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Tu apellido"
+                  placeholder={t("placeholder_last_name")}
                   borderColor="teal.300"
                 />
               </FormControl>
@@ -331,23 +313,23 @@ const Register: React.FC = () => {
           {role === "protectora" && (
             <>
               <FormControl mb="4">
-                <FormLabel>Nombre de la protectora</FormLabel>
+                <FormLabel>{t("shelter_name_label")}</FormLabel>
                 <Input
                   type="text"
                   value={shelterName}
                   onChange={(e) => setShelterName(e.target.value)}
-                  placeholder="Ej. Abam i Apropat"
+                  placeholder={t("placeholder_shelter_name")}
                   borderColor="teal.300"
                 />
               </FormControl>
 
               <FormControl isInvalid={!!protectoraUsernameError} mb="4">
-                <FormLabel>Username de protectora</FormLabel>
+                <FormLabel>{t("protectora_username_label")}</FormLabel>
                 <Input
                   type="text"
                   value={protectoraUsername}
                   onChange={(e) => setProtectoraUsername(e.target.value)}
-                  placeholder="Ej. abam_apropat"
+                  placeholder={t("placeholder_protectora_username")}
                   borderColor="teal.300"
                 />
                 {protectoraUsernameError && (
@@ -356,12 +338,12 @@ const Register: React.FC = () => {
               </FormControl>
 
               <FormControl mb="6">
-                <FormLabel>Localidad</FormLabel>
+                <FormLabel>{t("localidad_label")}</FormLabel>
                 <Input
                   type="text"
                   value={localidad}
                   onChange={(e) => setLocalidad(e.target.value)}
-                  placeholder="Ej. Barcelona, Madrid..."
+                  placeholder={t("placeholder_localidad")}
                   borderColor="teal.300"
                 />
               </FormControl>
@@ -375,12 +357,12 @@ const Register: React.FC = () => {
             size="lg"
             mb="6"
           >
-            Registrarse
+            {t("register_button")}
           </Button>
 
           <Flex justify="center">
             <Button variant="link" color="teal.500" onClick={goBackToLogin}>
-              Volver al Login
+              {t("register_go_login")}
             </Button>
           </Flex>
         </CardBody>

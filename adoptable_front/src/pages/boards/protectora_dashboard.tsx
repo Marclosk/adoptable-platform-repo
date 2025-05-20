@@ -1,4 +1,4 @@
-// ── src/pages/protectora/ProtectoraDashboard.tsx ──
+// src/pages/protectora/ProtectoraDashboard.tsx
 
 import React, { useEffect, useState } from "react";
 import {
@@ -27,6 +27,7 @@ import {
 } from "react-icons/fa";
 import Layout from "../../components/layout";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   getProtectoraMetrics,
@@ -60,6 +61,7 @@ import {
 const COLORS = ["#38A169", "#ED8936", "#4FD1C5"];
 
 const ProtectoraDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -121,7 +123,7 @@ const ProtectoraDashboard: React.FC = () => {
     <Layout handleLogout={() => navigate("/login")}>
       <Box maxW="1200px" mx="auto" py={8} px={[4, 6, 8]}>
         <Heading mb={6} color="teal.600">
-          Panel Protectora
+          {t("panel_protectora")}
         </Heading>
 
         {/* Estadísticas generales */}
@@ -130,7 +132,7 @@ const ProtectoraDashboard: React.FC = () => {
             <Flex align="center" mb={2}>
               <Icon as={FaPaw} boxSize={6} color="teal.500" mr={3} />
               <Text fontSize="lg" fontWeight="medium">
-                Total de animales
+                {t("total_animales")}
               </Text>
             </Flex>
             <Text fontSize="3xl" fontWeight="bold">
@@ -146,7 +148,7 @@ const ProtectoraDashboard: React.FC = () => {
                 mr={3}
               />
               <Text fontSize="lg" fontWeight="medium">
-                Solicitudes pendientes
+                {t("solicitudes_pendientes")}
               </Text>
             </Flex>
             <Text fontSize="3xl" fontWeight="bold">
@@ -157,7 +159,7 @@ const ProtectoraDashboard: React.FC = () => {
             <Flex align="center" mb={2}>
               <Icon as={FaCheckCircle} boxSize={6} color="green.500" mr={3} />
               <Text fontSize="lg" fontWeight="medium">
-                Adopciones completadas
+                {t("adopciones_completadas")}
               </Text>
             </Flex>
             <Text fontSize="3xl" fontWeight="bold">
@@ -173,7 +175,7 @@ const ProtectoraDashboard: React.FC = () => {
           {/* PieChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
-              Estado global
+              {t("estado_global")}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -182,10 +184,10 @@ const ProtectoraDashboard: React.FC = () => {
                     total_animals - completed_adoptions
                   }`}
                   data={[
-                    { name: "Adoptados", value: completed_adoptions },
-                    { name: "Pendientes", value: pending_requests },
+                    { name: t("adoptados"), value: completed_adoptions },
+                    { name: t("pendientes"), value: pending_requests },
                     {
-                      name: "Disponibles",
+                      name: t("disponibles"),
                       value: total_animals - completed_adoptions,
                     },
                   ]}
@@ -196,7 +198,7 @@ const ProtectoraDashboard: React.FC = () => {
                   paddingAngle={2}
                   label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
                   labelLine={false}
-                  isAnimationActive={true}
+                  isAnimationActive
                   animationBegin={0}
                   animationDuration={800}
                   animationEasing="ease-in-out"
@@ -229,7 +231,7 @@ const ProtectoraDashboard: React.FC = () => {
           {/* LineChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
-              Adopciones mensuales
+              {t("adopciones_mensuales")}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart
@@ -246,7 +248,7 @@ const ProtectoraDashboard: React.FC = () => {
                   stroke="#38A169"
                   strokeWidth={2}
                   dot
-                  isAnimationActive={true}
+                  isAnimationActive
                   animationBegin={0}
                   animationDuration={800}
                   animationEasing="ease-in-out"
@@ -258,7 +260,7 @@ const ProtectoraDashboard: React.FC = () => {
           {/* BarChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
-              Animales más solicitados
+              {t("animales_mas_solicitados")}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
@@ -279,7 +281,7 @@ const ProtectoraDashboard: React.FC = () => {
                 <Bar
                   dataKey="count"
                   fill="#3182CE"
-                  isAnimationActive={true}
+                  isAnimationActive
                   animationBegin={0}
                   animationDuration={800}
                   animationEasing="ease-in-out"
@@ -294,14 +296,14 @@ const ProtectoraDashboard: React.FC = () => {
         {/* Tabla detallada: Animales en adopción */}
         <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
           <Heading size="md" mb={4}>
-            Animales en adopción
+            {t("animales_en_adopcion")}
           </Heading>
           <Table variant="simple">
             <Thead>
               <Tr>
-                <Th>Nombre</Th>
-                <Th isNumeric>Solicitudes</Th>
-                <Th textAlign="right">Acciones</Th>
+                <Th>{t("nombre")}</Th>
+                <Th isNumeric>{t("solicitudes")}</Th>
+                <Th textAlign="right">{t("acciones")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -316,7 +318,7 @@ const ProtectoraDashboard: React.FC = () => {
                       rightIcon={<FaChevronRight />}
                       onClick={() => navigate(`/animals/${a.id}/requests`)}
                     >
-                      Ver
+                      {t("ver")}
                     </Button>
                   </Td>
                 </Tr>
@@ -325,7 +327,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Table>
           {availableAnimals.length === 0 && (
             <Text textAlign="center" mt={4} color="gray.500">
-              No tienes animales en adopción.
+              {t("no_tienes_animales_en_adopcion")}
             </Text>
           )}
         </Box>
@@ -333,14 +335,14 @@ const ProtectoraDashboard: React.FC = () => {
         {/* Tabla detallada: Animales adoptados */}
         <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
           <Heading size="md" mb={4}>
-            Animales adoptados
+            {t("animales_adoptados")}
           </Heading>
           <Table variant="simple">
             <Thead>
               <Tr>
-                <Th>Nombre</Th>
-                <Th>Adoptado por</Th>
-                <Th textAlign="right">Acciones</Th>
+                <Th>{t("nombre")}</Th>
+                <Th>{t("adoptado_por")}</Th>
+                <Th textAlign="right">{t("acciones")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -355,7 +357,7 @@ const ProtectoraDashboard: React.FC = () => {
                       rightIcon={<FaChevronRight />}
                       onClick={() => navigate(`/animals/${a.id}/requests`)}
                     >
-                      Ver
+                      {t("ver")}
                     </Button>
                   </Td>
                 </Tr>
@@ -364,7 +366,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Table>
           {adoptedAnimals.length === 0 && (
             <Text textAlign="center" mt={4} color="gray.500">
-              No tienes animales adoptados.
+              {t("no_tienes_animales_adoptados")}
             </Text>
           )}
         </Box>

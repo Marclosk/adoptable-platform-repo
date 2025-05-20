@@ -1,7 +1,13 @@
 // src/App.tsx
 
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useEffect } from "react";
+// 1️⃣ Workaround para evitar el ReferenceError de Vite HMR
+declare const __WS_TOKEN__: string;
+if (typeof __WS_TOKEN__ === "undefined") {
+  ;(window as any).__WS_TOKEN__ = "";
+}
+
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "./features/auth/authSlice";
 
@@ -13,18 +19,23 @@ import Profile from "./pages/profile/profile";
 import Donations from "./pages/donations/donations";
 import ContactPage from "./pages/contact/contact";
 import AddAnimal from "./pages/animal/add_animal";
-import AnimalRequests from "./pages/protectora/animal_requests";  
+import AnimalRequests from "./pages/protectora/animal_requests";
 import ProtectoraDashboard from "./pages/boards/protectora_dashboard";
 
-const App = () => {
+const App: React.FC = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
     const saved = localStorage.getItem("authState");
     if (saved) {
-      const { user, token } = JSON.parse(saved);
-      if (user && token) {
-        dispatch(loginSuccess({ user, token }));
+      try {
+        // parseamos sólo lo que loginSuccess acepta: { user, role }
+        const { user, role } = JSON.parse(saved);
+        if (user && role) {
+          dispatch(loginSuccess({ user, role }));
+        }
+      } catch (err) {
+        console.warn("No se pudo restaurar authState:", err);
       }
     }
   }, [dispatch]);
@@ -39,12 +50,11 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/card_detail/:id" element={<CardDetail />} />
         <Route path="/perfil" element={<Profile />} />
-        <Route path="/donacions" element={<Donations />} />
-        <Route path="/contacte" element={<ContactPage />} />
+        <Route path="/donaciones" element={<Donations />} />
+        <Route path="/contacto" element={<ContactPage />} />
         <Route path="/add-animal" element={<AddAnimal />} />
-        <Route path="/animals/:id/requests" element={<AnimalRequests />}/>
-        <Route path="/protectora/dashboard" element={<ProtectoraDashboard />}/>
-
+        <Route path="/animals/:id/requests" element={<AnimalRequests />} />
+        <Route path="/protectora/dashboard" element={<ProtectoraDashboard />} />
       </Routes>
     </Router>
   );

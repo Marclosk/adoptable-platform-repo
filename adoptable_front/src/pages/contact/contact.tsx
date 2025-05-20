@@ -1,3 +1,5 @@
+// src/pages/animal/ContactPage.tsx
+
 import React, { useState } from "react";
 import {
   Box,
@@ -13,14 +15,16 @@ import {
   useToast,
   FormErrorMessage,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 import Layout from "../../components/layout";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
-import { useDispatch} from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { sendContactMessage, ContactData } from "./contact_services";
 
 const ContactPage: React.FC = () => {
+  const { t } = useTranslation();
   const toast = useToast();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -46,17 +50,17 @@ const ContactPage: React.FC = () => {
     let valid = true;
 
     if (!name.trim()) {
-      setNameError("Por favor, ingresa tu nombre.");
+      setNameError(t("error_nombre_obligatorio"));
       valid = false;
     }
 
     if (!validateEmail(email)) {
-      setEmailError("Por favor, ingresa un correo válido.");
+      setEmailError(t("error_correo_invalido"));
       valid = false;
     }
 
     if (!message.trim()) {
-      setMessageError("El mensaje no puede estar vacío.");
+      setMessageError(t("error_mensaje_vacio"));
       valid = false;
     }
 
@@ -68,8 +72,8 @@ const ContactPage: React.FC = () => {
       await sendContactMessage(contactData);
 
       toast({
-        title: "Mensaje enviado",
-        description: "Gracias por contactarnos. Te responderemos pronto.",
+        title: t("mensaje_enviado_titulo"),
+        description: t("mensaje_enviado_descripcion"),
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -84,16 +88,16 @@ const ContactPage: React.FC = () => {
       if (error.response?.status === 400) {
         const data = error.response.data;
         toast({
-          title: "Error",
-          description: data.error || "No se pudo enviar el mensaje.",
+          title: t("error"),
+          description: data.error || t("error_envio_mensaje"),
           status: "error",
           duration: 3000,
           isClosable: true,
         });
       } else {
         toast({
-          title: "Error",
-          description: "No se pudo enviar el mensaje. Inténtalo más tarde.",
+          title: t("error"),
+          description: t("error_envio_mensaje_luego"),
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -101,6 +105,7 @@ const ContactPage: React.FC = () => {
       }
     }
   };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -114,7 +119,7 @@ const ContactPage: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box
-        bg="gray.50" 
+        bg="gray.50"
         minH="100vh"
         display="flex"
         justifyContent="center"
@@ -137,17 +142,17 @@ const ContactPage: React.FC = () => {
               mb={4}
               color="teal.500"
             >
-              Contáctanos
+              {t("contact_title")}
             </Heading>
             <Text fontSize="md" textAlign="center" mb={6} color="gray.600">
-              ¿Tienes alguna pregunta o comentario? Envíanos un mensaje.
+              {t("contact_subtitle")}
             </Text>
 
             <FormControl isInvalid={!!nameError} mb={4}>
-              <FormLabel>Nombre</FormLabel>
+              <FormLabel>{t("nombre")}</FormLabel>
               <Input
                 type="text"
-                placeholder="Tu nombre"
+                placeholder={t("placeholder_nombre")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 borderColor="teal.300"
@@ -156,21 +161,23 @@ const ContactPage: React.FC = () => {
             </FormControl>
 
             <FormControl isInvalid={!!emailError} mb={4}>
-              <FormLabel>Correo electrónico</FormLabel>
+              <FormLabel>{t("correo_electronico")}</FormLabel>
               <Input
                 type="email"
-                placeholder="Tu correo"
+                placeholder={t("placeholder_correo")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 borderColor="teal.300"
               />
-              {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
+              {emailError && (
+                <FormErrorMessage>{emailError}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl isInvalid={!!messageError} mb={4}>
-              <FormLabel>Mensaje</FormLabel>
+              <FormLabel>{t("mensaje")}</FormLabel>
               <Textarea
-                placeholder="Escribe tu mensaje aquí..."
+                placeholder={t("placeholder_mensaje")}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 borderColor="teal.300"
@@ -188,7 +195,7 @@ const ContactPage: React.FC = () => {
               mt={4}
               onClick={handleSubmit}
             >
-              Enviar
+              {t("enviar")}
             </Button>
           </CardBody>
         </Card>

@@ -1,4 +1,4 @@
-// src/components/navbar/navbar_superior.tsx
+// src/components/navbar/NavbarSuperior.tsx
 
 import React, { useEffect, useState } from "react";
 import {
@@ -10,17 +10,18 @@ import {
   MenuItem,
   Button,
   Avatar,
-  Box,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import { getProfile } from "../../pages/profile/user_services";
+import { useTranslation } from "react-i18next";
 
 interface NavbarSuperiorProps {
   handleLogout: () => void;
 }
 
 const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
+  const { t } = useTranslation();
   const [avatarUrl, setAvatarUrl] = useState<string>();
   // Elegimos un color oscuro para el texto del menú
   const menuBg = useColorModeValue("white", "gray.800");
@@ -76,7 +77,7 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
             onClick={handleLogout}
             _hover={{ bg: "teal.100", color: "teal.800" }}
           >
-            Logout
+            {t("logout")}
           </MenuItem>
         </MenuList>
       </Menu>

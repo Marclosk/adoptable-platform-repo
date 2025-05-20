@@ -6,6 +6,8 @@ import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
+import { useTranslation } from "react-i18next";
+
 import Layout from "../../components/layout";
 import Loader from "../../components/loader/loader";
 import {
@@ -33,6 +35,7 @@ import {
   AlertDialogFooter,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
+
 import {
   getProfile,
   updateProfile,
@@ -51,6 +54,7 @@ import {
 } from "../../components/adoption_form/adoption_form";
 
 const Profile: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
@@ -74,7 +78,6 @@ const Profile: React.FC = () => {
   });
   const [preview, setPreview] = useState<string>("");
 
-  // AlertDialog para desadoptar
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [petToUnadopt, setPetToUnadopt] = useState<{
     id: number;
@@ -82,19 +85,16 @@ const Profile: React.FC = () => {
     adopter: string;
   } | null>(null);
 
-  // AlertDialog para cancelar solicitud
   const [requestToCancel, setRequestToCancel] = useState<{
     id: number;
     name: string;
   } | null>(null);
 
-  // Inline AdoptionForm toggle
   const [showAdoptionForm, setShowAdoptionForm] = useState(false);
   const [adopFormValues, setAdopFormValues] = useState<
     Partial<AdoptionFormData>
   >({});
 
-  // Fetch profile
   const fetchProfile = useCallback(async () => {
     try {
       const data = await getProfile();
@@ -107,72 +107,41 @@ const Profile: React.FC = () => {
         bio: data.bio || "",
       });
       setIsEditing(false);
-    } catch (err) {
-      console.error("Error al obtener perfil:", err);
+    } catch {
+      toast({ title: t("error_cargar_perfil"), status: "error" });
       setIsEditing(true);
     }
-  }, [authUser]);
-
-  // src/pages/profile/Profile.tsx
+  }, [t]);
 
   const toggleAdoptionForm = async () => {
     if (!showAdoptionForm) {
       try {
-        console.log("🖱️ Cargando datos de adopción…");
         const existing = await getAdoptionForm();
-        console.log("✅ Datos recibidos:", existing);
-
         setAdopFormValues({
-          fullName:            existing.full_name,
-          address:             existing.address,
-          phone:               existing.phone,
-          email:               existing.email,
-          motivation:          existing.reason,
-          hasExperience:       existing.experience !== "",
+          fullName: existing.full_name,
+          address: existing.address,
+          phone: existing.phone,
+          email: existing.email,
+          motivation: existing.reason,
+          hasExperience: existing.experience !== "",
           experienceDescription: existing.experience,
-          hasOtherPets:        existing.has_other_pets ? "yes" : "no",
-          otherPetTypes:       existing.other_pet_types,
-          references:          existing.references,
+          hasOtherPets: existing.has_other_pets ? "yes" : "no",
+          otherPetTypes: existing.other_pet_types,
+          references: existing.references,
         });
-
         setShowAdoptionForm(true);
-      } catch (err) {
-        console.error("❌ Error al cargar formulario:", err);
-        toast({
-          title: "No se pudieron cargar los datos previos",
-          status: "error",
-        });
+      } catch {
+        toast({ title: t("error_cargar_datos_adopcion"), status: "error" });
       }
     } else {
       setShowAdoptionForm(false);
     }
   };
 
-  const loadAdoptionForm = useCallback(async () => {
-    try {
-      const existing = await getAdoptionForm(); // ya desenvuelto
-      setAdopFormValues({
-        fullName: existing.full_name || "",
-        address: existing.address || "",
-        phone: existing.phone || "",
-        email: existing.email || "",
-        motivation: existing.reason || "",
-        hasExperience: !!existing.experience,
-        experienceDescription: existing.experience || "",
-        hasOtherPets: existing.has_other_pets ? "yes" : "no",
-        otherPetTypes: existing.other_pet_types || "",
-        references: existing.references || "",
-      });
-    } catch (err) {
-      console.error("❌ loadAdoptionForm error", err);
-    }
-  }, []);
-
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
-  // Save profile changes
   const handleSave = async () => {
     try {
       const fd = new FormData();
@@ -182,47 +151,35 @@ const Profile: React.FC = () => {
       fd.append("bio", formData.bio);
 
       await updateProfile(fd);
-      toast({ title: "Perfil actualizado", status: "success" });
+      toast({ title: t("perfil_actualizado"), status: "success" });
       fetchProfile();
       setIsEditing(false);
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error al actualizar perfil", status: "error" });
+    } catch {
+      toast({ title: t("error_actualizar_perfil"), status: "error" });
     }
   };
 
-// Profile.tsx (o donde esté definido)
+  const handleAdoptionSubmit = async (data: AdoptionFormData) => {
+    try {
+      const payload: AdoptionFormAPI = {
+        full_name: data.fullName,
+        address: data.address,
+        phone: data.phone,
+        email: data.email,
+        reason: data.motivation,
+        experience: data.hasExperience ? data.experienceDescription : "",
+        has_other_pets: data.hasOtherPets === "yes",
+        other_pet_types: data.hasOtherPets === "yes" ? data.otherPetTypes : "",
+        references: data.references,
+      };
+      await submitAdoptionForm(payload);
+      toast({ title: t("formulario_guardado"), status: "success" });
+      setShowAdoptionForm(false);
+    } catch {
+      toast({ title: t("error_guardar_formulario"), status: "error" });
+    }
+  };
 
-const handleAdoptionSubmit = async (data: AdoptionFormData) => {
-  try {
-    // construimos el objeto EXACTO que espera el backend
-    const payload: AdoptionFormAPI = {
-      full_name:       data.fullName,
-      address:         data.address,
-      phone:           data.phone,
-      email:           data.email,
-      reason:          data.motivation,
-      experience:      data.hasExperience
-                          ? data.experienceDescription
-                          : "",
-      has_other_pets:  data.hasOtherPets === "yes",
-      other_pet_types: data.hasOtherPets === "yes"
-                          ? data.otherPetTypes
-                          : "",
-      references:      data.references,
-    };
-
-    await submitAdoptionForm(payload);
-    toast({ title: "Formulario guardado", status: "success" });
-    setShowAdoptionForm(false);
-  } catch (err) {
-    console.error("Error al guardar formulario:", err);
-    toast({ title: "Error al guardar formulario", status: "error" });
-  }
-};
-
-
-  // Desadoptar
   const openUnadoptDialog = (id: number, name: string, adopter: string) => {
     setPetToUnadopt({ id, name, adopter });
     setIsAlertOpen(true);
@@ -236,40 +193,33 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
     try {
       await unadoptAnimal(petToUnadopt.id);
       toast({
-        title: `Animal "${petToUnadopt.name}" desadoptado`,
+        title: t("desadoptacion_exito", { name: petToUnadopt.name }),
         status: "success",
       });
       fetchProfile();
-    } catch (err: any) {
-      console.error(err);
-      toast({ title: "Error al desadoptar", status: "error" });
+    } catch {
+      toast({ title: t("error_desadoptar"), status: "error" });
     } finally {
       closeUnadoptDialog();
     }
   };
 
-  // Cancelar solicitud de adopción
-  const openCancelRequestDialog = (id: number, name: string) => {
-    setRequestToCancel({ id, name });
-  };
   const confirmCancelRequest = async () => {
     if (!requestToCancel) return;
     try {
       await cancelAdoptionRequest(requestToCancel.id);
       toast({
-        title: `Solicitud de "${requestToCancel.name}" cancelada`,
+        title: t("solicitud_cancelada", { name: requestToCancel.name }),
         status: "info",
       });
       fetchProfile();
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error al cancelar solicitud", status: "error" });
+    } catch {
+      toast({ title: t("error_cancelar_solicitud"), status: "error" });
     } finally {
       setRequestToCancel(null);
     }
   };
 
-  // Logout
   const handleLogout = async () => {
     await logout();
     dispatch(logoutSuccess());
@@ -279,23 +229,21 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
   const handleRemoveFavorite = async (animalId: number) => {
     try {
       await removeFavorite(animalId);
-      toast({ title: "Favorito eliminado", status: "info" });
+      toast({ title: t("favorito_eliminado"), status: "info" });
       fetchProfile();
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Error al eliminar favorito", status: "error" });
+    } catch {
+      toast({ title: t("error_eliminar_favorito"), status: "error" });
     }
   };
 
   if (!profile) {
-    return <Loader message="Cargando perfil…" />;
+    return <Loader message={t("cargando_perfil")} />;
   }
 
   return (
     <Layout handleLogout={handleLogout}>
       <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
         <VStack spacing={8} align="center">
-          {/* Tarjeta Perfil */}
           <Box
             bg="white"
             boxShadow="md"
@@ -309,10 +257,10 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
             {isEditing ? (
               <VStack spacing={6} align="stretch">
                 <Heading size="lg" color="teal.600" textAlign="center">
-                  Editar Perfil
+                  {t("editar_perfil")}
                 </Heading>
                 <FormControl>
-                  <FormLabel>Avatar</FormLabel>
+                  <FormLabel>{t("avatar")}</FormLabel>
                   <Input
                     type="file"
                     accept="image/*"
@@ -335,7 +283,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                   )}
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Ubicación</FormLabel>
+                  <FormLabel>{t("ubicacion")}</FormLabel>
                   <Input
                     name="location"
                     value={formData.location}
@@ -346,7 +294,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Teléfono</FormLabel>
+                  <FormLabel>{t("telefono")}</FormLabel>
                   <Input
                     name="phone_number"
                     value={formData.phone_number}
@@ -360,7 +308,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Biografía</FormLabel>
+                  <FormLabel>{t("biografia")}</FormLabel>
                   <Textarea
                     name="bio"
                     value={formData.bio}
@@ -372,14 +320,14 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                 </FormControl>
                 <HStack justify="center" spacing={4}>
                   <Button colorScheme="teal" onClick={handleSave}>
-                    Guardar cambios
+                    {t("guardar_cambios")}
                   </Button>
                   <Button
                     variant="outline"
                     colorScheme="teal"
                     onClick={() => setIsEditing(false)}
                   >
-                    Cancelar
+                    {t("cancelar")}
                   </Button>
                 </HStack>
               </VStack>
@@ -396,10 +344,10 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                   {profile.username}
                 </Heading>
                 <Text fontSize="md" color="gray.600">
-                  {profile.location || "Ubicación no especificada"}
+                  {profile.location || t("ubicacion_no_especificada")}
                 </Text>
                 <Text fontSize="md" color="gray.600">
-                  {profile.phone_number || "Teléfono no disponible"}
+                  {profile.phone_number || t("telefono_no_disponible")}
                 </Text>
                 <Text
                   textAlign="center"
@@ -407,7 +355,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                   color="gray.700"
                   fontSize="lg"
                 >
-                  {profile.bio || "Sin biografía aún."}
+                  {profile.bio || t("sin_biografia")}
                 </Text>
                 <HStack spacing={4}>
                   <Button
@@ -417,9 +365,8 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                     size="sm"
                     onClick={() => setIsEditing(true)}
                   >
-                    Editar perfil
+                    {t("editar_perfil")}
                   </Button>
-
                   {role === "adoptante" && (
                     <Button
                       colorScheme="purple"
@@ -427,8 +374,8 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                       onClick={toggleAdoptionForm}
                     >
                       {showAdoptionForm
-                        ? "Ocultar formulario"
-                        : "Formulario adopción"}
+                        ? t("ocultar_formulario")
+                        : t("mostrar_formulario_adopcion")}
                     </Button>
                   )}
                 </HStack>
@@ -436,7 +383,6 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
             )}
           </Box>
 
-          {/* Inline AdoptionForm */}
           {role === "adoptante" && showAdoptionForm && (
             <Box
               bg="white"
@@ -447,7 +393,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
               maxW="800px"
             >
               <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                Formulario de Adopción
+                {t("formulario_adopcion")}
               </Heading>
               <AdoptionForm
                 initialValues={adopFormValues}
@@ -456,10 +402,8 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
             </Box>
           )}
 
-          {/* Secciones Adoptante */}
           {role === "adoptante" && (
             <>
-              {/* Favoritos */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -469,7 +413,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  Favoritos
+                  {t("favoritos")}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.favorites?.length > 0 ? (
@@ -485,19 +429,18 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                         <TagLabel>{fav.name}</TagLabel>
                         <TagCloseButton
                           onClick={(e) => {
-                            e.stopPropagation(); // evita el onClick del Tag
-                            handleRemoveFavorite(fav.id); // llama a tu servicio
+                            e.stopPropagation();
+                            handleRemoveFavorite(fav.id);
                           }}
                         />
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">No tienes favoritos aún.</Text>
+                    <Text color="gray.500">{t("no_tienes_favoritos")}</Text>
                   )}
                 </Wrap>
               </Box>
 
-              {/* Adoptados */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -507,7 +450,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  Adoptados
+                  {t("adoptados_perfil")}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.adopted?.length > 0 ? (
@@ -525,14 +468,11 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">
-                      No has adoptado ningún animal aún.
-                    </Text>
+                    <Text color="gray.500">{t("no_has_adoptado")}</Text>
                   )}
                 </Wrap>
               </Box>
 
-              {/* Solicitudes de adopción */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -542,7 +482,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  Solicitudes de adopción
+                  {t("solicitudes_adopcion_perfil")}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.requests?.length > 0 ? (
@@ -561,61 +501,24 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                         <TagCloseButton
                           onClick={(e) => {
                             e.stopPropagation();
-                            openCancelRequestDialog(req.id, req.animal.name);
+                            setRequestToCancel({
+                              id: req.id,
+                              name: req.animal.name,
+                            });
                           }}
                         />
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">
-                      No has solicitado ninguna adopción.
-                    </Text>
+                    <Text color="gray.500">{t("no_has_solicitado")}</Text>
                   )}
                 </Wrap>
               </Box>
             </>
           )}
 
-          {/* Secciones Protectora */}
           {role === "protectora" && (
             <>
-          {/* En adopción */}
-          <Box
-            bg="white"
-            boxShadow="md"
-            p={6}
-            borderRadius="lg"
-            w="100%"
-            maxW="800px"
-          >
-            <Heading size="md" color="teal.600" mb={4} textAlign="center">
-              En adopción
-            </Heading>
-            <Wrap justify="center" spacing={3}>
-              {profile.en_adopcion?.length > 0 ? (
-                profile.en_adopcion.map((a: any) => (
-                  <Tag
-                    key={a.id}
-                    size="md"
-                    variant="subtle"
-                    colorScheme="orange"
-                    cursor="pointer"
-                    onClick={() =>
-                      navigate(`/animals/${a.id}/requests`)
-                    }
-                  >
-                    <TagLabel>{a.name}</TagLabel>
-                  </Tag>
-                ))
-              ) : (
-                <Text color="gray.500">
-                  No tienes perros en adopción.
-                </Text>
-              )}
-            </Wrap>
-          </Box>
-
-              {/* Adoptados */}
               <Box
                 bg="white"
                 boxShadow="md"
@@ -625,7 +528,38 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  Adoptados
+                  {t("en_adopcion")}
+                </Heading>
+                <Wrap justify="center" spacing={3}>
+                  {profile.en_adopcion?.length > 0 ? (
+                    profile.en_adopcion.map((a: any) => (
+                      <Tag
+                        key={a.id}
+                        size="md"
+                        variant="subtle"
+                        colorScheme="orange"
+                        cursor="pointer"
+                        onClick={() => navigate(`/animals/${a.id}/requests`)}
+                      >
+                        <TagLabel>{a.name}</TagLabel>
+                      </Tag>
+                    ))
+                  ) : (
+                    <Text color="gray.500">{t("no_perros_en_adopcion")}</Text>
+                  )}
+                </Wrap>
+              </Box>
+
+              <Box
+                bg="white"
+                boxShadow="md"
+                p={6}
+                borderRadius="lg"
+                w="100%"
+                maxW="800px"
+              >
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
+                  {t("adoptados_protectora")}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.adopted?.length > 0 ? (
@@ -648,7 +582,7 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                               openUnadoptDialog(
                                 pet.id,
                                 pet.name,
-                                pet.adopter_username
+                                pet.adopter_username!
                               )
                             }
                           />
@@ -656,16 +590,13 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">
-                      No se ha completado ninguna adopción aún.
-                    </Text>
+                    <Text color="gray.500">{t("no_completado_adopcion")}</Text>
                   )}
                 </Wrap>
               </Box>
             </>
           )}
 
-          {/* AlertDialog: Confirmar desadopción */}
           <AlertDialog
             isOpen={isAlertOpen}
             leastDestructiveRef={cancelRef}
@@ -674,25 +605,27 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
             <AlertDialogOverlay>
               <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Confirmar desadopción
+                  {t("confirmar_desadopcion")}
                 </AlertDialogHeader>
                 <AlertDialogBody>
                   {petToUnadopt &&
-                    `¿Estás seguro de que "${petToUnadopt.name}" ya no está adoptado por ${petToUnadopt.adopter}?`}
+                    t("confirmar_desadopcion_text", {
+                      name: petToUnadopt.name,
+                      adopter: petToUnadopt.adopter,
+                    })}
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button ref={cancelRef} onClick={closeUnadoptDialog}>
-                    Cancelar
+                    {t("cancelar")}
                   </Button>
                   <Button colorScheme="red" onClick={confirmUnadopt} ml={3}>
-                    Sí, desadoptar
+                    {t("si_desadoptar")}
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialogOverlay>
           </AlertDialog>
 
-          {/* AlertDialog: Confirmar cancelar solicitud */}
           <AlertDialog
             isOpen={!!requestToCancel}
             leastDestructiveRef={cancelRef}
@@ -701,25 +634,26 @@ const handleAdoptionSubmit = async (data: AdoptionFormData) => {
             <AlertDialogOverlay>
               <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  Cancelar solicitud
+                  {t("cancelar_solicitud")}
                 </AlertDialogHeader>
                 <AlertDialogBody>
-                  ¿Eliminar la solicitud de adopción de "{requestToCancel?.name}
-                  "?
+                  {t("confirmar_cancelar_solicitud_text", {
+                    name: requestToCancel?.name,
+                  })}
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button
                     ref={cancelRef}
                     onClick={() => setRequestToCancel(null)}
                   >
-                    Cancelar
+                    {t("cancelar")}
                   </Button>
                   <Button
                     colorScheme="orange"
                     onClick={confirmCancelRequest}
                     ml={3}
                   >
-                    Sí, cancelar
+                    {t("si_cancelar")}
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>

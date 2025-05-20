@@ -1,3 +1,5 @@
+// src/pages/auth/session/checkSession.ts
+
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -11,7 +13,6 @@ export const checkSession = async () => {
     }
   } catch (error) {
     console.error("Error al verificar la sesión:", error);
-
 
     if (axios.isAxiosError(error) && error.response && error.response.status === 401) {
       Cookies.remove("sessionid");

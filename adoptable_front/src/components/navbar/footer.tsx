@@ -12,13 +12,18 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
+
   // escogemos un fondo contrastado respecto al dashboard (teal oscuro)
   const bg = "teal.700";
   const linkColor = "whiteAlpha.900";
   const iconBg = useColorModeValue("whiteAlpha.900", "gray.700");
   const iconColor = useColorModeValue("teal.700", "teal.300");
+
+  const year = new Date().getFullYear();
 
   return (
     <Box as="footer" bg={bg} color="whiteAlpha.900" py={8} mt="auto">
@@ -37,7 +42,7 @@ const Footer: React.FC = () => {
             AdoptAble
           </Text>
           <Text fontSize="sm" color="whiteAlpha.700">
-            Connecting pets with loving homes.
+            {t("footer_tagline")}
           </Text>
         </VStack>
 
@@ -49,40 +54,76 @@ const Footer: React.FC = () => {
         >
           <VStack align="start" spacing={2}>
             <Text fontSize="md" fontWeight="semibold">
-              Navegación
+              {t("footer_nav_title")}
             </Text>
-            <Link href="/" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Inicio
+            <Link
+              href="/"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("nav_inicio")}
             </Link>
-            <Link href="/dogder" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Dogder
+            <Link
+              href="/dogder"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("nav_dogder")}
             </Link>
-            <Link href="/perfil" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Perfil
+            <Link
+              href="/perfil"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("nav_perfil")}
             </Link>
-            <Link href="/donaciones" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Donaciones
+            <Link
+              href="/donaciones"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("nav_donaciones")}
             </Link>
-            <Link href="/contacto" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Contacto
+            <Link
+              href="/contacto"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("nav_contacto")}
             </Link>
           </VStack>
 
           <VStack align="start" spacing={2}>
             <Text fontSize="md" fontWeight="semibold">
-              Ayuda
+              {t("footer_help_title")}
             </Text>
-            <Link href="/faq" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Preguntas frecuentes
+            <Link
+              href="/faq"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("help_faq")}
             </Link>
-            <Link href="/support" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Soporte
+            <Link
+              href="/support"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("help_support")}
             </Link>
-            <Link href="/terms" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Términos y condiciones
+            <Link
+              href="/terms"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("help_terms")}
             </Link>
-            <Link href="/privacy" color={linkColor} _hover={{ textDecoration: "underline" }}>
-              Política de privacidad
+            <Link
+              href="/privacy"
+              color={linkColor}
+              _hover={{ textDecoration: "underline" }}
+            >
+              {t("help_privacy")}
             </Link>
           </VStack>
         </HStack>
@@ -90,13 +131,13 @@ const Footer: React.FC = () => {
         {/* Redes sociales */}
         <VStack align="start" spacing={4} mt={{ base: 8, md: 0 }}>
           <Text fontSize="md" fontWeight="semibold">
-            Síguenos
+            {t("footer_follow_title")}
           </Text>
           <HStack spacing={4}>
             <IconButton
               as="a"
               href="https://facebook.com"
-              aria-label="Facebook"
+              aria-label={t("footer_facebook")}
               icon={<FaFacebook />}
               bg={iconBg}
               color={iconColor}
@@ -107,7 +148,7 @@ const Footer: React.FC = () => {
             <IconButton
               as="a"
               href="https://twitter.com"
-              aria-label="Twitter"
+              aria-label={t("footer_twitter")}
               icon={<FaTwitter />}
               bg={iconBg}
               color={iconColor}
@@ -118,7 +159,7 @@ const Footer: React.FC = () => {
             <IconButton
               as="a"
               href="https://instagram.com"
-              aria-label="Instagram"
+              aria-label={t("footer_instagram")}
               icon={<FaInstagram />}
               bg={iconBg}
               color={iconColor}
@@ -129,7 +170,7 @@ const Footer: React.FC = () => {
             <IconButton
               as="a"
               href="https://linkedin.com"
-              aria-label="LinkedIn"
+              aria-label={t("footer_linkedin")}
               icon={<FaLinkedin />}
               bg={iconBg}
               color={iconColor}
@@ -143,7 +184,7 @@ const Footer: React.FC = () => {
 
       {/* Copy */}
       <Box mt={8} textAlign="center" fontSize="sm" color="whiteAlpha.700">
-        © {new Date().getFullYear()} AdoptAble. Todos los derechos reservados.
+        {t("footer_copy", { year })}
       </Box>
     </Box>
   );

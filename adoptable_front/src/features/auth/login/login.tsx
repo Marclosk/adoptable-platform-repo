@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+// src/pages/auth/Login.tsx
+
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginSuccess, loginFailure } from "../authSlice";
@@ -17,8 +19,10 @@ import {
   FormErrorMessage,
   Flex,
 } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
 
-const Login = () => {
+const Login: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -41,44 +45,31 @@ const Login = () => {
   const handleLogin = async () => {
     setPasswordError("");
     if (!username) {
-      setPasswordError("El campo nombre de usuario está vacío");
+      setPasswordError(t("error_username_required"));
       return;
     }
     if (!password) {
-      setPasswordError("El campo contraseña está vacío");
+      setPasswordError(t("error_password_required"));
       return;
     }
     if (!validatePassword(password)) {
-      setPasswordError(
-        "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número."
-      );
+      setPasswordError(t("error_password_requirements"));
       return;
     }
 
     try {
-      console.log("Intentando iniciar sesión...");
       const data: LoginResponse = await login({ username, password });
-
-
       dispatch(
         loginSuccess({
           user: data.user,
           role: data.role,
         })
       );
-
-
-      if (data.role === "protectora") {
-        navigate("/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard");
     } catch (err: any) {
       dispatch(loginFailure(err.message));
       console.error("Error durante el inicio de sesión:", err.message);
-      setPasswordError("Credenciales inválidas.");
-    } finally {
-      console.log("Fin del proceso de inicio de sesión.");
+      setPasswordError(t("error_invalid_credentials"));
     }
   };
 
@@ -106,30 +97,30 @@ const Login = () => {
       >
         <CardBody>
           <Heading as="h2" size="lg" textAlign="center" mb="6" color="teal.500">
-            Iniciar sesión
+            {t("login_heading")}
           </Heading>
 
           <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
-            Bienvenido a nuestra plataforma de adopción de perros.
+            {t("login_subtitle")}
           </Text>
 
           <FormControl mb="4">
-            <FormLabel>Nombre de usuario</FormLabel>
+            <FormLabel>{t("login_username_label")}</FormLabel>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Nombre de usuario"
+              placeholder={t("placeholder_username")}
               borderColor="teal.300"
             />
           </FormControl>
 
           <FormControl isInvalid={!!passwordError} mb="6">
-            <FormLabel>Contraseña</FormLabel>
+            <FormLabel>{t("password_label")}</FormLabel>
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Contraseña"
+              placeholder={t("placeholder_password")}
               onKeyDown={handleKeyDown}
               borderColor="teal.300"
             />
@@ -145,14 +136,14 @@ const Login = () => {
             size="lg"
             mb="6"
           >
-            Iniciar sesión
+            {t("login_button")}
           </Button>
 
           <Flex justify="center">
             <Text fontSize="sm" color="gray.600">
-              ¿No tienes cuenta?{" "}
+              {t("login_no_account")}{" "}
               <Button variant="link" color="teal.500" onClick={goToRegister}>
-                Regístrate aquí
+                {t("login_register_link")}
               </Button>
             </Text>
           </Flex>

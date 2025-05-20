@@ -1,5 +1,3 @@
-// src/components/card/card.tsx
-
 import React, { useEffect } from "react";
 import {
   SimpleGrid,
@@ -16,6 +14,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   FaDog,
   FaMapMarkerAlt,
@@ -42,14 +41,14 @@ interface DogCardsProps {
 }
 
 const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
-  // Para debug en consola:
+  const { t } = useTranslation();
+
   useEffect(() => {
     console.debug("🔍 [DEBUG] DogCards received dogs:", dogs);
   }, [dogs]);
 
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
-  // Pon aquí tu imagen por defecto en public/images/default_image.jpg
   const fallback = "/images/default_image.jpg";
 
   return (
@@ -105,7 +104,7 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
               </Text>
 
               <Text fontSize="sm" color="gray.600" noOfLines={2}>
-                Raza: {dog.breed}
+                {t("card_raza", { breed: dog.breed })}
               </Text>
             </VStack>
           </Box>

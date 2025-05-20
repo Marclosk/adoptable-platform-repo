@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Heading,
@@ -36,6 +37,7 @@ import {
 } from "../card_detail/animal_services";
 
 const AnimalRequests: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -45,18 +47,20 @@ const AnimalRequests: React.FC = () => {
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Dialogo de rechazo
-  const { isOpen: isRejectOpen, onOpen: onRejectOpen, onClose: onRejectClose } =
-    useDisclosure();
+  const {
+    isOpen: isRejectOpen,
+    onOpen: onRejectOpen,
+    onClose: onRejectClose,
+  } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [toReject, setToReject] = useState<AdoptionRequest | null>(null);
 
-  // si no es protectora, redirige
   useEffect(() => {
-    if (role !== "protectora") navigate("/dashboard");
+    if (role !== "protectora") {
+      navigate("/dashboard");
+    }
   }, [role, navigate]);
 
-  // carga animal y solicitudes
   useEffect(() => {
     (async () => {
       try {
@@ -66,12 +70,12 @@ const AnimalRequests: React.FC = () => {
         setRequests(reqs);
       } catch (err) {
         console.error(err);
-        toast({ title: "Error cargando datos", status: "error" });
+        toast({ title: t("error_cargando_datos"), status: "error" });
       } finally {
         setLoading(false);
       }
     })();
-  }, [id, toast]);
+  }, [id, toast, t]);
 
   const openRejectDialog = (req: AdoptionRequest) => {
     setToReject(req);
@@ -82,21 +86,21 @@ const AnimalRequests: React.FC = () => {
     if (!toReject || !animal) return;
     try {
       await cancelAdoptionRequestForUser(animal.id, toReject.user.username);
-      toast({ title: "Solicitud rechazada", status: "info" });
+      toast({ title: t("solicitud_rechazada"), status: "info" });
       setRequests((prev) => prev.filter((r) => r.id !== toReject.id));
     } catch (err) {
       console.error(err);
-      toast({ title: "Error al rechazar", status: "error" });
+      toast({ title: t("error_rechazar"), status: "error" });
     } finally {
       onRejectClose();
       setToReject(null);
     }
-  }, [toReject, animal, toast, onRejectClose]);
+  }, [toReject, animal, toast, onRejectClose, t]);
 
   if (loading) {
     return (
       <Layout handleLogout={() => navigate("/login")}>
-        <Loader message="Cargando solicitudes…" />
+        <Loader message={t("cargando_solicitudes")} />
       </Layout>
     );
   }
@@ -105,14 +109,13 @@ const AnimalRequests: React.FC = () => {
       <Layout handleLogout={() => navigate("/login")}>
         <Box textAlign="center" mt={12}>
           <Text fontSize="2xl" fontWeight="bold" color="red.500">
-            Animal no encontrado
+            {t("animal_no_encontrado")}
           </Text>
         </Box>
       </Layout>
     );
   }
 
-  // resolver URL imagen igual que en AnimalDetail
   const urlFromImage =
     typeof animal.image === "string" ? animal.image : animal.image?.url;
   const imgUrl = animal.imageUrl || urlFromImage || "/images/default_image.jpg";
@@ -120,7 +123,6 @@ const AnimalRequests: React.FC = () => {
   return (
     <Layout handleLogout={() => navigate("/login")}>
       <Box maxW="960px" mx="auto" py={8}>
-        {/* Imagen y datos del animal */}
         <AspectRatio ratio={16 / 9} mb={6} borderRadius="md" overflow="hidden">
           <ChakraImage
             src={imgUrl}
@@ -141,12 +143,11 @@ const AnimalRequests: React.FC = () => {
         </Flex>
         <Divider />
 
-        {/* Solicitudes */}
         <Heading size="lg" mt={6} mb={4}>
-          Solicitudes recibidas ({requests.length})
+          {t("solicitudes_recibidas")} ({requests.length})
         </Heading>
         {requests.length === 0 ? (
-          <Text color="gray.500">No hay solicitudes pendientes.</Text>
+          <Text color="gray.500">{t("no_hay_solicitudes_pendientes")}</Text>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
             {requests.map((r) => (
@@ -166,36 +167,41 @@ const AnimalRequests: React.FC = () => {
                       {new Date(r.created_at).toLocaleDateString()}
                     </Text>
                   </Flex>
-                  <VStack align="start" spacing={1} fontSize="sm" color="gray.700">
+                  <VStack
+                    align="start"
+                    spacing={1}
+                    fontSize="sm"
+                    color="gray.700"
+                  >
                     <Text>
-                      <b>Nombre:</b> {r.form_data.full_name}
+                      <b>{t("nombre")}:</b> {r.form_data.full_name}
                     </Text>
                     <Text>
-                      <b>Dirección:</b> {r.form_data.address}
+                      <b>{t("direccion")}:</b> {r.form_data.address}
                     </Text>
                     <Text>
-                      <b>Teléfono:</b> {r.form_data.phone}
+                      <b>{t("telefono")}:</b> {r.form_data.phone}
                     </Text>
                     <Text>
-                      <b>Email:</b> {r.form_data.email}
+                      <b>{t("correo_electronico")}:</b> {r.form_data.email}
                     </Text>
                     <Text>
-                      <b>Motivación:</b> {r.form_data.reason}
+                      <b>{t("motivacion")}:</b> {r.form_data.reason}
                     </Text>
                     {r.form_data.experience && (
                       <Text>
-                        <b>Experiencia:</b> {r.form_data.experience}
+                        <b>{t("experiencia")}:</b> {r.form_data.experience}
                       </Text>
                     )}
                     <Text>
-                      <b>Otras mascotas:</b>{" "}
+                      <b>{t("otras_mascotas")}:</b>{" "}
                       {r.form_data.has_other_pets
                         ? r.form_data.other_pet_types
-                        : "No"}
+                        : t("no")}
                     </Text>
                     {r.form_data.references && (
                       <Text>
-                        <b>Referencias:</b> {r.form_data.references}
+                        <b>{t("referencias")}:</b> {r.form_data.references}
                       </Text>
                     )}
                   </VStack>
@@ -206,7 +212,7 @@ const AnimalRequests: React.FC = () => {
                     alignSelf="end"
                     onClick={() => openRejectDialog(r)}
                   >
-                    Rechazar
+                    {t("rechazar")}
                   </Button>
                 </VStack>
               </Box>
@@ -214,7 +220,6 @@ const AnimalRequests: React.FC = () => {
           </SimpleGrid>
         )}
 
-        {/* Diálogo de confirmación de rechazo */}
         <AlertDialog
           isOpen={isRejectOpen}
           leastDestructiveRef={cancelRef}
@@ -223,19 +228,20 @@ const AnimalRequests: React.FC = () => {
           <AlertDialogOverlay>
             <AlertDialogContent>
               <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                Rechazar solicitud
+                {t("rechazar_solicitud")}
               </AlertDialogHeader>
               <AlertDialogBody>
-                {toReject
-                  ? `¿Estás seguro de rechazar la solicitud de "${toReject.user.username}"?`
-                  : null}
+                {toReject &&
+                  t("confirmar_rechazar_solicitud", {
+                    username: toReject.user.username,
+                  })}
               </AlertDialogBody>
               <AlertDialogFooter>
                 <Button ref={cancelRef} onClick={onRejectClose}>
-                  Cancelar
+                  {t("cancelar")}
                 </Button>
                 <Button colorScheme="red" onClick={handleConfirmReject} ml={3}>
-                  Sí, rechazar
+                  {t("si_rechazar")}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>

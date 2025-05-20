@@ -1,4 +1,5 @@
 // src/pages/animal/AddAnimal.tsx
+
 import React, { useState } from "react";
 import {
   Box,
@@ -15,27 +16,29 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Layout from "../../components/layout";
 import LocationHeader from "../../components/location/location_header";
 import { addAnimal } from "../card_detail/animal_services";
 import Loader from "../../components/loader/loader";
 
 const GENDERS = [
-  { value: "male", label: "Macho" },
-  { value: "female", label: "Hembra" },
+  { value: "male", labelKey: "genero_macho" },
+  { value: "female", labelKey: "genero_hembra" },
 ];
 const SIZES = [
-  { value: "small", label: "Pequeño" },
-  { value: "medium", label: "Mediano" },
-  { value: "large", label: "Grande" },
+  { value: "small", labelKey: "tamano_pequeno" },
+  { value: "medium", labelKey: "tamano_mediano" },
+  { value: "large", labelKey: "tamano_grande" },
 ];
 const ACTIVITIES = [
-  { value: "low", label: "Baja" },
-  { value: "medium", label: "Media" },
-  { value: "high", label: "Alta" },
+  { value: "low", labelKey: "actividad_baja" },
+  { value: "medium", labelKey: "actividad_media" },
+  { value: "high", labelKey: "actividad_alta" },
 ];
 
 const AddAnimal: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -84,7 +87,7 @@ const AddAnimal: React.FC = () => {
   const handleSubmit = async () => {
     if (!form.name || !image || !form.city || !location) {
       toast({
-        title: "Completa los campos obligatorios",
+        title: t("completar_campos_obligatorios"),
         status: "error",
       });
       return;
@@ -99,7 +102,7 @@ const AddAnimal: React.FC = () => {
     setLoading(true);
     try {
       await addAnimal(data);
-      toast({ title: "Perro añadido", status: "success" });
+      toast({ title: t("perro_anadido"), status: "success" });
       navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
@@ -112,39 +115,39 @@ const AddAnimal: React.FC = () => {
   return (
     <Layout handleLogout={() => navigate("/login")}>
       <Box maxW="600px" mx="auto" py={8}>
-        <Heading mb={6}>Añadir nuevo perro</Heading>
+        <Heading mb={6}>{t("anadir_nuevo_perro")}</Heading>
 
         {loading ? (
           <Loader />
         ) : (
           <VStack spacing={4} align="stretch">
             <FormControl isRequired>
-              <FormLabel>Nombre</FormLabel>
+              <FormLabel>{t("nombre")}</FormLabel>
               <Input name="name" value={form.name} onChange={onChange} />
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>Edad</FormLabel>
+              <FormLabel>{t("edad")}</FormLabel>
               <Input name="age" value={form.age} onChange={onChange} />
             </FormControl>
 
             <Flex gap={4}>
               <FormControl>
-                <FormLabel>Género</FormLabel>
+                <FormLabel>{t("genero")}</FormLabel>
                 <Select name="gender" value={form.gender} onChange={onChange}>
                   {GENDERS.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.labelKey)}
                     </option>
                   ))}
                 </Select>
               </FormControl>
               <FormControl>
-                <FormLabel>Tamaño</FormLabel>
+                <FormLabel>{t("tamano")}</FormLabel>
                 <Select name="size" value={form.size} onChange={onChange}>
                   {SIZES.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label}
+                      {t(o.labelKey)}
                     </option>
                   ))}
                 </Select>
@@ -152,35 +155,43 @@ const AddAnimal: React.FC = () => {
             </Flex>
 
             <FormControl>
-              <FormLabel>Actividad</FormLabel>
-              <Select name="activity" value={form.activity} onChange={onChange}>
+              <FormLabel>{t("actividad")}</FormLabel>
+              <Select
+                name="activity"
+                value={form.activity}
+                onChange={onChange}
+              >
                 {ACTIVITIES.map((o) => (
                   <option key={o.value} value={o.value}>
-                    {o.label}
+                    {t(o.labelKey)}
                   </option>
                 ))}
               </Select>
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>Ciudad</FormLabel>
+              <FormLabel>{t("ciudad")}</FormLabel>
               <Input name="city" value={form.city} onChange={onChange} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Especie</FormLabel>
-              <Input name="species" value={form.species} onChange={onChange} />
+              <FormLabel>{t("especie")}</FormLabel>
+              <Input
+                name="species"
+                value={form.species}
+                onChange={onChange}
+              />
             </FormControl>
             <FormControl>
-              <FormLabel>Raza</FormLabel>
+              <FormLabel>{t("raza")}</FormLabel>
               <Input name="breed" value={form.breed} onChange={onChange} />
             </FormControl>
             <FormControl>
-              <FormLabel>Peso (kg)</FormLabel>
+              <FormLabel>{t("peso_kg")}</FormLabel>
               <Input name="weight" value={form.weight} onChange={onChange} />
             </FormControl>
             <FormControl>
-              <FormLabel>Biografía</FormLabel>
+              <FormLabel>{t("biografia")}</FormLabel>
               <Textarea
                 name="biography"
                 value={form.biography}
@@ -189,12 +200,12 @@ const AddAnimal: React.FC = () => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Imagen principal</FormLabel>
+              <FormLabel>{t("imagen_principal")}</FormLabel>
               <Input type="file" accept="image/*" onChange={onFileChange} />
             </FormControl>
 
             <FormControl>
-              <FormLabel>Ubicación exacta</FormLabel>
+              <FormLabel>{t("ubicacion_exacta")}</FormLabel>
               <LocationHeader
                 distance={0}
                 onDistanceChange={() => {}}
@@ -208,33 +219,33 @@ const AddAnimal: React.FC = () => {
                 isChecked={form.vaccinated}
                 onChange={onChange}
               >
-                Vacunado
+                {t("vacunado")}
               </Checkbox>
               <Checkbox
                 name="sterilized"
                 isChecked={form.sterilized}
                 onChange={onChange}
               >
-                Esterilizado
+                {t("esterilizado")}
               </Checkbox>
               <Checkbox
                 name="microchipped"
                 isChecked={form.microchipped}
                 onChange={onChange}
               >
-                Con microchip
+                {t("con_microchip")}
               </Checkbox>
               <Checkbox
                 name="dewormed"
                 isChecked={form.dewormed}
                 onChange={onChange}
               >
-                Desparasitado
+                {t("desparasitado")}
               </Checkbox>
             </FormControl>
 
             <Button colorScheme="teal" onClick={handleSubmit}>
-              Guardar perro
+              {t("guardar_perro")}
             </Button>
           </VStack>
         )}

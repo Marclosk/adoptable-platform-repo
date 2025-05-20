@@ -31,6 +31,8 @@ import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../features/auth/authSlice";
 import { logout } from "../features/auth/authService";
 import { checkSession } from "../features/auth/session/checkSession";
+import { useTranslation } from "react-i18next";
+
 import Layout from "../components/layout";
 import LocationHeader from "../components/location/location_header";
 import DogCards from "../components/card/card";
@@ -51,6 +53,7 @@ export interface Dog {
 }
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userRole = useSelector((s: RootState) => s.auth.role);
@@ -65,7 +68,6 @@ const Dashboard: React.FC = () => {
   const [filteredDogs, setFilteredDogs] = useState<Dog[]>([]);
   const [loadingDogs, setLoadingDogs] = useState<boolean>(true);
 
-  // control de skeleton mínimo 600ms
   const [showSkeleton, setShowSkeleton] = useState(true);
   const loaderStart = useRef(Date.now());
   useEffect(() => {
@@ -76,15 +78,14 @@ const Dashboard: React.FC = () => {
       const elapsed = Date.now() - loaderStart.current;
       const remaining = 600 - elapsed;
       if (remaining > 0) {
-        const t = setTimeout(() => setShowSkeleton(false), remaining);
-        return () => clearTimeout(t);
+        const tmr = setTimeout(() => setShowSkeleton(false), remaining);
+        return () => clearTimeout(tmr);
       } else {
         setShowSkeleton(false);
       }
     }
   }, [loadingDogs]);
 
-  // control de precarga de imágenes
   const [imagesLoaded, setImagesLoaded] = useState(false);
   useEffect(() => {
     if (!loadingDogs) {
@@ -107,10 +108,7 @@ const Dashboard: React.FC = () => {
     }
   }, [filteredDogs, loadingDogs]);
 
-  // filtros y buscador
-  const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(
-    new Set()
-  );
+  const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(new Set());
   const [sizeFilters, setSizeFilters] = useState<Set<string>>(new Set());
   const [activityFilters, setActivityFilters] = useState<Set<string>>(
     new Set()
@@ -142,7 +140,6 @@ const Dashboard: React.FC = () => {
   };
   useEffect(requestLocation, []);
 
-  // carga de datos
   useEffect(() => {
     (async () => {
       setLoadingDogs(true);
@@ -173,20 +170,18 @@ const Dashboard: React.FC = () => {
     })();
   }, [distance, userLat, userLng, locationAvailable]);
 
-  // aplicar filtros
   useEffect(() => {
     let list = allDogs;
     if (speciesFilters.size)
       list = list.filter((d) => speciesFilters.has(d.species));
-    if (sizeFilters.size)
-      list = list.filter((d) => sizeFilters.has(d.size));
+    if (sizeFilters.size) list = list.filter((d) => sizeFilters.has(d.size));
     if (activityFilters.size)
       list = list.filter((d) => activityFilters.has(d.activity));
     setFilteredDogs(list);
   }, [allDogs, speciesFilters, sizeFilters, activityFilters]);
 
   if (isSessionValid === null) {
-    return <Loader message="Verificando sesión..." />;
+    return <Loader message={t("verificando_sesion")} />;
   }
 
   const handleLogout = async () => {
@@ -197,9 +192,7 @@ const Dashboard: React.FC = () => {
 
   const uniqueSpecies = Array.from(new Set(allDogs.map((d) => d.species)));
   const uniqueSizes = Array.from(new Set(allDogs.map((d) => d.size)));
-  const uniqueActivities = Array.from(
-    new Set(allDogs.map((d) => d.activity))
-  );
+  const uniqueActivities = Array.from(new Set(allDogs.map((d) => d.activity)));
 
   const toggleSet = (
     set: Set<string>,
@@ -220,8 +213,6 @@ const Dashboard: React.FC = () => {
 
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
-
-  // Sólo quitamos el skeleton cuando imágenes y tiempo mínimo estén completos
   const showCards = !showSkeleton && imagesLoaded && !loadingDogs;
 
   return (
@@ -232,13 +223,13 @@ const Dashboard: React.FC = () => {
             <Alert status="warning" variant="left-accent" borderRadius="lg">
               <AlertIcon />
               <Box flex="1">
-                <AlertTitle>Ubicación no disponible</AlertTitle>
+                <AlertTitle>{t("ubicacion_no_disponible")}</AlertTitle>
                 <AlertDescription>
-                  Activa la geolocalización o ingresa manualmente tu ciudad.
+                  {t("descripcion_ubicacion_no_disponible")}
                 </AlertDescription>
               </Box>
               <Button size="sm" onClick={requestLocation}>
-                Reintentar
+                {t("reintentar")}
               </Button>
             </Alert>
           )}
@@ -256,7 +247,7 @@ const Dashboard: React.FC = () => {
           <Box bg="white" p={4} borderRadius="lg" boxShadow="base">
             <HStack justify="space-between" mb={4}>
               <Text fontSize="lg" fontWeight="semibold">
-                Filtrar resultados
+                {t("filtrar_resultados")}
               </Text>
               <Button
                 size="sm"
@@ -264,15 +255,15 @@ const Dashboard: React.FC = () => {
                 variant="outline"
                 onClick={onToggle}
               >
-                {isOpen ? "Ocultar filtros" : "Mostrar filtros"}
+                {isOpen ? t("ocultar_filtros") : t("mostrar_filtros")}
               </Button>
             </HStack>
             <Collapse in={isOpen} animateOpacity>
               <VStack align="start" spacing={4}>
                 <FormControl>
-                  <FormLabel>Buscar etiquetas</FormLabel>
+                  <FormLabel>{t("buscar_etiquetas")}</FormLabel>
                   <Input
-                    placeholder="Escribe para filtrar..."
+                    placeholder={t("placeholder_filtrar")}
                     value={filterQuery}
                     onChange={(e) => setFilterQuery(e.target.value)}
                   />
@@ -342,13 +333,12 @@ const Dashboard: React.FC = () => {
                 </HStack>
 
                 <Button size="sm" variant="ghost" onClick={clearAll}>
-                  Limpiar filtros
+                  {t("limpiar_filtros")}
                 </Button>
               </VStack>
             </Collapse>
           </Box>
 
-          {/* Si aún no estamos listos, mostramos skeletons con el tamaño real de las cards */}
           {!showCards ? (
             <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8}>
               {Array.from({ length: 8 }).map((_, idx) => (
@@ -387,7 +377,7 @@ const Dashboard: React.FC = () => {
           size="lg"
           onClick={() => navigate("/add-animal")}
         >
-          + Añadir perro
+          {t("boton_anadir_perro")}
         </Button>
       )}
     </Layout>
