@@ -295,6 +295,25 @@
     "error_username_required": "El campo nombre de usuario está vacío",
     "error_password_required": "El campo contraseña está vacío",
     "error_password_requirements": "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.",
-    "error_invalid_credentials": "Credenciales inválidas."
-  }
+    "error_invalid_credentials": "Credenciales inválidas.",
+    "error_account_not_approved": "Tu cuenta aún no ha sido validada.",
+    "accept_terms_prefix": "Acepto los",
+    "terms_and_conditions": "Términos y Condiciones",
+    "error_accept_terms": "Debes aceptar los Términos y Condiciones",
+    "terms_content_title": "Términos y Condiciones",
+    "terms_content_body": "Al registrarse en AdoptAble, usted acepta estos Términos y Condiciones, que regulan el uso de nuestra plataforma y establecen las responsabilidades de todas las partes. Se ruega leer con atención las cláusulas relativas a privacidad de datos, propiedad intelectual, exención de responsabilidad y procedimiento de resolución de disputas. El incumplimiento de estos términos podrá dar lugar a la suspensión o cancelación de la cuenta.",
+
+    "faq_how_to_adopt_title": "¿Cómo adopto?",
+    "faq_how_to_adopt_line1": "Completa tu perfil, elige un perro y envía tu solicitud.",
+    "faq_how_to_adopt_line2": "Nuestro equipo responderá en menos de 48 horas.",
+    "terms_content_objeto": "1. Objeto: Uso de AdoptAble para adopción responsable.",
+    "terms_content_conducta": "2. Conducta: Trato ético y respetuoso con los animales.",
+    "terms_content_suspension": "3. Suspensión: Las cuentas que violen las normas serán inhabilitadas.",
+
+    "privacy_content_1": "Recopilamos datos para gestionar adopciones y perfiles de usuarios.",
+    "privacy_content_2": "Nunca compartimos tu información sin tu permiso.",
+    "privacy_content_3": "Solicita la eliminación de tus datos contactándonos."
+
+
+}
   

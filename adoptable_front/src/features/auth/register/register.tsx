@@ -19,6 +19,9 @@ import {
   Alert,
   AlertIcon,
   useToast,
+  Checkbox,
+  Collapse,
+  HStack,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { register } from "../authService";
@@ -30,38 +33,41 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
 
+  // estado form
   const [serverError, setServerError] = useState("");
-
   const [role, setRole] = useState<"adoptante" | "protectora">("adoptante");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
   const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
   const [shelterName, setShelterName] = useState("");
   const [localidad, setLocalidad] = useState("");
   const [protectoraUsername, setProtectoraUsername] = useState("");
+
+  // errores de campo
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [protectoraUsernameError, setProtectoraUsernameError] = useState("");
 
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+  // términos y condiciones
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState("");
+  const [showTerms, setShowTerms] = useState(false);
 
-  const validatePassword = (password: string) => {
-    const regex =
-      /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+={}[\]|\\:;"'<>,.?/`~-]{8,}$/;
-    return regex.test(password);
-  };
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validatePassword = (pwd: string) =>
+    /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+={}[\]|\\:;"'<>,.?/`~-]{8,}$/.test(
+      pwd
+    );
 
   const clearErrors = () => {
     setServerError("");
@@ -70,12 +76,18 @@ const Register: React.FC = () => {
     setConfirmPasswordError("");
     setUsernameError("");
     setProtectoraUsernameError("");
+    setTermsError("");
   };
 
   const handleRegister = async () => {
     clearErrors();
-
     let valid = true;
+
+    // Validar aceptación de términos
+    if (!acceptedTerms) {
+      setTermsError(t("error_accept_terms"));
+      valid = false;
+    }
 
     if (!validateEmail(email)) {
       setEmailError(t("error_correo_invalido"));
@@ -141,35 +153,25 @@ const Register: React.FC = () => {
       navigate("/login");
     } catch (error: any) {
       console.error("❌ Error en el servidor:", error);
-
       if (axios.isAxiosError(error) && error.response?.status === 400) {
         const data = error.response.data;
-
         if (data.username && Array.isArray(data.username)) {
-          const detail = data.username[0];
           const msg =
-            typeof detail === "string" ? detail : (detail as any).string || "";
+            typeof data.username[0] === "string"
+              ? data.username[0]
+              : (data.username[0] as any).string || "";
           setProtectoraUsernameError(
             msg.toLowerCase().includes("already exists")
               ? t("error_username_taken")
               : msg
           );
         }
-
         if (data.email && Array.isArray(data.email)) {
-          const detail = data.email[0];
-          const msg =
-            typeof detail === "string" ? detail : (detail as any).string || "";
-          setEmailError(msg);
+          setEmailError(data.email[0]);
         }
-
         if (data.password && Array.isArray(data.password)) {
-          const detail = data.password[0];
-          const msg =
-            typeof detail === "string" ? detail : (detail as any).string || "";
-          setPasswordError(msg);
+          setPasswordError(data.password[0]);
         }
-
         if (!data.username && !data.email && !data.password) {
           setServerError(JSON.stringify(data));
         }
@@ -179,189 +181,215 @@ const Register: React.FC = () => {
     }
   };
 
-  const goBackToLogin = () => {
-    navigate("/login");
-  };
-
   return (
     <Box
-      minHeight="100vh"
+      minH="100vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="#DDD2B5"
+      bg="#F7FAFC" // color de fondo consistente
     >
       <Card
-        maxWidth="600px"
-        width="full"
+        maxW="600px"
+        w="full"
         boxShadow="lg"
-        borderRadius="md"
+        borderRadius="lg"
         bg="white"
         borderColor="teal.300"
-        p="6"
+        p={6}
       >
         <CardBody>
-          <Heading as="h2" size="lg" textAlign="center" mb="6" color="teal.500">
+          <Heading as="h2" size="xl" textAlign="center" mb={4} color="teal.600">
             {t("register_heading")}
           </Heading>
-
-          <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
+          <Text fontSize="md" textAlign="center" mb={6} color="gray.600">
             {t("register_subtitle")}
           </Text>
 
           {serverError && (
             <Alert status="error" mb={4}>
-              <AlertIcon />
-              {serverError}
+              <AlertIcon /> {serverError}
             </Alert>
           )}
 
-          <FormControl mb="6">
+          {/* Rol */}
+          <FormControl mb={4}>
             <FormLabel>{t("register_role_label")}</FormLabel>
             <Select
               value={role}
               onChange={(e) =>
                 setRole(e.target.value as "adoptante" | "protectora")
               }
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             >
               <option value="adoptante">{t("role_adoptante")}</option>
               <option value="protectora">{t("role_protectora")}</option>
             </Select>
           </FormControl>
 
-          <FormControl isInvalid={!!emailError} mb="4">
+          {/* Email */}
+          <FormControl isInvalid={!!emailError} mb={4}>
             <FormLabel>{t("email")}</FormLabel>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("placeholder_email")}
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             />
-            {emailError && <FormErrorMessage>{emailError}</FormErrorMessage>}
+            <FormErrorMessage>{emailError}</FormErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={!!passwordError} mb="4">
+          {/* Contraseña */}
+          <FormControl isInvalid={!!passwordError} mb={4}>
             <FormLabel>{t("password")}</FormLabel>
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("placeholder_password")}
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             />
-            {passwordError && (
-              <FormErrorMessage>{passwordError}</FormErrorMessage>
-            )}
+            <FormErrorMessage>{passwordError}</FormErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={!!confirmPasswordError} mb="6">
+          {/* Confirmar Contraseña */}
+          <FormControl isInvalid={!!confirmPasswordError} mb={4}>
             <FormLabel>{t("confirm_password")}</FormLabel>
             <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t("placeholder_confirm_password")}
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             />
-            {confirmPasswordError && (
-              <FormErrorMessage>{confirmPasswordError}</FormErrorMessage>
-            )}
+            <FormErrorMessage>{confirmPasswordError}</FormErrorMessage>
           </FormControl>
 
-          {role === "adoptante" && (
+          {/* Campos según rol */}
+          {role === "adoptante" ? (
             <>
-              <FormControl isInvalid={!!usernameError} mb="4">
+              <FormControl isInvalid={!!usernameError} mb={4}>
                 <FormLabel>{t("username_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={t("placeholder_username")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
-                {usernameError && (
-                  <FormErrorMessage>{usernameError}</FormErrorMessage>
-                )}
+                <FormErrorMessage>{usernameError}</FormErrorMessage>
               </FormControl>
-
-              <FormControl mb="4">
+              <FormControl mb={4}>
                 <FormLabel>{t("first_name_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t("placeholder_first_name")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
               </FormControl>
-
-              <FormControl mb="6">
+              <FormControl mb={4}>
                 <FormLabel>{t("last_name_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t("placeholder_last_name")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
               </FormControl>
             </>
-          )}
-
-          {role === "protectora" && (
+          ) : (
             <>
-              <FormControl mb="4">
+              <FormControl mb={4}>
                 <FormLabel>{t("shelter_name_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={shelterName}
                   onChange={(e) => setShelterName(e.target.value)}
                   placeholder={t("placeholder_shelter_name")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
               </FormControl>
-
-              <FormControl isInvalid={!!protectoraUsernameError} mb="4">
+              <FormControl isInvalid={!!protectoraUsernameError} mb={4}>
                 <FormLabel>{t("protectora_username_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={protectoraUsername}
                   onChange={(e) => setProtectoraUsername(e.target.value)}
                   placeholder={t("placeholder_protectora_username")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
-                {protectoraUsernameError && (
-                  <FormErrorMessage>{protectoraUsernameError}</FormErrorMessage>
-                )}
+                <FormErrorMessage>{protectoraUsernameError}</FormErrorMessage>
               </FormControl>
-
-              <FormControl mb="6">
+              <FormControl mb={4}>
                 <FormLabel>{t("localidad_label")}</FormLabel>
                 <Input
-                  type="text"
                   value={localidad}
                   onChange={(e) => setLocalidad(e.target.value)}
                   placeholder={t("placeholder_localidad")}
-                  borderColor="teal.300"
+                  focusBorderColor="teal.500"
                 />
               </FormControl>
             </>
           )}
 
+          {/* Términos y Condiciones */}
+          <FormControl isInvalid={!!termsError} mb={4}>
+            <HStack align="start">
+              <Checkbox
+                isChecked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                colorScheme="teal"
+              />
+              <Text>
+                {t("accept_terms_prefix")}{" "}
+                <Button
+                  variant="link"
+                  colorScheme="teal"
+                  onClick={() => setShowTerms(!showTerms)}
+                >
+                  {t("terms_and_conditions")}
+                </Button>
+              </Text>
+            </HStack>
+            <FormErrorMessage>{termsError}</FormErrorMessage>
+          </FormControl>
+
+          <Collapse in={showTerms} animateOpacity>
+            <Box
+              p={4}
+              bg="gray.50"
+              borderWidth="1px"
+              borderColor="gray.200"
+              borderRadius="md"
+              mb={4}
+              maxH="200px"
+              overflowY="auto"
+            >
+              <Text fontWeight="bold" mb={2}>
+                {t("terms_content_title")}
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                {t("terms_content_body")}
+              </Text>
+            </Box>
+          </Collapse>
+
+          {/* Botón Registrar */}
           <Button
             colorScheme="teal"
-            onClick={handleRegister}
-            width="full"
             size="lg"
-            mb="6"
+            w="full"
+            mb={4}
+            onClick={handleRegister}
           >
             {t("register_button")}
           </Button>
 
           <Flex justify="center">
-            <Button variant="link" color="teal.500" onClick={goBackToLogin}>
+            <Button
+              variant="link"
+              color="teal.500"
+              onClick={() => navigate("/login")}
+            >
               {t("register_go_login")}
             </Button>
           </Flex>

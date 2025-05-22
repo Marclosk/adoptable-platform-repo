@@ -68,12 +68,28 @@ def login_view(request):
     username = request.data.get('username')
     password = request.data.get('password')
 
+    # Primero buscamos al usuario para ver si existe y su estado
+    try:
+        user_obj = User.objects.get(username=username)
+    except User.DoesNotExist:
+        user_obj = None
+
+    # Si existe pero aún no está activo, devolvemos 403
+    if user_obj and not user_obj.is_active:
+        return Response(
+            {"error": "Tu cuenta está pendiente de aprobación."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Autenticamos (si era inactivo, ya hemos salido con 403)
     user = authenticate(request, username=username, password=password)
     if user is None:
-        return Response({"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
-    if not user.is_active:
-        return Response({"error": "Tu cuenta está pendiente de aprobación."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "Credenciales inválidas"},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
+    # Login y respuesta
     login(request, user)
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
@@ -82,6 +98,7 @@ def login_view(request):
         {"message": "Login successful!", "user": user_data, "role": role},
         status=status.HTTP_200_OK
     )
+
 
 
 @api_view(['POST'])

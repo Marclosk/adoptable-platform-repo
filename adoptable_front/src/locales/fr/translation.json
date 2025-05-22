@@ -293,5 +293,22 @@
   "error_username_required": "Le champ nom d'utilisateur est vide.",
   "error_password_required": "Le champ mot de passe est vide.",
   "error_password_requirements": "Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.",
-  "error_invalid_credentials": "Identifiants invalides."
+  "error_invalid_credentials": "Identifiants invalides.",
+  "error_account_not_approved": "Votre compte n'a pas encore été validé.",
+  "accept_terms_prefix": "J’accepte les",
+  "terms_and_conditions": "Conditions Générales",
+  "error_accept_terms": "Vous devez accepter les Conditions Générales",
+  "terms_content_title": "Conditions Générales",
+  "terms_content_body": "En vous inscrivant sur AdoptAble, vous acceptez ces Conditions Générales qui régissent l’usage de notre plateforme et définissent les responsabilités de chaque partie. Veuillez lire attentivement les sections relatives à la confidentialité des données, la propriété intellectuelle, la limitation de responsabilité et les procédures de résolution des litiges. Le non‐respect de ces conditions peut entraîner la suspension ou la suppression de votre compte.",
+  "faq_how_to_adopt_title": "Comment adopter ?",
+  "faq_how_to_adopt_line1": "Complétez votre profil, choisissez un chien et envoyez votre demande.",
+  "faq_how_to_adopt_line2": "Notre équipe répondra sous 48 heures.",
+
+  "terms_content_objeto": "1. Objet : Utiliser AdoptAble pour une adoption responsable.",
+  "terms_content_conducta": "2. Conduite : Traitement éthique et respectueux des animaux.",
+  "terms_content_suspension": "3. Suspension : Les comptes non conformes seront désactivés.",
+
+  "privacy_content_1": "Nous collectons des données pour gérer les adoptions et les profils.",
+  "privacy_content_2": "Nous ne partageons jamais vos informations sans autorisation.",
+  "privacy_content_3": "Demandez la suppression de vos données en nous contactant."
 }

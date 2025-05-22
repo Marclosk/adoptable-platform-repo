@@ -293,5 +293,20 @@
   "error_username_required": "Das Benutzername-Feld ist leer.",
   "error_password_required": "Das Passwort-Feld ist leer.",
   "error_password_requirements": "Das Passwort muss mindestens 8 Zeichen lang sein, einen Großbuchstaben und eine Zahl enthalten.",
-  "error_invalid_credentials": "Ungültige Zugangsdaten."
+  "error_invalid_credentials": "Ungültige Zugangsdaten.",
+  "error_account_not_approved": "Ihr Konto wurde noch nicht validiert.",
+  "accept_terms_prefix": "Ich akzeptiere die",
+  "terms_and_conditions": "Geschäftsbedingungen",
+  "error_accept_terms": "Sie müssen die Geschäftsbedingungen akzeptieren",
+  "terms_content_title": "Geschäftsbedingungen",
+  "terms_content_body": "Mit der Registrierung bei AdoptAble stimmen Sie diesen Geschäftsbedingungen zu, die die Nutzung unserer Plattform regeln und die Pflichten aller Beteiligten festlegen. Bitte lesen Sie insbesondere die Abschnitte zum Datenschutz, Urheberrecht, Haftungsbeschränkung und zu Streitbeilegungsverfahren sorgfältig durch. Die Nichteinhaltung kann zur Aussetzung oder Löschung Ihres Kontos führen.",
+  "faq_how_to_adopt_title": "Wie adoptiere ich?",
+  "faq_how_to_adopt_line1": "Vervollständigen Sie Ihr Profil, wählen Sie einen Hund und senden Sie Ihre Anfrage.",
+  "faq_how_to_adopt_line2": "Unser Team antwortet innerhalb von 48 Stunden.",
+  "terms_content_objeto": "1. Zweck: Verwenden Sie AdoptAble für verantwortungsvolle Adoptionen.",
+  "terms_content_conducta": "2. Verhalten: Ethischer und respektvoller Umgang mit Tieren.",
+  "terms_content_suspension": "3. Sperrung: Regelverstoßende Konten werden deaktiviert.",
+  "privacy_content_1": "Wir erfassen Daten, um Adoptionen und Profile zu verwalten.",
+  "privacy_content_2": "Wir teilen Ihre Daten niemals ohne Ihre Erlaubnis.",
+  "privacy_content_3": "Fordern Sie die Löschung Ihrer Daten durch Kontaktaufnahme an."
 }

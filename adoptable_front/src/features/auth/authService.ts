@@ -39,12 +39,15 @@ export const login = async ({
     console.log("✅ Respuesta del servidor:", response.data);
     return response.data;
   } catch (error: any) {
-    const serverError =
-      error.response?.data?.error ||
-      error.response?.data?.detail ||
-      "Error en el servidor";
-    console.error("❌ Error en login:", serverError);
-    throw new Error(serverError);
+    if (axios.isAxiosError(error)) {
+      // Logueamos todo response.data para depurar
+      console.error("❌ Error en login:", error.response?.data);
+      // Volvemos a lanzar el AxiosError para mantener response.data en el catch de Login.tsx
+      throw error;
+    }
+    // Cualquier otro error
+    console.error("❌ Error inesperado en login:", error);
+    throw error;
   }
 };
 

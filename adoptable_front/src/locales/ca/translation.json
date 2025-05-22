@@ -293,5 +293,21 @@
   "error_username_required": "El camp nom d'usuari està buit",
   "error_password_required": "El camp contrasenya està buit",
   "error_password_requirements": "La contrasenya ha de tenir almenys 8 caràcters, una majúscula i un número.",
-  "error_invalid_credentials": "Credencials invàlides."
+  "error_invalid_credentials": "Credencials invàlides.",
+  "error_account_not_approved": "El teu compte encara no ha estat validat.",
+  "accept_terms_prefix": "Accepto els",
+  "terms_and_conditions": "Termes i Condicions",
+  "error_accept_terms": "Has d'acceptar els Termes i Condicions",
+  "terms_content_title": "Termes i Condicions",
+  "terms_content_body": "En registrar‐se a AdoptAble, accepteu aquests Termes i Condicions que regulen l’ús de la nostra plataforma i defineixen les responsabilitats de totes les parts. Llegiu detingudament les clàusules sobre privacitat de dades, propietat intel·lectual, limitació de responsabilitat i procediments de resolució de conflictes. El incompliment podrà comportar la suspensió o cancel·lació del vostre compte.",
+
+  "faq_how_to_adopt_title": "Com adopto?",
+  "faq_how_to_adopt_line1": "Completa el teu perfil, tria un gos i envia la teva sol·licitud.",
+  "faq_how_to_adopt_line2": "El nostre equip respondrà en menys de 48 hores.",
+  "terms_content_objeto": "1. Objecte: Ús d’AdoptAble per a una adopció responsable.",
+  "terms_content_conducta": "2. Conducta: Tracte ètic i respectuós amb els animals.",
+  "terms_content_suspension": "3. Suspensió: Es desactivaran comptes que incompleixin les normes.",
+  "privacy_content_1": "Recollim dades per gestionar adopcions i perfils d’usuari.",
+  "privacy_content_2": "Mai compartim la teva informació sense permís.",
+  "privacy_content_3": "Sol·licita l’eliminació de les teves dades contactant-nos."
 }

@@ -48,7 +48,7 @@ import { getProfile, getAdoptionForm } from "../profile/user_services";
 import type { AdoptionFormAPI } from "../profile/user_services";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
-import { RootState } from "../../redux/store";
+import type { RootState } from "../../redux/store";
 
 interface Animal {
   id: number;
@@ -63,13 +63,13 @@ interface Animal {
   weight: string;
   size: string;
   activity: string;
-  characteristics: string[] | { [key: string]: any };
-  shelter: string;
-  since: string;
+  gender: "male" | "female";
   vaccinated: boolean;
   sterilized: boolean;
   microchipped: boolean;
   dewormed: boolean;
+  shelter: string;
+  since: string;
   owner?: number | null;
   adopter?: number | null;
   adopter_username?: string;
@@ -94,14 +94,13 @@ const AnimalDetail: React.FC = () => {
   const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [isRequested, setIsRequested] = useState(false);
-  const [requestId, setRequestId] = useState<number | null>(null);
   const [requestLoading, setRequestLoading] = useState(false);
   const [isFormAlertOpen, setIsFormAlertOpen] = useState(false);
   const formAlertCancelRef = useRef<HTMLButtonElement>(null);
 
   const fallbackImage = "/images/default_image.jpg";
 
-  /** 1) cargar detalle */
+  // 1) Cargar detalles
   const loadAnimal = useCallback(async () => {
     try {
       const data = await getAnimalById(Number(id));
@@ -114,7 +113,7 @@ const AnimalDetail: React.FC = () => {
     }
   }, [id, navigate, toast, t]);
 
-  /** 2) favoritos */
+  // 2) Favoritos
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -124,11 +123,11 @@ const AnimalDetail: React.FC = () => {
           prof.favorites.some((f: any) => f.id === animal.id)
       );
     } catch {
-      /* no hacemos toast aquí */
+      // silent
     }
   }, [animal, role]);
 
-  /** 3) estado solicitud */
+  // 3) Estado de solicitud
   const loadRequestStatus = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -136,14 +135,13 @@ const AnimalDetail: React.FC = () => {
       const existing = requests.find((r: any) => r.animal.id === animal.id);
       if (existing) {
         setIsRequested(true);
-        setRequestId(existing.id);
       }
     } catch {
-      /* silent */
+      // silent
     }
   }, [animal, role]);
 
-  /** 4) lista solicitantes para protectora */
+  // 4) Solicitantes (protectora)
   const loadApplicants = useCallback(async () => {
     if (
       role !== "protectora" ||
@@ -156,7 +154,7 @@ const AnimalDetail: React.FC = () => {
       const reqs = await listAdoptionRequestsForAnimal(animal.id);
       setAdopters(reqs.map((r) => r.user));
     } catch {
-      /* silent */
+      // silent
     }
   }, [animal, role, authUser]);
 
@@ -170,7 +168,7 @@ const AnimalDetail: React.FC = () => {
     loadApplicants();
   }, [loadFavorites, loadRequestStatus, loadApplicants]);
 
-  /** handlers comunes */
+  // Logout
   const handleLogout = async () => {
     try {
       await logout();
@@ -181,6 +179,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
+  // Eliminar animal
   const handleDelete = async () => {
     if (!animal) return;
     try {
@@ -195,7 +194,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  /** adoptante: solicitar adopción */
+  // Solicitar adopción
   const handleAdoptionRequest = async () => {
     if (!animal) return;
     setRequestLoading(true);
@@ -208,22 +207,17 @@ const AnimalDetail: React.FC = () => {
         "email",
         "reason",
       ];
-      const missing = requiredFields.filter((field) => {
-        const val = form[field];
-        const isEmpty =
-          val === undefined ||
-          val === null ||
-          (typeof val === "string" && val.trim() === "");
-        return isEmpty;
+      const missing = requiredFields.filter((f) => {
+        const v = form[f];
+        return v == null || (typeof v === "string" && !v.trim());
       });
-      if (missing.length > 0) {
+      if (missing.length) {
         setIsFormAlertOpen(true);
         return;
       }
-      const newReq = await requestAdoption(animal.id, form);
+      await requestAdoption(animal.id, form);
       toast({ title: t("solicitud_enviada"), status: "success" });
       setIsRequested(true);
-      setRequestId(newReq.id);
     } catch (err: any) {
       if (err.response?.status === 404) {
         setIsFormAlertOpen(true);
@@ -235,11 +229,11 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  /** protectora: marcar adoptado */
+  // Marcar adoptado
   const handleAdopt = async () => {
     if (!animal || !selectedAdopter) return;
     try {
-      const updated = await adoptAnimal(animal.id, selectedAdopter);
+      const updated = await adoptAnimal(animal.id, Number(selectedAdopter));
       setAnimal(updated);
       toast({ title: t("animal_marcado_adoptado"), status: "success" });
     } catch (err: any) {
@@ -250,7 +244,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  /** favorito */
+  // Favoritos toggle
   const toggleFavorite = async () => {
     if (!animal) return;
     try {
@@ -280,11 +274,9 @@ const AnimalDetail: React.FC = () => {
   const urlFromImage =
     typeof animal.image === "string" ? animal.image : animal.image?.url;
   const imgUrl = animal.imageUrl || urlFromImage || fallbackImage;
+
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("lg", "dark-lg");
-  const chars: string[] = Array.isArray(animal.characteristics)
-    ? animal.characteristics
-    : Object.keys(animal.characteristics || {});
 
   return (
     <Layout handleLogout={handleLogout}>
@@ -318,7 +310,7 @@ const AnimalDetail: React.FC = () => {
             )}
           </HStack>
 
-          {/* Image */}
+          {/* Imagen */}
           <AspectRatio ratio={16 / 9} maxH="350px">
             <ChakraImage
               src={imgUrl}
@@ -328,8 +320,9 @@ const AnimalDetail: React.FC = () => {
             />
           </AspectRatio>
 
-          {/* Details */}
+          {/* Detalles */}
           <VStack align="start" spacing={4} p={6}>
+            {/* Nombre y ciudad */}
             <Text fontSize="3xl" fontWeight="bold" color="teal.600">
               {animal.name}
             </Text>
@@ -337,6 +330,7 @@ const AnimalDetail: React.FC = () => {
               <Icon as={CheckCircleIcon} mr={2} /> {animal.city}
             </Text>
 
+            {/* Etiquetas originales */}
             <HStack spacing={3} wrap="wrap" mb={4}>
               <Badge colorScheme="blue">{animal.species}</Badge>
               <Badge colorScheme="green">{animal.age}</Badge>
@@ -344,21 +338,36 @@ const AnimalDetail: React.FC = () => {
               <Badge colorScheme="pink">{animal.size}</Badge>
               <Badge colorScheme="orange">{animal.activity}</Badge>
             </HStack>
+
+            {/* Información adicional (no como etiquetas) */}
+            <VStack align="start" spacing={1}>
+              <Text>
+                <Text as="span" fontWeight="bold">
+                  {t("peso_kg")}:
+                </Text>{" "}
+                {animal.weight} kg
+              </Text>
+              <Text>
+                <Text as="span" fontWeight="bold">
+                  {t("genero")}:
+                </Text>{" "}
+                {animal.gender === "male"
+                  ? t("genero_macho")
+                  : t("genero_hembra")}
+              </Text>
+            </VStack>
             <Divider />
 
-            <Text fontWeight="bold">{t("como_soy")}</Text>
-            <HStack wrap="wrap" spacing={2}>
-              {chars.length ? (
-                chars.map((c, i) => (
-                  <Badge key={i} colorScheme="teal">
-                    {c}
-                  </Badge>
-                ))
-              ) : (
-                <Text color="gray.500">{t("sin_caracteristicas")}</Text>
-              )}
-            </HStack>
+            {/* Biografía */}
+            {animal.biography && (
+              <>
+                <Text fontWeight="bold">{t("biografia")}</Text>
+                <Text>{animal.biography}</Text>
+                <Divider />
+              </>
+            )}
 
+            {/* Me entregan (vacuna, esterilización…) */}
             <Text fontWeight="bold">{t("me_entregan")}</Text>
             <VStack align="start" spacing={1}>
               {animal.dewormed && (
@@ -388,14 +397,16 @@ const AnimalDetail: React.FC = () => {
             </VStack>
             <Divider />
 
+            {/* Datos de la protectora */}
             <Text fontSize="lg" fontWeight="bold">
               {t("shelter_label")} {animal.shelter}
             </Text>
             <Text fontSize="sm" color="gray.500">
               {t("en_la_protectora_desde", { date: animal.since })}
             </Text>
+            <Divider />
 
-            {/* Adoptante */}
+            {/* Acciones según rol */}
             {role === "adoptante" && animal.adopter == null && (
               <Button
                 colorScheme="purple"
@@ -410,47 +421,44 @@ const AnimalDetail: React.FC = () => {
               </Button>
             )}
 
-            {/* Protectora */}
             {role === "protectora" &&
-              authUser?.id === animal.owner &&
-              animal.adopter == null && (
-                <Box w="full" mt={4}>
-                  <FormControl>
-                    <FormLabel>{t("solicitudes_recibidas")}</FormLabel>
-                    <Select
-                      placeholder={t("selecciona_solicitante")}
-                      value={selectedAdopter}
-                      onChange={(e) =>
-                        setSelectedAdopter(Number(e.target.value) || "")
-                      }
-                    >
-                      {adopters.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.username}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Button
-                    mt={2}
-                    colorScheme="teal"
-                    isDisabled={!selectedAdopter}
-                    onClick={handleAdopt}
-                    w="full"
+            authUser?.id === animal.owner &&
+            animal.adopter == null ? (
+              <Box w="full" mt={4}>
+                <FormControl>
+                  <FormLabel>{t("solicitudes_recibidas")}</FormLabel>
+                  <Select
+                    placeholder={t("selecciona_solicitante")}
+                    value={selectedAdopter}
+                    onChange={(e) =>
+                      setSelectedAdopter(Number(e.target.value) || "")
+                    }
                   >
-                    {t("marcar_como_adoptado")}
-                  </Button>
-                </Box>
-              )}
+                    {adopters.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.username}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  isDisabled={!selectedAdopter}
+                  onClick={handleAdopt}
+                  w="full"
+                >
+                  {t("marcar_como_adoptado")}
+                </Button>
+              </Box>
+            ) : null}
 
-            {/* Adoptado por */}
             {animal.adopter_username && (
               <Text fontWeight="bold" mt={4}>
                 {t("adoptado_por")}: {animal.adopter_username}
               </Text>
             )}
 
-            {/* Eliminar */}
             {(role === "admin" ||
               (role === "protectora" && authUser?.id === animal.owner)) && (
               <Button colorScheme="red" w="full" onClick={handleDelete} mt={4}>
@@ -461,7 +469,7 @@ const AnimalDetail: React.FC = () => {
         </Box>
       </Flex>
 
-      {/* AlertDialog formulario incompleto */}
+      {/* Alert: formulario incompleto */}
       <AlertDialog
         isOpen={isFormAlertOpen}
         leastDestructiveRef={formAlertCancelRef}

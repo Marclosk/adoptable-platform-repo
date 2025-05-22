@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { loginSuccess, loginFailure } from "../authSlice";
 import { login, LoginResponse } from "../authService";
 import { checkSession } from "../session/checkSession";
@@ -18,6 +19,8 @@ import {
   Text,
   FormErrorMessage,
   Flex,
+  Alert,
+  AlertIcon,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
@@ -26,9 +29,14 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // campos de formulario y sus errores
   const [username, setUsername] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  // error general del backend
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -43,9 +51,14 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = async () => {
+    // Limpiar errores
+    setUsernameError("");
     setPasswordError("");
+    setFormError("");
+
+    // Validaciones cliente
     if (!username) {
-      setPasswordError(t("error_username_required"));
+      setUsernameError(t("error_username_required"));
       return;
     }
     if (!password) {
@@ -68,8 +81,20 @@ const Login: React.FC = () => {
       navigate("/dashboard");
     } catch (err: any) {
       dispatch(loginFailure(err.message));
-      console.error("Error durante el inicio de sesión:", err.message);
-      setPasswordError(t("error_invalid_credentials"));
+      console.error("Error durante el inicio de sesión:", err);
+
+      if (axios.isAxiosError(err) && err.response) {
+        const status = err.response.status;
+        if (status === 403) {
+          setFormError(t("error_account_not_approved"));
+        } else if (status === 401) {
+          setFormError(t("error_invalid_credentials"));
+        } else {
+          setFormError(t("error_server"));
+        }
+      } else {
+        setFormError(t("error_server"));
+      }
     }
   };
 
@@ -81,40 +106,57 @@ const Login: React.FC = () => {
 
   return (
     <Box
-      minHeight="100vh"
+      minH="100vh"
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bg="#DDD2B5"
+      bg="#F7FAFC"
     >
       <Card
-        maxW="400px"
+        maxW="600px"
         w="full"
         boxShadow="lg"
-        borderRadius="md"
+        borderRadius="lg"
         bg="white"
-        p="6"
+        borderColor="teal.300"
+        p={6}
       >
         <CardBody>
-          <Heading as="h2" size="lg" textAlign="center" mb="6" color="teal.500">
+          <Heading
+            as="h2"
+            size="xl"
+            textAlign="center"
+            mb={4}
+            color="teal.600"
+          >
             {t("login_heading")}
           </Heading>
 
-          <Text fontSize="lg" textAlign="center" mb="6" color="gray.600">
+          <Text fontSize="md" textAlign="center" mb={6} color="gray.600">
             {t("login_subtitle")}
           </Text>
 
-          <FormControl mb="4">
+          {formError && (
+            <Alert status="error" mb={4}>
+              <AlertIcon />
+              {formError}
+            </Alert>
+          )}
+
+          <FormControl isInvalid={!!usernameError} mb={4}>
             <FormLabel>{t("login_username_label")}</FormLabel>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t("placeholder_username")}
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             />
+            {usernameError && (
+              <FormErrorMessage>{usernameError}</FormErrorMessage>
+            )}
           </FormControl>
 
-          <FormControl isInvalid={!!passwordError} mb="6">
+          <FormControl isInvalid={!!passwordError} mb={6}>
             <FormLabel>{t("password_label")}</FormLabel>
             <Input
               type="password"
@@ -122,7 +164,7 @@ const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("placeholder_password")}
               onKeyDown={handleKeyDown}
-              borderColor="teal.300"
+              focusBorderColor="teal.500"
             />
             {passwordError && (
               <FormErrorMessage>{passwordError}</FormErrorMessage>
@@ -134,7 +176,7 @@ const Login: React.FC = () => {
             onClick={handleLogin}
             w="full"
             size="lg"
-            mb="6"
+            mb={4}
           >
             {t("login_button")}
           </Button>
