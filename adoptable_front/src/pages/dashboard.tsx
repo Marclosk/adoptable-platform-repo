@@ -144,11 +144,14 @@ const Dashboard: React.FC = () => {
     (async () => {
       setLoadingDogs(true);
       try {
-        let raw: any[];
-        if (!locationAvailable) raw = await getAllAnimals();
-        else if (userLat != null && userLng != null)
+        let raw: any[] = [];
+        if (!locationAvailable) {
+          raw = await getAllAnimals();
+        } else if (userLat != null && userLng != null) {
           raw = await getAnimals(distance, userLat, userLng);
-        else raw = [];
+        }
+        // Filtrar aquí: sólo animales sin adoptante
+        raw = raw.filter((d) => d.adopter == null);
 
         const mapped = raw.map((d) => ({
           id: d.id,

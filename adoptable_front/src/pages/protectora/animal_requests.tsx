@@ -26,6 +26,9 @@ import {
   Badge,
   VStack,
   HStack,
+  FormControl,
+  FormLabel,
+  Select,
 } from "@chakra-ui/react";
 import Layout from "../../components/layout";
 import Loader from "../../components/loader/loader";
@@ -33,6 +36,7 @@ import {
   getAnimalById,
   listAdoptionRequestsForAnimal,
   cancelAdoptionRequestForUser,
+  adoptAnimal,
   AdoptionRequest,
 } from "../card_detail/animal_services";
 
@@ -45,8 +49,13 @@ const AnimalRequests: React.FC = () => {
 
   const [animal, setAnimal] = useState<any>(null);
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // Para selección y marcado de adoptante
+  const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
+  const [adoptLoading, setAdoptLoading] = useState<boolean>(false);
+
+  // Diálogo de rechazo
   const {
     isOpen: isRejectOpen,
     onOpen: onRejectOpen,
@@ -61,6 +70,7 @@ const AnimalRequests: React.FC = () => {
     }
   }, [role, navigate]);
 
+  // Carga animal y solicitudes
   useEffect(() => {
     (async () => {
       try {
@@ -76,6 +86,13 @@ const AnimalRequests: React.FC = () => {
       }
     })();
   }, [id, toast, t]);
+
+  // Si el animal ya está adoptado, redirigimos al card_detail
+  useEffect(() => {
+    if (!loading && animal?.adopter) {
+      navigate(`/card_detail/${animal.id}`);
+    }
+  }, [loading, animal, navigate]);
 
   const openRejectDialog = (req: AdoptionRequest) => {
     setToReject(req);
@@ -97,6 +114,21 @@ const AnimalRequests: React.FC = () => {
     }
   }, [toReject, animal, toast, onRejectClose, t]);
 
+  const handleAdopt = async () => {
+    if (!animal || !selectedAdopter) return;
+    setAdoptLoading(true);
+    try {
+      await adoptAnimal(animal.id, Number(selectedAdopter));
+      toast({ title: t("animal_marcado_adoptado"), status: "success" });
+      navigate("/protectora/dashboard");
+    } catch (err) {
+      console.error(err);
+      toast({ title: t("error_al_adoptar"), status: "error" });
+    } finally {
+      setAdoptLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout handleLogout={() => navigate("/login")}>
@@ -104,6 +136,7 @@ const AnimalRequests: React.FC = () => {
       </Layout>
     );
   }
+
   if (!animal) {
     return (
       <Layout handleLogout={() => navigate("/login")}>
@@ -123,6 +156,7 @@ const AnimalRequests: React.FC = () => {
   return (
     <Layout handleLogout={() => navigate("/login")}>
       <Box maxW="960px" mx="auto" py={8}>
+        {/* Imagen y encabezado */}
         <AspectRatio ratio={16 / 9} mb={6} borderRadius="md" overflow="hidden">
           <ChakraImage
             src={imgUrl}
@@ -143,7 +177,35 @@ const AnimalRequests: React.FC = () => {
         </Flex>
         <Divider />
 
-        <Heading size="lg" mt={6} mb={4}>
+        {/* Selector de adoptante */}
+        <Box my={6} bg="white" p={4} borderRadius="md" boxShadow="sm">
+          <FormControl>
+            <FormLabel>{t("selecciona_solicitante")}</FormLabel>
+            <Select
+              placeholder={t("selecciona_solicitante")}
+              value={selectedAdopter}
+              onChange={(e) => setSelectedAdopter(Number(e.target.value) || "")}
+            >
+              {requests.map((r) => (
+                <option key={r.id} value={r.user.id}>
+                  {r.user.username}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            mt={3}
+            colorScheme="teal"
+            onClick={handleAdopt}
+            isDisabled={!selectedAdopter}
+            isLoading={adoptLoading}
+          >
+            {t("marcar_como_adoptado")}
+          </Button>
+        </Box>
+
+        {/* Lista de solicitudes */}
+        <Heading size="lg" mb={4}>
           {t("solicitudes_recibidas")} ({requests.length})
         </Heading>
         {requests.length === 0 ? (
@@ -220,6 +282,7 @@ const AnimalRequests: React.FC = () => {
           </SimpleGrid>
         )}
 
+        {/* Diálogo de rechazo */}
         <AlertDialog
           isOpen={isRejectOpen}
           leastDestructiveRef={cancelRef}

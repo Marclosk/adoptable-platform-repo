@@ -15,7 +15,6 @@ import {
   VStack,
   HStack,
   FormControl,
-  FormLabel,
   Select,
   useToast,
   useColorModeValue,
@@ -25,6 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  useDisclosure,
+  FormLabel,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, CheckCircleIcon, StarIcon } from "@chakra-ui/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,6 +38,7 @@ import {
   getAnimalById,
   deleteAnimal,
   adoptAnimal,
+  unadoptAnimal, // <-- import unadopt
   addFavorite,
   removeFavorite,
   requestAdoption,
@@ -97,6 +99,14 @@ const AnimalDetail: React.FC = () => {
   const [requestLoading, setRequestLoading] = useState(false);
   const [isFormAlertOpen, setIsFormAlertOpen] = useState(false);
   const formAlertCancelRef = useRef<HTMLButtonElement>(null);
+
+  // para dialogo de desadoptar
+  const {
+    isOpen: isUnadoptOpen,
+    onOpen: onUnadoptOpen,
+    onClose: onUnadoptClose,
+  } = useDisclosure();
+  const unadoptCancelRef = useRef<HTMLButtonElement>(null);
 
   const fallbackImage = "/images/default_image.jpg";
 
@@ -244,6 +254,23 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
+  // Desadoptar
+  const handleUnadopt = async () => {
+    if (!animal) return;
+    try {
+      await unadoptAnimal(animal.id);
+      toast({
+        title: t("desadoptacion_exito", { name: animal.name }),
+        status: "success",
+      });
+      loadAnimal();
+    } catch {
+      toast({ title: t("error_desadoptar"), status: "error" });
+    } finally {
+      onUnadoptClose();
+    }
+  };
+
   // Favoritos toggle
   const toggleFavorite = async () => {
     if (!animal) return;
@@ -339,7 +366,7 @@ const AnimalDetail: React.FC = () => {
               <Badge colorScheme="orange">{animal.activity}</Badge>
             </HStack>
 
-            {/* Información adicional (no como etiquetas) */}
+            {/* Información adicional */}
             <VStack align="start" spacing={1}>
               <Text>
                 <Text as="span" fontWeight="bold">
@@ -367,7 +394,7 @@ const AnimalDetail: React.FC = () => {
               </>
             )}
 
-            {/* Me entregan (vacuna, esterilización…) */}
+            {/* Me entregan */}
             <Text fontWeight="bold">{t("me_entregan")}</Text>
             <VStack align="start" spacing={1}>
               {animal.dewormed && (
@@ -397,7 +424,7 @@ const AnimalDetail: React.FC = () => {
             </VStack>
             <Divider />
 
-            {/* Datos de la protectora */}
+            {/* Datos de protectora */}
             <Text fontSize="lg" fontWeight="bold">
               {t("shelter_label")} {animal.shelter}
             </Text>
@@ -406,68 +433,105 @@ const AnimalDetail: React.FC = () => {
             </Text>
             <Divider />
 
-            {/* Acciones según rol */}
-            {role === "adoptante" && animal.adopter == null && (
-              <Button
-                colorScheme="purple"
-                variant={isRequested ? "solid" : "outline"}
-                onClick={handleAdoptionRequest}
-                isDisabled={isRequested}
-                isLoading={requestLoading}
-                w="full"
-                mt={4}
-              >
-                {isRequested ? t("solicitud_enviada") : t("solicitar_adopcion")}
-              </Button>
-            )}
-
+            {/* Selección y acciones */}
             {role === "protectora" &&
-            authUser?.id === animal.owner &&
-            animal.adopter == null ? (
-              <Box w="full" mt={4}>
-                <FormControl>
-                  <FormLabel>{t("solicitudes_recibidas")}</FormLabel>
-                  <Select
-                    placeholder={t("selecciona_solicitante")}
-                    value={selectedAdopter}
-                    onChange={(e) =>
-                      setSelectedAdopter(Number(e.target.value) || "")
-                    }
+              authUser?.id === animal.owner &&
+              animal.adopter == null && (
+                <Box width="full" mt={4}>
+                  <FormControl>
+                    <FormLabel>{t("solicitudes_recibidas")}</FormLabel>
+                    <Select
+                      placeholder={t("selecciona_solicitante")}
+                      value={selectedAdopter}
+                      onChange={(e) =>
+                        setSelectedAdopter(Number(e.target.value) || "")
+                      }
+                    >
+                      {adopters.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.username}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    mt={2}
+                    colorScheme="teal"
+                    isDisabled={!selectedAdopter}
+                    onClick={handleAdopt}
+                    width="full"
                   >
-                    {adopters.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Button
-                  mt={2}
-                  colorScheme="teal"
-                  isDisabled={!selectedAdopter}
-                  onClick={handleAdopt}
-                  w="full"
-                >
-                  {t("marcar_como_adoptado")}
-                </Button>
-              </Box>
-            ) : null}
+                    {t("marcar_como_adoptado")}
+                  </Button>
+                </Box>
+              )}
 
+            {/* Mostrar adoptante y opción desadoptar */}
             {animal.adopter_username && (
-              <Text fontWeight="bold" mt={4}>
-                {t("adoptado_por")}: {animal.adopter_username}
-              </Text>
+              <>
+                <Text fontWeight="bold" mt={4}>
+                  {t("adoptado_por")}: {animal.adopter_username}
+                </Text>
+
+                {(role === "protectora" && authUser?.id === animal.owner) ||
+                role === "admin" ? (
+                  <Button
+                    mt={2}
+                    colorScheme="orange"
+                    onClick={onUnadoptOpen}
+                    width="full"
+                  >
+                    {t("si_desadoptar")}
+                  </Button>
+                ) : null}
+              </>
             )}
 
             {(role === "admin" ||
-              (role === "protectora" && authUser?.id === animal.owner)) && (
-              <Button colorScheme="red" w="full" onClick={handleDelete} mt={4}>
+              (role === "protectora" &&
+                authUser?.id === animal.owner &&
+                animal.adopter == null)) && (
+              <Button
+                colorScheme="red"
+                width="full"
+                onClick={handleDelete}
+                mt={4}
+              >
                 {t("eliminar_animal")}
               </Button>
             )}
           </VStack>
         </Box>
       </Flex>
+
+      {/* Dialogo desadoptar */}
+      <AlertDialog
+        isOpen={isUnadoptOpen}
+        leastDestructiveRef={unadoptCancelRef}
+        onClose={onUnadoptClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              {t("confirmar_desadopcion")}
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              {t("confirmar_desadopcion_text", {
+                name: animal?.name,
+                adopter: animal?.adopter_username,
+              })}
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={unadoptCancelRef} onClick={onUnadoptClose}>
+                {t("cancelar")}
+              </Button>
+              <Button colorScheme="orange" onClick={handleUnadopt} ml={3}>
+                {t("si_desadoptar")}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
 
       {/* Alert: formulario incompleto */}
       <AlertDialog

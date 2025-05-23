@@ -34,7 +34,6 @@ export interface ProtectoraAnimal {
   pending_requests: number;
 }
 
-
 export interface ProtectoraAdoptedAnimal extends ProtectoraAnimal {
   adopter_username: string;
 }
@@ -139,9 +138,13 @@ export const adoptAnimal = async (id: number, adopterId: number) => {
 
 export const unadoptAnimal = async (id: number) => {
   const resp = await api.patch(
-    `api/animals/${id}/`,
+    `/api/animals/${id}/`,
     { adopter: null },
-    { headers: { "X-CSRFToken": getCSRFToken() } }
+    {
+      headers: {
+        "X-CSRFToken": getCSRFToken(),
+      },
+    }
   );
   return resp.data;
 };

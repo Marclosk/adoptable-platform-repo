@@ -1,19 +1,25 @@
+# backend/app/views.py
+
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.db.models.functions import TruncMonth
 
 from .models import Animal, AdoptionRequest
-from .serializers import AnimalSerializer, AdoptionRequestSerializer, ProtectoraAnimalSerializer
+from .serializers import (
+    AnimalSerializer,
+    AdoptionRequestSerializer,
+    ProtectoraAnimalSerializer,
+)
 from .signals import haversine_distance
 from .permissions import IsOwnerOrAdmin
 
-
 User = get_user_model()
+
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     """
@@ -59,10 +65,38 @@ class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Recupera, actualiza o borra un animal.
     Solo el owner (protectora) o admin tienen permisos de PUT/DELETE.
+    Además maneja PATCH { adopter: <id> } y PATCH { adopter: null }.
+    Cuando se asigna un adoptante, elimina automáticamente su solicitud previa.
     """
     queryset = Animal.objects.all()
     serializer_class = AnimalSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if "adopter" in request.data:
+            adopter_id = request.data.get("adopter")
+            if adopter_id is None:
+                # Desadoptar
+                instance.adopter = None
+            else:
+                # Asignar adoptante
+                adopter = get_object_or_404(User, pk=adopter_id)
+                instance.adopter = adopter
+            instance.save()
+
+            # Si acabamos de asignar un adoptante, borramos su AdoptionRequest
+            if adopter_id is not None:
+                AdoptionRequest.objects.filter(
+                    animal=instance,
+                    user__pk=adopter_id
+                ).delete()
+
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return super().partial_update(request, *args, **kwargs)
 
 
 @api_view(["POST"])
@@ -80,7 +114,6 @@ def request_adoption(request, pk):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # get_or_create con defaults para form_data
     req, created = AdoptionRequest.objects.get_or_create(
         animal=animal,
         user=request.user,
@@ -145,6 +178,7 @@ def list_animal_requests_view(request, animal_id):
     serializer = AdoptionRequestSerializer(qs, many=True)
     return Response(serializer.data)
 
+
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated, IsOwnerOrAdmin])
 def reject_adoption_request_view(request, animal_id, username):
@@ -159,6 +193,7 @@ def reject_adoption_request_view(request, animal_id, username):
     AdoptionRequest.objects.filter(animal=animal, user=user).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def protectora_metrics(request):
@@ -169,9 +204,7 @@ def protectora_metrics(request):
     user = request.user
 
     total_animals = Animal.objects.filter(owner=user).count()
-    # todas las solicitudes pendientes (independientemente de animal)
     pending_requests = AdoptionRequest.objects.filter(animal__owner=user).count()
-    # adopciones completadas: animales de la protectora con adopter != null
     completed_adoptions = Animal.objects.filter(owner=user, adopter__isnull=False).count()
 
     return Response({
@@ -190,14 +223,14 @@ def protectora_animals(request):
     (owner=request.user y adopter IS NULL), con cuenta de solicitudes pendientes.
     """
     user = request.user
-
     qs = (
         Animal.objects
-        .filter(owner=user, adopter__isnull=True)          
+        .filter(owner=user, adopter__isnull=True)
         .annotate(pending_requests=Count('adoption_requests'))
     )
     serialized = ProtectoraAnimalSerializer(qs, many=True)
     return Response(serialized.data)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -215,6 +248,7 @@ def protectora_adopted_animals(request):
     )
     serialized = ProtectoraAnimalSerializer(qs, many=True)
     return Response(serialized.data)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -248,7 +282,7 @@ def monthly_adoptions_view(request):
         .annotate(month=TruncMonth("updated_at"))
         .values("month")
         .annotate(count=Count("id"))
-        .order_by("month")  # ascendente
+        .order_by("month")
     )
     data = [
         {"month": entry["month"].strftime("%b"), "count": entry["count"]}
