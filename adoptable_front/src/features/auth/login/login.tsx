@@ -1,5 +1,3 @@
-// src/pages/auth/Login.tsx
-
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -29,13 +27,11 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // campos de formulario y sus errores
   const [username, setUsername] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  // error general del backend
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
@@ -51,12 +47,10 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = async () => {
-    // Limpiar errores
     setUsernameError("");
     setPasswordError("");
     setFormError("");
 
-    // Validaciones cliente
     if (!username) {
       setUsernameError(t("error_username_required"));
       return;

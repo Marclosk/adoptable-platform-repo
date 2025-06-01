@@ -310,5 +310,10 @@
 
   "privacy_content_1": "Nous collectons des données pour gérer les adoptions et les profils.",
   "privacy_content_2": "Nous ne partageons jamais vos informations sans autorisation.",
-  "privacy_content_3": "Demandez la suppression de vos données en nous contactant."
+  "privacy_content_3": "Demandez la suppression de vos données en nous contactant.",
+
+  "search_placeholder": "Rechercher un chien ou un utilisateur…",
+  "search_tab_animals": "Chien",
+  "search_tab_users": "Utilisateur",
+  "search_no_results": "Aucun résultat"
 }

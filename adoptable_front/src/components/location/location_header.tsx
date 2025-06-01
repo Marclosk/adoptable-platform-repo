@@ -1,5 +1,3 @@
-// src/components/location/location_header.tsx
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -30,7 +28,6 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 
-// Configuración de iconos Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -44,7 +41,6 @@ interface LocationHeaderProps {
   onLocationSelect: (lat: number, lng: number) => void;
 }
 
-// Idiomas soportados directamente por country_code (además de 'es' que tratamos arriba)
 const OTHER_LANGS = ["de", "fr", "en"];
 
 const LocationHeader: React.FC<LocationHeaderProps> = ({
@@ -84,17 +80,15 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
     setIsOpen(false);
 
     try {
-      // Reverse-geocode para detalles de la dirección
       const rev = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`
       );
       const revData = await rev.json();
       const cc: string = revData.address?.country_code?.toLowerCase() || "";
 
-      let lang = "en"; // fallback
+      let lang = "en"; 
 
       if (cc === "es") {
-        // En España, diferenciamos Cataluña → catalán, resto → español
         const region = (
           revData.address.state ||
           revData.address.region ||

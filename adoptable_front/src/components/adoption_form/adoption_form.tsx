@@ -1,5 +1,3 @@
-// src/components/adoption_form/AdoptionForm.tsx
-
 import React, { useState, useEffect } from "react";
 import {
   Box,

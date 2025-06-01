@@ -3,7 +3,7 @@
 // 1️⃣ Workaround para evitar el ReferenceError de Vite HMR
 declare const __WS_TOKEN__: string;
 if (typeof __WS_TOKEN__ === "undefined") {
-  ;(window as any).__WS_TOKEN__ = "";
+  (window as any).__WS_TOKEN__ = "";
 }
 
 import React, { useEffect } from "react";
@@ -55,6 +55,7 @@ const App: React.FC = () => {
         <Route path="/add-animal" element={<AddAnimal />} />
         <Route path="/animals/:id/requests" element={<AnimalRequests />} />
         <Route path="/protectora/dashboard" element={<ProtectoraDashboard />} />
+        <Route path="/users/:userId/profile" element={<Profile />} />
       </Routes>
     </Router>
   );

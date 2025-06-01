@@ -11,6 +11,8 @@ from .views import (
     cancel_adoption_request_view,
     adoption_request_view,
     adoption_form_view,
+    user_profile_view,
+    user_search
 )
 
 urlpatterns = [
@@ -19,6 +21,8 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('check_session/', check_session, name='check_session'),
+    path("<int:user_id>/profile/", user_profile_view),
+    path("", user_search),
 
 
     path('profile/', get_profile, name='get_profile'),

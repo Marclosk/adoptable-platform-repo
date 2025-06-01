@@ -1,12 +1,20 @@
+# backend/app/views.py
+
 from rest_framework import status, generics
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    parser_classes
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth import authenticate, login, logout
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.db.models import Q, Count
+from django.db.models.functions import TruncMonth
 
 from animals.models import AdoptionRequest, Animal
 from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
@@ -81,7 +89,7 @@ def login_view(request):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Autenticamos (si era inactivo, ya hemos salido con 403)
+    # Autenticamos
     user = authenticate(request, username=username, password=password)
     if user is None:
         return Response(
@@ -98,7 +106,6 @@ def login_view(request):
         {"message": "Login successful!", "user": user_data, "role": role},
         status=status.HTTP_200_OK
     )
-
 
 
 @api_view(['POST'])
@@ -165,37 +172,38 @@ def get_profile(request):
     role = "protectora" if user.is_staff else "adoptante"
     user_data['role'] = role
 
+    # perfil adoptante
     if not user.is_staff:
-        # obtenemos el perfil de adoptante
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # serializamos los campos básicos de AdopterProfile
         profile_data = AdopterProfileSerializer(profile).data
-
-        # favoritos
         fav_qs = profile.favorites.all()
         profile_data['favorites'] = AnimalSerializer(fav_qs, many=True).data
-
-        # adoptados
         adopted_qs = Animal.objects.filter(adopter=user)
         profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
-
-        # solicitudes de adopción
         req_qs = AdoptionRequest.objects.filter(user=user)
         profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
 
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
     # perfil protectora
+    # serializamos también los campos de AdopterProfile si existen
+    try:
+        profile = user.profile
+        profile_data = AdopterProfileSerializer(profile).data
+    except AdopterProfile.DoesNotExist:
+        profile_data = {}
+
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
     return Response({
         **user_data,
+        **profile_data,
         "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
-        "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
+        "adopted":    AnimalSerializer(adopted_owner_qs, many=True).data,
     }, status=status.HTTP_200_OK)
 
 
@@ -204,40 +212,46 @@ def get_profile(request):
 @parser_classes([MultiPartParser, FormParser])
 def update_profile(request):
     """
-    Actualiza avatar, location, phone_number, bio para adoptantes.
-    Luego reconstruye y devuelve el payload completo como get_profile.
+    Actualiza avatar, location, phone_number y bio para cualquier usuario
+    (adoptante o protectora). Luego reconstruye y devuelve el payload completo,
+    igual que get_profile.
     """
+    user = request.user
     try:
-        profile = request.user.profile
+        profile = user.profile
     except AdopterProfile.DoesNotExist:
-        return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     serializer.save()
 
-    user = request.user
     user_data = UserSerializer(user).data
-    role = "protectora" if user.is_staff else "adoptante"
+    role = 'protectora' if user.is_staff else 'adoptante'
     user_data['role'] = role
 
-    if role == "adoptante":
-        profile_data = serializer.data
+    # campos recién guardados
+    profile_data = serializer.data
 
+    if role == 'adoptante':
         fav_qs = profile.favorites.all()
         profile_data['favorites'] = AnimalSerializer(fav_qs, many=True).data
-
         adopted_qs = Animal.objects.filter(adopter=user)
         profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
+        req_qs = AdoptionRequest.objects.filter(user=user)
+        profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
+
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
+    # protectora
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
     return Response({
         **user_data,
-        "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
-        "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
+        **profile_data,
+        'en_adopcion': AnimalSerializer(en_adopcion_qs, many=True).data,
+        'adopted':     AnimalSerializer(adopted_owner_qs, many=True).data,
     }, status=status.HTTP_200_OK)
 
 
@@ -246,14 +260,15 @@ class AdopterListView(generics.ListAPIView):
     serializer_class = AdopterListSerializer
     permission_classes = [AllowAny]
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def cancel_adoption_request_view(request, req_id):
-    # Borra la AdoptionRequest con pk=req_id y user=request.user
     deleted, _ = AdoptionRequest.objects.filter(pk=req_id, user=request.user).delete()
     if deleted:
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response({'detail': 'No encontrado o sin permisos'}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
@@ -261,8 +276,73 @@ def adoption_form_view(request):
     profile = request.user.profile
     if request.method == 'GET':
         return Response({"adoption_form": profile.adoption_form})
-    # PUT
     form_data = request.data.get("adoption_form", {})
     profile.adoption_form = form_data
     profile.save()
     return Response({"adoption_form": profile.adoption_form})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_profile_view(request, user_id):
+    """
+    GET /api/users/{user_id}/profile/
+    Devuelve el perfil completo de un usuario (adoptante o protectora),
+    incluyendo favoritos, adoptados, solicitudes, etc. Solo lectura.
+    """
+    user = get_object_or_404(User, pk=user_id)
+    user_data = UserSerializer(user).data
+    role = "protectora" if user.is_staff else "adoptante"
+    user_data["role"] = role
+
+    if not user.is_staff:
+        try:
+            profile = user.profile
+        except AdopterProfile.DoesNotExist:
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        profile_data = AdopterProfileSerializer(profile).data
+        fav_qs = profile.favorites.all()
+        profile_data["favorites"] = AnimalSerializer(fav_qs, many=True).data
+        adopted_qs = Animal.objects.filter(adopter=user)
+        profile_data["adopted"] = AnimalSerializer(adopted_qs, many=True).data
+        req_qs = AdoptionRequest.objects.filter(user=user)
+        profile_data["requests"] = AdoptionRequestSerializer(req_qs, many=True).data
+        return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
+
+    # perfil protectora (solo lectura)
+    try:
+        profile = user.profile
+        profile_data = AdopterProfileSerializer(profile).data
+    except AdopterProfile.DoesNotExist:
+        profile_data = {}
+
+    en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
+    adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
+    return Response({
+        **user_data,
+        **profile_data,
+        "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
+        "adopted":     AnimalSerializer(adopted_owner_qs, many=True).data,
+    }, status=status.HTTP_200_OK)
+
+
+# --- BÚSQUEDA DE USUARIOS ---
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_search(request):
+    """
+    GET /api/users/?search=<q>
+    Devuelve lista de usuarios cuyo username, first_name o last_name
+    contienen la cadena 'q' (case-insensitive).
+    """
+    q = request.query_params.get("search", "").strip()
+    if not q:
+        return Response([], status=status.HTTP_200_OK)
+
+    qs = User.objects.filter(
+        Q(username__icontains=q) |
+        Q(first_name__icontains=q) |
+        Q(last_name__icontains=q)
+    )
+    serializer = AdopterListSerializer(qs, many=True)
+    return Response(serializer.data)

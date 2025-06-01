@@ -49,6 +49,14 @@ const Register: React.FC = () => {
   const [localidad, setLocalidad] = useState("");
   const [protectoraUsername, setProtectoraUsername] = useState("");
 
+  // Hack para evitar autofill en password: empieza como texto, al hacer foco pasa a password
+  const [pwdFieldType, setPwdFieldType] = useState<"text" | "password">("text");
+  const [pwdReadOnly, setPwdReadOnly] = useState(true);
+  const [confirmFieldType, setConfirmFieldType] = useState<"text" | "password">(
+    "text"
+  );
+  const [confirmReadOnly, setConfirmReadOnly] = useState(true);
+
   // errores de campo
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -212,187 +220,232 @@ const Register: React.FC = () => {
             </Alert>
           )}
 
-          {/* Rol */}
-          <FormControl mb={4}>
-            <FormLabel>{t("register_role_label")}</FormLabel>
-            <Select
-              value={role}
-              onChange={(e) =>
-                setRole(e.target.value as "adoptante" | "protectora")
-              }
-              focusBorderColor="teal.500"
-            >
-              <option value="adoptante">{t("role_adoptante")}</option>
-              <option value="protectora">{t("role_protectora")}</option>
-            </Select>
-          </FormControl>
-
-          {/* Email */}
-          <FormControl isInvalid={!!emailError} mb={4}>
-            <FormLabel>{t("email")}</FormLabel>
+          {/* Envoltura <form> con autocomplete="off" */}
+          <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+            {/* Campos ocultos para evitar autofill */}
             <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("placeholder_email")}
-              focusBorderColor="teal.500"
+              type="text"
+              name="username_fake"
+              style={{ display: "none" }}
+              tabIndex={-1}
+              autoComplete="username"
             />
-            <FormErrorMessage>{emailError}</FormErrorMessage>
-          </FormControl>
-
-          {/* Contraseña */}
-          <FormControl isInvalid={!!passwordError} mb={4}>
-            <FormLabel>{t("password")}</FormLabel>
             <Input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("placeholder_password")}
-              focusBorderColor="teal.500"
+              name="password_fake"
+              style={{ display: "none" }}
+              tabIndex={-1}
+              autoComplete="new-password"
             />
-            <FormErrorMessage>{passwordError}</FormErrorMessage>
-          </FormControl>
 
-          {/* Confirmar Contraseña */}
-          <FormControl isInvalid={!!confirmPasswordError} mb={4}>
-            <FormLabel>{t("confirm_password")}</FormLabel>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t("placeholder_confirm_password")}
-              focusBorderColor="teal.500"
-            />
-            <FormErrorMessage>{confirmPasswordError}</FormErrorMessage>
-          </FormControl>
+            {/* Rol */}
+            <FormControl mb={4}>
+              <FormLabel>{t("register_role_label")}</FormLabel>
+              <Select
+                value={role}
+                onChange={(e) =>
+                  setRole(e.target.value as "adoptante" | "protectora")
+                }
+                focusBorderColor="teal.500"
+              >
+                <option value="adoptante">{t("role_adoptante")}</option>
+                <option value="protectora">{t("role_protectora")}</option>
+              </Select>
+            </FormControl>
 
-          {/* Campos según rol */}
-          {role === "adoptante" ? (
-            <>
-              <FormControl isInvalid={!!usernameError} mb={4}>
-                <FormLabel>{t("username_label")}</FormLabel>
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder={t("placeholder_username")}
-                  focusBorderColor="teal.500"
-                />
-                <FormErrorMessage>{usernameError}</FormErrorMessage>
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>{t("first_name_label")}</FormLabel>
-                <Input
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder={t("placeholder_first_name")}
-                  focusBorderColor="teal.500"
-                />
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>{t("last_name_label")}</FormLabel>
-                <Input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder={t("placeholder_last_name")}
-                  focusBorderColor="teal.500"
-                />
-              </FormControl>
-            </>
-          ) : (
-            <>
-              <FormControl mb={4}>
-                <FormLabel>{t("shelter_name_label")}</FormLabel>
-                <Input
-                  value={shelterName}
-                  onChange={(e) => setShelterName(e.target.value)}
-                  placeholder={t("placeholder_shelter_name")}
-                  focusBorderColor="teal.500"
-                />
-              </FormControl>
-              <FormControl isInvalid={!!protectoraUsernameError} mb={4}>
-                <FormLabel>{t("protectora_username_label")}</FormLabel>
-                <Input
-                  value={protectoraUsername}
-                  onChange={(e) => setProtectoraUsername(e.target.value)}
-                  placeholder={t("placeholder_protectora_username")}
-                  focusBorderColor="teal.500"
-                />
-                <FormErrorMessage>{protectoraUsernameError}</FormErrorMessage>
-              </FormControl>
-              <FormControl mb={4}>
-                <FormLabel>{t("localidad_label")}</FormLabel>
-                <Input
-                  value={localidad}
-                  onChange={(e) => setLocalidad(e.target.value)}
-                  placeholder={t("placeholder_localidad")}
-                  focusBorderColor="teal.500"
-                />
-              </FormControl>
-            </>
-          )}
-
-          {/* Términos y Condiciones */}
-          <FormControl isInvalid={!!termsError} mb={4}>
-            <HStack align="start">
-              <Checkbox
-                isChecked={acceptedTerms}
-                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                colorScheme="teal"
+            {/* Email (nombre distinto + autocomplete="nope") */}
+            <FormControl isInvalid={!!emailError} mb={4}>
+              <FormLabel>{t("email")}</FormLabel>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("placeholder_email")}
+                focusBorderColor="teal.500"
+                name="signup_email"
+                autoComplete="nope"
               />
-              <Text>
-                {t("accept_terms_prefix")}{" "}
-                <Button
-                  variant="link"
+              <FormErrorMessage>{emailError}</FormErrorMessage>
+            </FormControl>
+
+            {/* Contraseña: empieza como texto, al hacer foco pasa a password (sin name) */}
+            <FormControl isInvalid={!!passwordError} mb={4}>
+              <FormLabel>{t("password")}</FormLabel>
+              <Input
+                type={pwdFieldType}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("placeholder_password")}
+                focusBorderColor="teal.500"
+                autoComplete="new-password"
+                readOnly={pwdReadOnly}
+                onFocus={() => {
+                  setPwdFieldType("password");
+                  setPwdReadOnly(false);
+                }}
+              />
+              <FormErrorMessage>{passwordError}</FormErrorMessage>
+            </FormControl>
+
+            {/* Confirmar Contraseña: mismo hack que en contraseña (sin name) */}
+            <FormControl isInvalid={!!confirmPasswordError} mb={4}>
+              <FormLabel>{t("confirm_password")}</FormLabel>
+              <Input
+                type={confirmFieldType}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t("placeholder_confirm_password")}
+                focusBorderColor="teal.500"
+                autoComplete="new-password"
+                readOnly={confirmReadOnly}
+                onFocus={() => {
+                  setConfirmFieldType("password");
+                  setConfirmReadOnly(false);
+                }}
+              />
+              <FormErrorMessage>{confirmPasswordError}</FormErrorMessage>
+            </FormControl>
+
+            {/* Campos según rol */}
+            {role === "adoptante" ? (
+              <>
+                <FormControl isInvalid={!!usernameError} mb={4}>
+                  <FormLabel>{t("username_label")}</FormLabel>
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder={t("placeholder_username")}
+                    focusBorderColor="teal.500"
+                    name="signup_username"
+                    autoComplete="nope"
+                  />
+                  <FormErrorMessage>{usernameError}</FormErrorMessage>
+                </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>{t("first_name_label")}</FormLabel>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder={t("placeholder_first_name")}
+                    focusBorderColor="teal.500"
+                    name="signup_first_name"
+                    autoComplete="nope"
+                  />
+                </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>{t("last_name_label")}</FormLabel>
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder={t("placeholder_last_name")}
+                    focusBorderColor="teal.500"
+                    name="signup_last_name"
+                    autoComplete="nope"
+                  />
+                </FormControl>
+              </>
+            ) : (
+              <>
+                <FormControl mb={4}>
+                  <FormLabel>{t("shelter_name_label")}</FormLabel>
+                  <Input
+                    value={shelterName}
+                    onChange={(e) => setShelterName(e.target.value)}
+                    placeholder={t("placeholder_shelter_name")}
+                    focusBorderColor="teal.500"
+                    name="signup_shelter_name"
+                    autoComplete="nope"
+                  />
+                </FormControl>
+                <FormControl isInvalid={!!protectoraUsernameError} mb={4}>
+                  <FormLabel>{t("protectora_username_label")}</FormLabel>
+                  <Input
+                    value={protectoraUsername}
+                    onChange={(e) => setProtectoraUsername(e.target.value)}
+                    placeholder={t("placeholder_protectora_username")}
+                    focusBorderColor="teal.500"
+                    name="signup_protectora_username"
+                    autoComplete="nope"
+                  />
+                  <FormErrorMessage>{protectoraUsernameError}</FormErrorMessage>
+                </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>{t("localidad_label")}</FormLabel>
+                  <Input
+                    value={localidad}
+                    onChange={(e) => setLocalidad(e.target.value)}
+                    placeholder={t("placeholder_localidad")}
+                    focusBorderColor="teal.500"
+                    name="signup_localidad"
+                    autoComplete="nope"
+                  />
+                </FormControl>
+              </>
+            )}
+
+            {/* Términos y Condiciones */}
+            <FormControl isInvalid={!!termsError} mb={4}>
+              <HStack align="start">
+                <Checkbox
+                  isChecked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
                   colorScheme="teal"
-                  onClick={() => setShowTerms(!showTerms)}
-                >
-                  {t("terms_and_conditions")}
-                </Button>
-              </Text>
-            </HStack>
-            <FormErrorMessage>{termsError}</FormErrorMessage>
-          </FormControl>
+                />
+                <Text>
+                  {t("accept_terms_prefix")}{" "}
+                  <Button
+                    variant="link"
+                    colorScheme="teal"
+                    onClick={() => setShowTerms(!showTerms)}
+                  >
+                    {t("terms_and_conditions")}
+                  </Button>
+                </Text>
+              </HStack>
+              <FormErrorMessage>{termsError}</FormErrorMessage>
+            </FormControl>
 
-          <Collapse in={showTerms} animateOpacity>
-            <Box
-              p={4}
-              bg="gray.50"
-              borderWidth="1px"
-              borderColor="gray.200"
-              borderRadius="md"
-              mb={4}
-              maxH="200px"
-              overflowY="auto"
-            >
-              <Text fontWeight="bold" mb={2}>
-                {t("terms_content_title")}
-              </Text>
-              <Text fontSize="sm" color="gray.600">
-                {t("terms_content_body")}
-              </Text>
-            </Box>
-          </Collapse>
+            <Collapse in={showTerms} animateOpacity>
+              <Box
+                p={4}
+                bg="gray.50"
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="md"
+                mb={4}
+                maxH="200px"
+                overflowY="auto"
+              >
+                <Text fontWeight="bold" mb={2}>
+                  {t("terms_content_title")}
+                </Text>
+                <Text fontSize="sm" color="gray.600">
+                  {t("terms_content_body")}
+                </Text>
+              </Box>
+            </Collapse>
 
-          {/* Botón Registrar */}
-          <Button
-            colorScheme="teal"
-            size="lg"
-            w="full"
-            mb={4}
-            onClick={handleRegister}
-          >
-            {t("register_button")}
-          </Button>
-
-          <Flex justify="center">
+            {/* Botón Registrar */}
             <Button
-              variant="link"
-              color="teal.500"
-              onClick={() => navigate("/login")}
+              colorScheme="teal"
+              size="lg"
+              w="full"
+              mb={4}
+              onClick={handleRegister}
             >
-              {t("register_go_login")}
+              {t("register_button")}
             </Button>
-          </Flex>
+
+            <Flex justify="center">
+              <Button
+                variant="link"
+                color="teal.500"
+                onClick={() => navigate("/login")}
+              >
+                {t("register_go_login")}
+              </Button>
+            </Flex>
+          </form>
         </CardBody>
       </Card>
     </Box>

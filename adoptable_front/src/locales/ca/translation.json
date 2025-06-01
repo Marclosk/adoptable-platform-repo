@@ -309,5 +309,12 @@
   "terms_content_suspension": "3. Suspensió: Es desactivaran comptes que incompleixin les normes.",
   "privacy_content_1": "Recollim dades per gestionar adopcions i perfils d’usuari.",
   "privacy_content_2": "Mai compartim la teva informació sense permís.",
-  "privacy_content_3": "Sol·licita l’eliminació de les teves dades contactant-nos."
+  "privacy_content_3": "Sol·licita l’eliminació de les teves dades contactant-nos.",
+
+  "search_placeholder": "Cercar gos o usuari…",
+  "search_tab_animals": "Gos",
+  "search_tab_users": "Usuari",
+  "search_no_results": "Sense resultats"
+
+  
 }

@@ -58,16 +58,21 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const userRole = useSelector((s: RootState) => s.auth.role);
 
+  // Sessión
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
+
+  // Localización
   const [distance, setDistance] = useState<number>(30);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [locationAvailable, setLocationAvailable] = useState<boolean>(true);
 
+  // Datos de perros
   const [allDogs, setAllDogs] = useState<Dog[]>([]);
   const [filteredDogs, setFilteredDogs] = useState<Dog[]>([]);
   const [loadingDogs, setLoadingDogs] = useState<boolean>(true);
 
+  // Skeleton/loading visual
   const [showSkeleton, setShowSkeleton] = useState(true);
   const loaderStart = useRef(Date.now());
   useEffect(() => {
@@ -86,6 +91,7 @@ const Dashboard: React.FC = () => {
     }
   }, [loadingDogs]);
 
+  // Espera a que carguen imágenes
   const [imagesLoaded, setImagesLoaded] = useState(false);
   useEffect(() => {
     if (!loadingDogs) {
@@ -108,6 +114,7 @@ const Dashboard: React.FC = () => {
     }
   }, [filteredDogs, loadingDogs]);
 
+  // Filtros de etiquetas
   const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(new Set());
   const [sizeFilters, setSizeFilters] = useState<Set<string>>(new Set());
   const [activityFilters, setActivityFilters] = useState<Set<string>>(
@@ -116,10 +123,12 @@ const Dashboard: React.FC = () => {
   const [filterQuery, setFilterQuery] = useState("");
   const { isOpen, onToggle } = useDisclosure();
 
+  // CSRF
   useEffect(() => {
     fetchCSRFToken();
   }, []);
 
+  // Verificar sesión
   useEffect(() => {
     (async () => {
       const valid = await checkSession();
@@ -128,6 +137,7 @@ const Dashboard: React.FC = () => {
     })();
   }, [navigate]);
 
+  // Obtener localización
   const requestLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -140,6 +150,7 @@ const Dashboard: React.FC = () => {
   };
   useEffect(requestLocation, []);
 
+  // Cargar animales según distancia (Filtrado adicional de adoptados)
   useEffect(() => {
     (async () => {
       setLoadingDogs(true);
@@ -150,7 +161,7 @@ const Dashboard: React.FC = () => {
         } else if (userLat != null && userLng != null) {
           raw = await getAnimals(distance, userLat, userLng);
         }
-        // Filtrar aquí: sólo animales sin adoptante
+        // Filtramos solo disponibles
         raw = raw.filter((d) => d.adopter == null);
 
         const mapped = raw.map((d) => ({
@@ -173,6 +184,7 @@ const Dashboard: React.FC = () => {
     })();
   }, [distance, userLat, userLng, locationAvailable]);
 
+  // Aplicar filtros de etiqueta
   useEffect(() => {
     let list = allDogs;
     if (speciesFilters.size)
@@ -183,20 +195,7 @@ const Dashboard: React.FC = () => {
     setFilteredDogs(list);
   }, [allDogs, speciesFilters, sizeFilters, activityFilters]);
 
-  if (isSessionValid === null) {
-    return <Loader message={t("verificando_sesion")} />;
-  }
-
-  const handleLogout = async () => {
-    await logout();
-    dispatch(logoutSuccess());
-    navigate("/login");
-  };
-
-  const uniqueSpecies = Array.from(new Set(allDogs.map((d) => d.species)));
-  const uniqueSizes = Array.from(new Set(allDogs.map((d) => d.size)));
-  const uniqueActivities = Array.from(new Set(allDogs.map((d) => d.activity)));
-
+  // Función para alternar sets
   const toggleSet = (
     set: Set<string>,
     fn: React.Dispatch<Set<string>>,
@@ -207,6 +206,7 @@ const Dashboard: React.FC = () => {
     fn(nxt);
   };
 
+  // Limpiar filtros
   const clearAll = () => {
     setSpeciesFilters(new Set());
     setSizeFilters(new Set());
@@ -214,9 +214,27 @@ const Dashboard: React.FC = () => {
     setFilterQuery("");
   };
 
+  // ——— Hooks de estilo: siempre antes de cualquier return ———
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
   const showCards = !showSkeleton && imagesLoaded && !loadingDogs;
+
+  // Early return mientras verificamos sesión
+  if (isSessionValid === null) {
+    return <Loader message={t("verificando_sesion")} />;
+  }
+
+  // Logout
+  const handleLogout = async () => {
+    await logout();
+    dispatch(logoutSuccess());
+    navigate("/login");
+  };
+
+  // Opciones únicas para filtros
+  const uniqueSpecies = Array.from(new Set(allDogs.map((d) => d.species)));
+  const uniqueSizes = Array.from(new Set(allDogs.map((d) => d.size)));
+  const uniqueActivities = Array.from(new Set(allDogs.map((d) => d.activity)));
 
   return (
     <Layout handleLogout={handleLogout}>
@@ -271,7 +289,6 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setFilterQuery(e.target.value)}
                   />
                 </FormControl>
-
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueSpecies
                     .filter((s) =>
@@ -292,7 +309,6 @@ const Dashboard: React.FC = () => {
                       </Tag>
                     ))}
                 </HStack>
-
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueSizes
                     .filter((s) =>
@@ -313,7 +329,6 @@ const Dashboard: React.FC = () => {
                       </Tag>
                     ))}
                 </HStack>
-
                 <HStack wrap="wrap" spacing={2}>
                   {uniqueActivities
                     .filter((a) =>
@@ -334,7 +349,6 @@ const Dashboard: React.FC = () => {
                       </Tag>
                     ))}
                 </HStack>
-
                 <Button size="sm" variant="ghost" onClick={clearAll}>
                   {t("limpiar_filtros")}
                 </Button>

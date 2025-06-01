@@ -1,5 +1,3 @@
-// src/components/navbar/NavbarInferior.tsx
-
 import React from "react";
 import { Flex, Button, Image, Text } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -21,7 +19,6 @@ const NavbarInferior: React.FC = () => {
 
   const menuItems: { src: string; labelKey: string; path: string }[] = [
     { src: homeIcon, labelKey: "nav_home", path: "/dashboard" },
-    // Sólo para protectora o admin mostramos su panel
     ...(role === "protectora"
       ? [
           {

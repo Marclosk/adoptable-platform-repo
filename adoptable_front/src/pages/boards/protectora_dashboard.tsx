@@ -1,5 +1,3 @@
-// src/pages/protectora/ProtectoraDashboard.tsx
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -126,7 +124,7 @@ const ProtectoraDashboard: React.FC = () => {
           {t("panel_protectora")}
         </Heading>
 
-        {/* Estadísticas generales */}
+
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
             <Flex align="center" mb={2}>
@@ -170,19 +168,16 @@ const ProtectoraDashboard: React.FC = () => {
 
         <Divider mb={8} />
 
-        {/* Gráficas */}
+
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6} mb={8}>
-          {/* PieChart */}
+
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
               {t("estado_global")}
             </Heading>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
-                  key={`${completed_adoptions}-${pending_requests}-${
-                    total_animals - completed_adoptions
-                  }`}
                   data={[
                     { name: t("adoptados"), value: completed_adoptions },
                     { name: t("pendientes"), value: pending_requests },
@@ -193,8 +188,8 @@ const ProtectoraDashboard: React.FC = () => {
                   ]}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={50}
-                  outerRadius={70}
+                  innerRadius={30}  
+                  outerRadius={50}  
                   paddingAngle={2}
                   label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
                   labelLine={false}
@@ -228,7 +223,6 @@ const ProtectoraDashboard: React.FC = () => {
             </ResponsiveContainer>
           </Box>
 
-          {/* LineChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
               {t("adopciones_mensuales")}
@@ -257,7 +251,6 @@ const ProtectoraDashboard: React.FC = () => {
             </ResponsiveContainer>
           </Box>
 
-          {/* BarChart */}
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
             <Heading size="md" mb={4}>
               {t("animales_mas_solicitados")}
@@ -293,7 +286,6 @@ const ProtectoraDashboard: React.FC = () => {
 
         <Divider mb={8} />
 
-        {/* Tabla detallada: Animales en adopción */}
         <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
           <Heading size="md" mb={4}>
             {t("animales_en_adopcion")}
@@ -332,7 +324,6 @@ const ProtectoraDashboard: React.FC = () => {
           )}
         </Box>
 
-        {/* Tabla detallada: Animales adoptados */}
         <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
           <Heading size="md" mb={4}>
             {t("animales_adoptados")}

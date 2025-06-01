@@ -21,7 +21,6 @@ i18n
       es: { translation: es },
     },
     fallbackLng: 'en',
-    debug: true, // sigue viendo los logs de detección
 
     detection: {
       // Ahora primero comprueba navigator, luego localStorage, luego URL…

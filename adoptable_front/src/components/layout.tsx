@@ -22,23 +22,14 @@ const Layout: React.FC<LayoutProps> = ({ children, handleLogout }) => {
 
   return (
     <Flex direction="column" minH="100vh">
-      {/* top nav */}
       <NavbarSuperior handleLogout={handleLogout} />
 
-      {/* second nav */}
       <NavbarInferior />
 
-      {/* main content */}
-      <Box
-        as="main"
-        flex="1"
-        bg="gray.50"        
-        p={{ base: 4, md: 6 }}
-      >
+      <Box as="main" flex="1" bg="gray.50" p={{ base: 4, md: 6 }}>
         {children}
       </Box>
 
-      {/* footer */}
       <Footer />
     </Flex>
   );

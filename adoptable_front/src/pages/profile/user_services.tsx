@@ -28,7 +28,6 @@ export const getProfile = async (): Promise<any> => {
         "X-CSRFToken": getCSRFToken(),
       },
     });
-    console.log("Perfil:", response.data);
     return response.data;
   } catch (error: any) {
     console.error(
@@ -122,4 +121,9 @@ export const submitAdoptionForm = async (
     );
     throw error;
   }
+};
+
+export const getUserProfile = async (userId: number) => {
+  const resp = await axios.get(`${API_URL}/${userId}/profile/`);
+  return resp.data;
 };

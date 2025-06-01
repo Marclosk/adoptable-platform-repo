@@ -23,7 +23,8 @@ User = get_user_model()
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     """
-    GET: lista solo los animales sin adoptante (disponibles), opcionalmente filtrados por distancia.
+    GET: lista solo los animales sin adoptante (disponibles),
+         opcionalmente filtrados por distancia y por nombre (?search=).
     POST: permite crear un nuevo animal; se asigna automáticamente la protectora creadora.
     """
     serializer_class = AnimalSerializer
@@ -31,6 +32,13 @@ class AnimalListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Animal.objects.filter(adopter__isnull=True)
+
+
+        search = self.request.query_params.get("search", "").strip()
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+
         user_lat = self.request.query_params.get('user_lat')
         user_lng = self.request.query_params.get('user_lng')
         distance_param = self.request.query_params.get('distance')
@@ -60,7 +68,6 @@ class AnimalListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-
 class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Recupera, actualiza o borra un animal.
@@ -78,15 +85,15 @@ class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
         if "adopter" in request.data:
             adopter_id = request.data.get("adopter")
             if adopter_id is None:
-                # Desadoptar
+
                 instance.adopter = None
             else:
-                # Asignar adoptante
+
                 adopter = get_object_or_404(User, pk=adopter_id)
                 instance.adopter = adopter
             instance.save()
 
-            # Si acabamos de asignar un adoptante, borramos su AdoptionRequest
+
             if adopter_id is not None:
                 AdoptionRequest.objects.filter(
                     animal=instance,

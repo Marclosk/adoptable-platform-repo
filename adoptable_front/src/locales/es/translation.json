@@ -312,7 +312,12 @@
 
     "privacy_content_1": "Recopilamos datos para gestionar adopciones y perfiles de usuarios.",
     "privacy_content_2": "Nunca compartimos tu información sin tu permiso.",
-    "privacy_content_3": "Solicita la eliminación de tus datos contactándonos."
+    "privacy_content_3": "Solicita la eliminación de tus datos contactándonos.",
+
+    "search_placeholder": "Buscar perro o usuario…",
+    "search_tab_animals": "Perro",
+    "search_tab_users": "Usuario",
+    "search_no_results": "Sin resultados"
 
 
 }

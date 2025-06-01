@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../../redux/store";
-import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
+import { useNavigate, useParams } from "react-router-dom";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
 import { useTranslation } from "react-i18next";
 
+import { MdLocationOn, MdPhone } from "react-icons/md";
 import Layout from "../../components/layout";
 import Loader from "../../components/loader/loader";
 import {
@@ -22,10 +23,10 @@ import {
   Heading,
   FormControl,
   FormLabel,
+  Wrap,
   Tag,
   TagLabel,
   TagCloseButton,
-  Wrap,
   HStack,
   AlertDialog,
   AlertDialogOverlay,
@@ -33,11 +34,14 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  Stack,
+  Icon,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 
 import {
   getProfile,
+  getUserProfile, // ← nuevo
   updateProfile,
   getAdoptionForm,
   submitAdoptionForm,
@@ -55,15 +59,21 @@ import {
 
 const Profile: React.FC = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const toast = useToast();
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const { user: authUser, role } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { userId } = useParams<{ userId?: string }>();
+  const { user: authUser, role } = useAppSelector((s) => s.auth);
 
+  // Si estamos viendo otro perfil, solo lectura
+  const isOwnProfile = !userId || Number(userId) === authUser?.id;
+
+  // Estado común
   const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Solo para edición (propio)
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<{
     avatar: File | null;
@@ -78,40 +88,50 @@ const Profile: React.FC = () => {
   });
   const [preview, setPreview] = useState<string>("");
 
+  // Solo para propio: adopción/desadopción solicitudes
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [petToUnadopt, setPetToUnadopt] = useState<{
     id: number;
     name: string;
     adopter: string;
   } | null>(null);
-
   const [requestToCancel, setRequestToCancel] = useState<{
     id: number;
     name: string;
   } | null>(null);
-
   const [showAdoptionForm, setShowAdoptionForm] = useState(false);
   const [adopFormValues, setAdopFormValues] = useState<
     Partial<AdoptionFormData>
   >({});
 
   const fetchProfile = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await getProfile();
+      const data = isOwnProfile
+        ? await getProfile()
+        : await getUserProfile(Number(userId));
       setProfile(data);
-      setPreview(data.avatar || "");
-      setFormData({
-        avatar: null,
-        location: data.location || "",
-        phone_number: data.phone_number || "",
-        bio: data.bio || "",
-      });
-      setIsEditing(false);
+      // preparar preview y formData solo si es propio
+      if (isOwnProfile) {
+        setPreview(data.avatar || "");
+        setFormData({
+          avatar: null,
+          location: data.location || "",
+          phone_number: data.phone_number || "",
+          bio: data.bio || "",
+        });
+        setIsEditing(false);
+      }
     } catch {
       toast({ title: t("error_cargar_perfil"), status: "error" });
-      setIsEditing(true);
+    } finally {
+      setLoading(false);
     }
-  }, [t]);
+  }, [isOwnProfile, userId, t, toast]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const toggleAdoptionForm = async () => {
     if (!showAdoptionForm) {
@@ -138,10 +158,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
   const handleSave = async () => {
     try {
       const fd = new FormData();
@@ -149,7 +165,6 @@ const Profile: React.FC = () => {
       fd.append("location", formData.location);
       fd.append("phone_number", formData.phone_number);
       fd.append("bio", formData.bio);
-
       await updateProfile(fd);
       toast({ title: t("perfil_actualizado"), status: "success" });
       fetchProfile();
@@ -173,7 +188,7 @@ const Profile: React.FC = () => {
         references: data.references,
       };
       await submitAdoptionForm(payload);
-      toast({ title: t("formulario_guardado"), status: "success" });
+      toast({ title: t("solicitud_guardada"), status: "success" });
       setShowAdoptionForm(false);
     } catch {
       toast({ title: t("error_guardar_formulario"), status: "error" });
@@ -220,26 +235,175 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleRemoveFavorite = async (animalId: number) => {
+    try {
+      await removeFavorite(animalId);
+      toast({ title: t("favorito_eliminado"), status: "info" });
+      if (isOwnProfile) fetchProfile();
+      else
+        setProfile((p: any) => ({
+          ...p,
+          favorites: p.favorites.filter((f: any) => f.id !== animalId),
+        }));
+    } catch {
+      toast({ title: t("error_eliminar_favorito"), status: "error" });
+    }
+  };
+
   const handleLogout = async () => {
     await logout();
     dispatch(logoutSuccess());
     navigate("/login");
   };
 
-  const handleRemoveFavorite = async (animalId: number) => {
-    try {
-      await removeFavorite(animalId);
-      toast({ title: t("favorito_eliminado"), status: "info" });
-      fetchProfile();
-    } catch {
-      toast({ title: t("error_eliminar_favorito"), status: "error" });
-    }
-  };
+  if (loading) return <Loader message={t("cargando_perfil")} />;
+  if (!profile) return null;
 
-  if (!profile) {
-    return <Loader message={t("cargando_perfil")} />;
+  // === PERFIL AJENO (solo lectura) ===
+  if (!isOwnProfile) {
+    return (
+      <Layout handleLogout={handleLogout}>
+        <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
+          <VStack spacing={8} align="center">
+            <Box
+              bg="white"
+              boxShadow="md"
+              p={8}
+              borderRadius="lg"
+              w="100%"
+              maxW="600px"
+              borderTop="4px solid"
+              borderTopColor="teal.400"
+            >
+              <VStack spacing={6} align="center">
+                <Avatar
+                  size="2xl"
+                  src={profile.avatar}
+                  name={profile.username}
+                />
+                <Heading size="xl" color="teal.600">
+                  {profile.username}
+                </Heading>
+                <Text color="gray.600">
+                  {profile.location || t("ubicacion_no_especificada")}
+                </Text>
+                <Text color="gray.600">
+                  {profile.phone_number || t("telefono_no_disponible")}
+                </Text>
+                <Text textAlign="center" color="gray.700">
+                  {profile.bio || t("sin_biografia")}
+                </Text>
+              </VStack>
+            </Box>
+
+            {/* Favoritos */}
+            <Box
+              bg="white"
+              boxShadow="md"
+              p={6}
+              borderRadius="lg"
+              w="100%"
+              maxW="600px"
+            >
+              <Heading size="md" color="teal.600" mb={4} textAlign="center">
+                {t("favoritos")}
+              </Heading>
+              <Wrap justify="center" spacing={3}>
+                {profile.favorites?.length ? (
+                  profile.favorites.map((fav: any) => (
+                    <Tag
+                      key={fav.id}
+                      size="md"
+                      variant="subtle"
+                      colorScheme="teal"
+                      cursor="pointer"
+                      onClick={() => navigate(`/card_detail/${fav.id}`)}
+                    >
+                      <TagLabel>{fav.name}</TagLabel>
+                    </Tag>
+                  ))
+                ) : (
+                  <Text color="gray.500">{t("no_tienes_favoritos")}</Text>
+                )}
+              </Wrap>
+            </Box>
+
+            {/* Adoptados */}
+            {profile.adopted && (
+              <Box
+                bg="white"
+                boxShadow="md"
+                p={6}
+                borderRadius="lg"
+                w="100%"
+                maxW="600px"
+              >
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
+                  {t("adoptados_perfil")}
+                </Heading>
+                <Wrap justify="center" spacing={3}>
+                  {profile.adopted.length ? (
+                    profile.adopted.map((pet: any) => (
+                      <Tag
+                        key={pet.id}
+                        size="md"
+                        variant="subtle"
+                        colorScheme="green"
+                        cursor="pointer"
+                        onClick={() => navigate(`/card_detail/${pet.id}`)}
+                      >
+                        <TagLabel>{pet.name}</TagLabel>
+                      </Tag>
+                    ))
+                  ) : (
+                    <Text color="gray.500">{t("no_has_adoptado")}</Text>
+                  )}
+                </Wrap>
+              </Box>
+            )}
+
+            {/* Solicitudes */}
+            {profile.requests && (
+              <Box
+                bg="white"
+                boxShadow="md"
+                p={6}
+                borderRadius="lg"
+                w="100%"
+                maxW="600px"
+              >
+                <Heading size="md" color="teal.600" mb={4} textAlign="center">
+                  {t("solicitudes_adopcion_perfil")}
+                </Heading>
+                <Wrap justify="center" spacing={3}>
+                  {profile.requests.length ? (
+                    profile.requests.map((req: any) => (
+                      <Tag
+                        key={req.id}
+                        size="md"
+                        variant="subtle"
+                        colorScheme="orange"
+                        cursor="pointer"
+                        onClick={() =>
+                          navigate(`/card_detail/${req.animal.id}`)
+                        }
+                      >
+                        <TagLabel>{req.animal.name}</TagLabel>
+                      </Tag>
+                    ))
+                  ) : (
+                    <Text color="gray.500">{t("no_has_solicitado")}</Text>
+                  )}
+                </Wrap>
+              </Box>
+            )}
+          </VStack>
+        </Box>
+      </Layout>
+    );
   }
 
+  // === PERFIL PROPIO ===
   return (
     <Layout handleLogout={handleLogout}>
       <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
@@ -288,7 +452,10 @@ const Profile: React.FC = () => {
                     name="location"
                     value={formData.location}
                     onChange={(e) =>
-                      setFormData((f) => ({ ...f, location: e.target.value }))
+                      setFormData((f) => ({
+                        ...f,
+                        location: e.target.value,
+                      }))
                     }
                     focusBorderColor="teal.300"
                   />
@@ -313,7 +480,10 @@ const Profile: React.FC = () => {
                     name="bio"
                     value={formData.bio}
                     onChange={(e) =>
-                      setFormData((f) => ({ ...f, bio: e.target.value }))
+                      setFormData((f) => ({
+                        ...f,
+                        bio: e.target.value,
+                      }))
                     }
                     focusBorderColor="teal.300"
                   />
@@ -343,20 +513,30 @@ const Profile: React.FC = () => {
                 <Heading size="xl" color="teal.600">
                   {profile.username}
                 </Heading>
-                <Text fontSize="md" color="gray.600">
-                  {profile.location || t("ubicacion_no_especificada")}
-                </Text>
-                <Text fontSize="md" color="gray.600">
-                  {profile.phone_number || t("telefono_no_disponible")}
-                </Text>
-                <Text
-                  textAlign="center"
-                  maxW="600px"
-                  color="gray.700"
-                  fontSize="lg"
-                >
-                  {profile.bio || t("sin_biografia")}
-                </Text>
+                <Stack spacing={4} w="full" pt={2}>
+                  <HStack spacing={2}>
+                    <Icon as={MdLocationOn} boxSize={5} color="teal.500" />
+                    <Text fontWeight="semibold">{t("ubicacion")}:</Text>
+                    <Text color="gray.600">
+                      {profile.location || t("ubicacion_no_especificada")}
+                    </Text>
+                  </HStack>
+
+                  <HStack spacing={2}>
+                    <Icon as={MdPhone} boxSize={5} color="teal.500" />
+                    <Text fontWeight="semibold">{t("telefono")}:</Text>
+                    <Text color="gray.600">
+                      {profile.phone_number || t("telefono_no_disponible")}
+                    </Text>
+                  </HStack>
+
+                  <VStack align="start" spacing={1}>
+                    <Text fontWeight="semibold">{t("biografia")}:</Text>
+                    <Text color="gray.700" whiteSpace="pre-line">
+                      {profile.bio || t("sin_biografia")}
+                    </Text>
+                  </VStack>
+                </Stack>
                 <HStack spacing={4}>
                   <Button
                     leftIcon={<EditIcon />}

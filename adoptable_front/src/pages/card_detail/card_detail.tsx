@@ -50,7 +50,7 @@ import { getProfile, getAdoptionForm } from "../profile/user_services";
 import type { AdoptionFormAPI } from "../profile/user_services";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
-import type { RootState } from "../../redux/store";
+import { useAppDispatch, useAppSelector } from "../../redux/store";
 
 interface Animal {
   id: number;
@@ -87,8 +87,8 @@ const AnimalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user: authUser, role } = useSelector((s: RootState) => s.auth);
+  const dispatch = useAppDispatch();
+  const { user: authUser, role } = useAppSelector((s) => s.auth);
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,7 +100,7 @@ const AnimalDetail: React.FC = () => {
   const [isFormAlertOpen, setIsFormAlertOpen] = useState(false);
   const formAlertCancelRef = useRef<HTMLButtonElement>(null);
 
-  // para dialogo de desadoptar
+
   const {
     isOpen: isUnadoptOpen,
     onOpen: onUnadoptOpen,
@@ -110,7 +110,7 @@ const AnimalDetail: React.FC = () => {
 
   const fallbackImage = "/images/default_image.jpg";
 
-  // 1) Cargar detalles
+
   const loadAnimal = useCallback(async () => {
     try {
       const data = await getAnimalById(Number(id));
@@ -123,7 +123,7 @@ const AnimalDetail: React.FC = () => {
     }
   }, [id, navigate, toast, t]);
 
-  // 2) Favoritos
+
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -133,11 +133,11 @@ const AnimalDetail: React.FC = () => {
           prof.favorites.some((f: any) => f.id === animal.id)
       );
     } catch {
-      // silent
+
     }
   }, [animal, role]);
 
-  // 3) Estado de solicitud
+
   const loadRequestStatus = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -147,11 +147,10 @@ const AnimalDetail: React.FC = () => {
         setIsRequested(true);
       }
     } catch {
-      // silent
+
     }
   }, [animal, role]);
 
-  // 4) Solicitantes (protectora)
   const loadApplicants = useCallback(async () => {
     if (
       role !== "protectora" ||
@@ -164,7 +163,7 @@ const AnimalDetail: React.FC = () => {
       const reqs = await listAdoptionRequestsForAnimal(animal.id);
       setAdopters(reqs.map((r) => r.user));
     } catch {
-      // silent
+
     }
   }, [animal, role, authUser]);
 
@@ -178,7 +177,7 @@ const AnimalDetail: React.FC = () => {
     loadApplicants();
   }, [loadFavorites, loadRequestStatus, loadApplicants]);
 
-  // Logout
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -189,7 +188,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  // Eliminar animal
+
   const handleDelete = async () => {
     if (!animal) return;
     try {
@@ -204,7 +203,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  // Solicitar adopción
+
   const handleAdoptionRequest = async () => {
     if (!animal) return;
     setRequestLoading(true);
@@ -239,7 +238,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  // Marcar adoptado
+
   const handleAdopt = async () => {
     if (!animal || !selectedAdopter) return;
     try {
@@ -254,7 +253,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  // Desadoptar
+ 
   const handleUnadopt = async () => {
     if (!animal) return;
     try {
@@ -271,7 +270,7 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-  // Favoritos toggle
+
   const toggleFavorite = async () => {
     if (!animal) return;
     try {
@@ -316,7 +315,7 @@ const AnimalDetail: React.FC = () => {
           boxShadow={shadow}
           overflow="hidden"
         >
-          {/* Header */}
+
           <HStack justify="space-between" p={4}>
             <Button
               leftIcon={<ArrowBackIcon />}
@@ -337,7 +336,7 @@ const AnimalDetail: React.FC = () => {
             )}
           </HStack>
 
-          {/* Imagen */}
+ 
           <AspectRatio ratio={16 / 9} maxH="350px">
             <ChakraImage
               src={imgUrl}
@@ -347,9 +346,9 @@ const AnimalDetail: React.FC = () => {
             />
           </AspectRatio>
 
-          {/* Detalles */}
+
           <VStack align="start" spacing={4} p={6}>
-            {/* Nombre y ciudad */}
+  
             <Text fontSize="3xl" fontWeight="bold" color="teal.600">
               {animal.name}
             </Text>
@@ -357,7 +356,7 @@ const AnimalDetail: React.FC = () => {
               <Icon as={CheckCircleIcon} mr={2} /> {animal.city}
             </Text>
 
-            {/* Etiquetas originales */}
+        
             <HStack spacing={3} wrap="wrap" mb={4}>
               <Badge colorScheme="blue">{animal.species}</Badge>
               <Badge colorScheme="green">{animal.age}</Badge>
@@ -366,7 +365,7 @@ const AnimalDetail: React.FC = () => {
               <Badge colorScheme="orange">{animal.activity}</Badge>
             </HStack>
 
-            {/* Información adicional */}
+       
             <VStack align="start" spacing={1}>
               <Text>
                 <Text as="span" fontWeight="bold">
@@ -432,6 +431,21 @@ const AnimalDetail: React.FC = () => {
               {t("en_la_protectora_desde", { date: animal.since })}
             </Text>
             <Divider />
+
+            {/* Acciones según rol */}
+            {role === "adoptante" && animal.adopter == null && (
+              <Button
+                colorScheme="purple"
+                variant={isRequested ? "solid" : "outline"}
+                onClick={handleAdoptionRequest}
+                isDisabled={isRequested}
+                isLoading={requestLoading}
+                w="full"
+                mt={4}
+              >
+                {isRequested ? t("solicitud_enviada") : t("solicitar_adopcion")}
+              </Button>
+            )}
 
             {/* Selección y acciones */}
             {role === "protectora" &&

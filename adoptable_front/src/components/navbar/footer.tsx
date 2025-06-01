@@ -1,5 +1,3 @@
-// src/components/layout/Footer.tsx
-
 import React from "react";
 import {
   Box,
@@ -44,7 +42,6 @@ const Footer: React.FC = () => {
           }}
           gap={8}
         >
-          {/* Branding */}
           <GridItem>
             <VStack align="start" spacing={3}>
               <Text fontSize="2xl" fontWeight="bold">
@@ -56,7 +53,6 @@ const Footer: React.FC = () => {
             </VStack>
           </GridItem>
 
-          {/* Navegación */}
           <GridItem>
             <VStack align="start" spacing={2}>
               <Text fontWeight="semibold">{t("footer_nav_title")}</Text>
@@ -100,7 +96,6 @@ const Footer: React.FC = () => {
             </VStack>
           </GridItem>
 
-          {/* Ayuda */}
           <GridItem>
             <VStack align="start" spacing={2}>
               <Text fontWeight="semibold">{t("footer_help_title")}</Text>
@@ -170,7 +165,6 @@ const Footer: React.FC = () => {
             </VStack>
           </GridItem>
 
-          {/* Redes sociales */}
           <GridItem>
             <VStack align="start" spacing={3}>
               <Text fontWeight="semibold">{t("footer_follow_title")}</Text>
@@ -224,7 +218,6 @@ const Footer: React.FC = () => {
           </GridItem>
         </Grid>
 
-        {/* Divider + Copy */}
         <Box borderTop="1px solid" borderColor="whiteAlpha.300" mt={10} pt={4}>
           <Text textAlign="center" fontSize="sm" color="whiteAlpha.700">
             {t("footer_copy", { year })}

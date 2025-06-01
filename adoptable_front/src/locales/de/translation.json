@@ -308,5 +308,10 @@
   "terms_content_suspension": "3. Sperrung: Regelverstoßende Konten werden deaktiviert.",
   "privacy_content_1": "Wir erfassen Daten, um Adoptionen und Profile zu verwalten.",
   "privacy_content_2": "Wir teilen Ihre Daten niemals ohne Ihre Erlaubnis.",
-  "privacy_content_3": "Fordern Sie die Löschung Ihrer Daten durch Kontaktaufnahme an."
+  "privacy_content_3": "Fordern Sie die Löschung Ihrer Daten durch Kontaktaufnahme an.",
+
+  "search_placeholder": "Hund oder Benutzer suchen…",
+  "search_tab_animals": "Hund",
+  "search_tab_users": "Benutzer",
+  "search_no_results": "Keine Ergebnisse"
 }

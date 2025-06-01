@@ -308,5 +308,10 @@
   "terms_content_suspension": "3. Suspension: Violating accounts will be disabled.",
   "privacy_content_1": "We collect data to manage adoptions and user profiles.",
   "privacy_content_2": "We never share your information without permission.",
-  "privacy_content_3": "Request data deletion by contacting us."
+  "privacy_content_3": "Request data deletion by contacting us.",
+
+  "search_placeholder": "Search for a dog or user…",
+  "search_tab_animals": "Dog",
+  "search_tab_users": "User",
+  "search_no_results": "No results"
 }
