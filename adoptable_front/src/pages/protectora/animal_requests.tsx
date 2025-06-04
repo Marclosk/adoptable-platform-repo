@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useTranslation } from "react-i18next";
 import {
@@ -40,11 +40,16 @@ import {
   AdoptionRequest,
 } from "../card_detail/animal_services";
 
+import { logoutSuccess } from "../../features/auth/authSlice";
+import { logout } from "../../features/auth/authService";
+
 const AnimalRequests: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();
+  const dispatch = useDispatch();
+
   const role = useSelector((s: RootState) => s.auth.role);
 
   const [animal, setAnimal] = useState<any>(null);
@@ -129,9 +134,19 @@ const AnimalRequests: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      dispatch(logoutSuccess());
+      navigate("/login");
+    } catch (err) {
+      console.error("Error al cerrar sesión:", err);
+    }
+  };
+
   if (loading) {
     return (
-      <Layout handleLogout={() => navigate("/login")}>
+      <Layout handleLogout={handleLogout}>
         <Loader message={t("cargando_solicitudes")} />
       </Layout>
     );
@@ -139,7 +154,7 @@ const AnimalRequests: React.FC = () => {
 
   if (!animal) {
     return (
-      <Layout handleLogout={() => navigate("/login")}>
+      <Layout handleLogout={handleLogout}>
         <Box textAlign="center" mt={12}>
           <Text fontSize="2xl" fontWeight="bold" color="red.500">
             {t("animal_no_encontrado")}
@@ -154,7 +169,7 @@ const AnimalRequests: React.FC = () => {
   const imgUrl = animal.imageUrl || urlFromImage || "/images/default_image.jpg";
 
   return (
-    <Layout handleLogout={() => navigate("/login")}>
+    <Layout handleLogout={handleLogout}>
       <Box maxW="960px" mx="auto" py={8}>
         {/* Imagen y encabezado */}
         <AspectRatio ratio={16 / 9} mb={6} borderRadius="md" overflow="hidden">

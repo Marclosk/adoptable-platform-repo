@@ -22,6 +22,7 @@ gunicorn = "^20.1.0"
 boto3 = "^1.37.3"
 django-storages = "^1.14.5"
 geopy = "^2.4.1"
+python-dotenv = "^1.1.0"
 
 
 [build-system]

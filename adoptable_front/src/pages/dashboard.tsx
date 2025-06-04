@@ -25,8 +25,8 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FiFilter } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "../redux/store";
+import { useDispatch } from "react-redux";
+import { useAppSelector, RootState } from "../redux/store";
 import { useNavigate } from "react-router-dom";
 import { logoutSuccess } from "../features/auth/authSlice";
 import { logout } from "../features/auth/authService";
@@ -56,16 +56,25 @@ const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const userRole = useSelector((s: RootState) => s.auth.role);
+  const userRole = useAppSelector((s: RootState) => s.auth.role);
 
-  // Sessión
+  // Sesión
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
 
   // Localización
   const [distance, setDistance] = useState<number>(30);
-  const [userLat, setUserLat] = useState<number | null>(null);
-  const [userLng, setUserLng] = useState<number | null>(null);
-  const [locationAvailable, setLocationAvailable] = useState<boolean>(true);
+
+  // Recuperamos lat/lng desde Redux si ya existen
+  const { lat: storedLat, lng: storedLng } = useAppSelector(
+    (state: RootState) => state.location
+  );
+
+  // Inicializamos estado con valores de Redux (o null si no hay)
+  const [userLat, setUserLat] = useState<number | null>(storedLat);
+  const [userLng, setUserLng] = useState<number | null>(storedLng);
+  const [locationAvailable, setLocationAvailable] = useState<boolean>(
+    storedLat !== null && storedLng !== null
+  );
 
   // Datos de perros
   const [allDogs, setAllDogs] = useState<Dog[]>([]);
@@ -137,8 +146,12 @@ const Dashboard: React.FC = () => {
     })();
   }, [navigate]);
 
-  // Obtener localización
+  // Obtener localización (solo si no viene de Redux)
   const requestLocation = () => {
+    if (storedLat !== null && storedLng !== null) {
+      setLocationAvailable(true);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLat(pos.coords.latitude);
@@ -148,7 +161,7 @@ const Dashboard: React.FC = () => {
       () => setLocationAvailable(false)
     );
   };
-  useEffect(requestLocation, []);
+  useEffect(requestLocation, [storedLat, storedLng]);
 
   // Cargar animales según distancia (Filtrado adicional de adoptados)
   useEffect(() => {
@@ -263,6 +276,7 @@ const Dashboard: React.FC = () => {
               setUserLng(lng);
               setLocationAvailable(true);
             }}
+            showDistance={true}
           />
 
           <Box bg="white" p={4} borderRadius="lg" boxShadow="base">

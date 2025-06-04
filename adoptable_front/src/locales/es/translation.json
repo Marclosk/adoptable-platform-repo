@@ -317,7 +317,47 @@
     "search_placeholder": "Buscar perro o usuario…",
     "search_tab_animals": "Perro",
     "search_tab_users": "Usuario",
-    "search_no_results": "Sin resultados"
+    "search_no_results": "Sin resultados",
+
+    "error_cargar_mensaje": "Error cargando mensaje",
+    "mensaje_no_encontrado": "Mensaje no encontrado",
+    "detalle_mensaje_contacto": "Detalle mensaje de contacto",
+    "fecha_envio": "Fecha de envío",
+    "resolver_mensaje": "Resolver",
+    "mensaje_resuelto": "Mensaje resuelto y eliminado",
+    "error_resolver_mensaje": "Error al resolver mensaje",
+    "panel_admin": "Panel administrador",
+    "sin_protectoras_pendientes": "No hay protectoras pendientes.",
+    "protectora_pendientes": "Protectoras pendientes",
+    "error_cargar_protectoras_pendientes": "Error cargando datos de protectoras",
+    "protectora_validada": "Protectora validada",
+    "error_validar_protectora": "Error validando protectora",
+    "mensajes_contacto": "Mensajes de contacto",
+    "sin_mensajes_contacto": "No hay mensajes de contacto.",
+    "fecha": "Fecha",
+    "ver_detalle": "Ver detalle",
+    "error_cargar_mensajes_contacto": "Error cargando mensajes de contacto",
+    "validar": "Validar",
+    "bloquear_usuario": "Bloquear usuario",
+
+    "usuarios_bloqueados": "Usuarios Bloqueados",
+    "sin_usuarios_bloqueados": "No hay usuarios bloqueados.",
+    "error_cargar_usuarios_bloqueados": "Error cargando usuarios bloqueados",
+    "reactivar_usuario": "Reactivar usuario",
+    "usuario_reactivado": "Usuario reactivado",
+    "error_reactivar_usuario": "Error reactivando usuario",
+
+    "no_hay_donaciones": "No hay donaciones aún",
+    "no_tus_donaciones": "Aún no has realizado donaciones",
+
+    "recuperar_contraseña": "Recuperar contraseña",
+    "restablecer_contraseña_boton": "Restablecer contraseña",
+    "restableciendo": "Restableciendo...",
+    "volver_al_login": "Volver al inicio de sesión",
+    "solicitud_rechazada": "Solicitud rechazada",
+    "error_reset_link_invalido": "Enlace de restablecimiento inválido.",
+    "password_restablecida_exito": "Contraseña restablecida con éxito",
+    "error_restablecer_contraseña": "No se pudo restablecer la contraseña"
 
 
 }

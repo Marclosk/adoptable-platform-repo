@@ -12,7 +12,16 @@ from .views import (
     adoption_request_view,
     adoption_form_view,
     user_profile_view,
-    user_search
+    user_search,
+    list_pending_protectoras,
+    validate_protectora,
+    block_user,
+    unblock_user,
+    delete_user,
+    list_blocked_users,
+    password_reset_confirm,
+    password_reset_request
+
 )
 
 urlpatterns = [
@@ -24,6 +33,8 @@ urlpatterns = [
     path("<int:user_id>/profile/", user_profile_view),
     path("", user_search),
 
+    path("password-reset-confirm/", password_reset_confirm),
+    path("password-reset/", password_reset_request),
 
     path('profile/', get_profile, name='get_profile'),
     path('profile/update/', update_profile, name='update_profile'),
@@ -40,7 +51,11 @@ urlpatterns = [
 
     path('animals/<int:animal_id>/request/', adoption_request_view, name='adoption-request'),
 
-    
+    path('admin/pending-protectoras/', list_pending_protectoras, name='list_pending_protectoras'),
+    path('admin/validate-protectora/<int:user_id>/', validate_protectora, name='validate_protectora'),
 
-
+    path("admin/block/<int:user_id>/", block_user, name="block_user"),
+    path("admin/unblock/<int:user_id>/", unblock_user, name="unblock_user"),
+    path("admin/delete/<int:user_id>/", delete_user, name="delete_user"),
+    path("admin/blocked-users/", list_blocked_users, name="list_blocked_users"),
 ]

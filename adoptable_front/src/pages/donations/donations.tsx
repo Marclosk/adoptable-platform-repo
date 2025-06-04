@@ -169,6 +169,8 @@ const Donations: React.FC = () => {
               </Heading>
               {loading ? (
                 <Loader />
+              ) : donations.length === 0 ? (
+                <Text color="gray.600">{t("no_hay_donaciones")}</Text>
               ) : (
                 <VStack spacing={3}>
                   {donations.slice(0, 5).map((donation) => (
@@ -181,9 +183,7 @@ const Donations: React.FC = () => {
                       w="100%"
                     >
                       <Text fontWeight="bold">
-                        {donation.anonimo
-                          ? t("anonimo")
-                          : donation.usuario}
+                        {donation.anonimo ? t("anonimo") : donation.usuario}
                       </Text>
                       <Text>
                         {donation.cantidad}€ –{" "}
@@ -211,6 +211,8 @@ const Donations: React.FC = () => {
                 </Heading>
                 {loading ? (
                   <Loader />
+                ) : userDonations.length === 0 ? (
+                  <Text color="gray.600">{t("no_tus_donaciones")}</Text>
                 ) : (
                   <VStack spacing={3}>
                     {userDonations.slice(0, 5).map((donation) => (
@@ -222,9 +224,7 @@ const Donations: React.FC = () => {
                         shadow="sm"
                         w="100%"
                       >
-                        <Text fontWeight="bold">
-                          {donation.cantidad}€
-                        </Text>
+                        <Text fontWeight="bold">{donation.cantidad}€</Text>
                         <Text>
                           {new Date(donation.fecha).toLocaleString()}
                         </Text>

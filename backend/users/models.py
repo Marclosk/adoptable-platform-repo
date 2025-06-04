@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from app.storages import PrivateMediaStorage
+from django.conf import settings
 
 class AdopterProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
@@ -21,3 +22,20 @@ class AdopterProfile(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
+
+class ProtectoraApproval(models.Model):
+    """
+    Guarda el estado de aprobación de una protectora:
+      - approved=False → pendiente de aprobar
+      - approved=True  → ya fue aprobada (o fue aprobada y luego quizá bloqueada)
+    Solo tiene sentido cuando user.is_staff=True.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="protectora_approval"
+    )
+    approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Protectora {self.user.username}: {'Aprobada' if self.approved else 'Pendiente'}"

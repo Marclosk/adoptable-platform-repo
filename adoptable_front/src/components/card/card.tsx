@@ -43,10 +43,6 @@ interface DogCardsProps {
 const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
   const { t } = useTranslation();
 
-  useEffect(() => {
-    console.debug("🔍 [DEBUG] DogCards received dogs:", dogs);
-  }, [dogs]);
-
   const cardBg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
   const fallback = "/images/default_image.jpg";

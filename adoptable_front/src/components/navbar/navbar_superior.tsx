@@ -13,8 +13,9 @@ import {
   Divider,
   useColorModeValue,
   HStack,
+  IconButton,
 } from "@chakra-ui/react";
-import { FaSignOutAlt } from "react-icons/fa";
+import { FaSignOutAlt, FaGlobe } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "../../pages/profile/user_services";
 import { useTranslation } from "react-i18next";
@@ -24,8 +25,16 @@ interface NavbarSuperiorProps {
   handleLogout: () => void;
 }
 
+const AVAILABLE_LANGUAGES: { code: string; label: string }[] = [
+  { code: "en", label: "English" },
+  { code: "de", label: "Deutsch" },
+  { code: "fr", label: "Français" },
+  { code: "ca", label: "Català" },
+  { code: "es", label: "Español" },
+];
+
 const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<{
@@ -56,6 +65,11 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
     user.username;
   const avatarSrc = user.avatar;
 
+  const changeLanguage = (lang: string) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem("i18nextLng", lang);
+  };
+
   return (
     <Flex
       as="nav"
@@ -74,6 +88,36 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
       <HStack spacing="4">
         {/* Search fija al lado del título */}
         <SearchBar />
+
+        {/* Selector de idioma */}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            icon={<FaGlobe />}
+            aria-label="Seleccionar idioma"
+            variant="ghost"
+            color="white"
+            _hover={{ bg: "teal.600" }}
+          />
+          <MenuList
+            bg={menuBg}
+            color={menuColor}
+            borderColor="gray.200"
+            boxShadow="md"
+            mt={1}
+            minW="120px"
+          >
+            {AVAILABLE_LANGUAGES.map((lang) => (
+              <MenuItem
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                _hover={{ bg: "teal.100", color: "teal.800" }}
+              >
+                {lang.label}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
 
         {/* Menú de usuario */}
         <Menu>

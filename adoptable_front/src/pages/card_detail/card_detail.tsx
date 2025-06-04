@@ -7,6 +7,7 @@ import {
   Text,
   AspectRatio,
   Image as ChakraImage,
+  Skeleton,
   Button,
   Flex,
   Divider,
@@ -38,7 +39,7 @@ import {
   getAnimalById,
   deleteAnimal,
   adoptAnimal,
-  unadoptAnimal, // <-- import unadopt
+  unadoptAnimal,
   addFavorite,
   removeFavorite,
   requestAdoption,
@@ -100,7 +101,6 @@ const AnimalDetail: React.FC = () => {
   const [isFormAlertOpen, setIsFormAlertOpen] = useState(false);
   const formAlertCancelRef = useRef<HTMLButtonElement>(null);
 
-
   const {
     isOpen: isUnadoptOpen,
     onOpen: onUnadoptOpen,
@@ -110,6 +110,8 @@ const AnimalDetail: React.FC = () => {
 
   const fallbackImage = "/images/default_image.jpg";
 
+  // Nuevo estado: controlar cuándo la imagen ha cargado
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const loadAnimal = useCallback(async () => {
     try {
@@ -123,7 +125,6 @@ const AnimalDetail: React.FC = () => {
     }
   }, [id, navigate, toast, t]);
 
-
   const loadFavorites = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
     try {
@@ -132,11 +133,8 @@ const AnimalDetail: React.FC = () => {
         Array.isArray(prof.favorites) &&
           prof.favorites.some((f: any) => f.id === animal.id)
       );
-    } catch {
-
-    }
+    } catch {}
   }, [animal, role]);
-
 
   const loadRequestStatus = useCallback(async () => {
     if (role !== "adoptante" || !animal) return;
@@ -146,9 +144,7 @@ const AnimalDetail: React.FC = () => {
       if (existing) {
         setIsRequested(true);
       }
-    } catch {
-
-    }
+    } catch {}
   }, [animal, role]);
 
   const loadApplicants = useCallback(async () => {
@@ -162,9 +158,7 @@ const AnimalDetail: React.FC = () => {
     try {
       const reqs = await listAdoptionRequestsForAnimal(animal.id);
       setAdopters(reqs.map((r) => r.user));
-    } catch {
-
-    }
+    } catch {}
   }, [animal, role, authUser]);
 
   useEffect(() => {
@@ -177,7 +171,6 @@ const AnimalDetail: React.FC = () => {
     loadApplicants();
   }, [loadFavorites, loadRequestStatus, loadApplicants]);
 
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -187,7 +180,6 @@ const AnimalDetail: React.FC = () => {
       toast({ title: t("error_cerrar_sesion"), status: "error" });
     }
   };
-
 
   const handleDelete = async () => {
     if (!animal) return;
@@ -202,7 +194,6 @@ const AnimalDetail: React.FC = () => {
       });
     }
   };
-
 
   const handleAdoptionRequest = async () => {
     if (!animal) return;
@@ -238,7 +229,6 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
-
   const handleAdopt = async () => {
     if (!animal || !selectedAdopter) return;
     try {
@@ -253,7 +243,6 @@ const AnimalDetail: React.FC = () => {
     }
   };
 
- 
   const handleUnadopt = async () => {
     if (!animal) return;
     try {
@@ -269,7 +258,6 @@ const AnimalDetail: React.FC = () => {
       onUnadoptClose();
     }
   };
-
 
   const toggleFavorite = async () => {
     if (!animal) return;
@@ -315,7 +303,6 @@ const AnimalDetail: React.FC = () => {
           boxShadow={shadow}
           overflow="hidden"
         >
-
           <HStack justify="space-between" p={4}>
             <Button
               leftIcon={<ArrowBackIcon />}
@@ -336,19 +323,24 @@ const AnimalDetail: React.FC = () => {
             )}
           </HStack>
 
- 
           <AspectRatio ratio={16 / 9} maxH="350px">
-            <ChakraImage
-              src={imgUrl}
-              alt={animal.name}
-              objectFit="cover"
-              fallbackSrc={fallbackImage}
-            />
+            <Box w="100%" h="100%" position="relative">
+              {!imageLoaded && <Skeleton width="100%" height="100%" />}
+              <ChakraImage
+                src={imgUrl}
+                alt={animal.name}
+                objectFit="cover"
+                fallbackSrc={fallbackImage}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(true)}
+                display={imageLoaded ? "block" : "none"}
+                w="100%"
+                h="100%"
+              />
+            </Box>
           </AspectRatio>
 
-
           <VStack align="start" spacing={4} p={6}>
-  
             <Text fontSize="3xl" fontWeight="bold" color="teal.600">
               {animal.name}
             </Text>
@@ -356,7 +348,6 @@ const AnimalDetail: React.FC = () => {
               <Icon as={CheckCircleIcon} mr={2} /> {animal.city}
             </Text>
 
-        
             <HStack spacing={3} wrap="wrap" mb={4}>
               <Badge colorScheme="blue">{animal.species}</Badge>
               <Badge colorScheme="green">{animal.age}</Badge>
@@ -365,7 +356,6 @@ const AnimalDetail: React.FC = () => {
               <Badge colorScheme="orange">{animal.activity}</Badge>
             </HStack>
 
-       
             <VStack align="start" spacing={1}>
               <Text>
                 <Text as="span" fontWeight="bold">
@@ -502,9 +492,7 @@ const AnimalDetail: React.FC = () => {
             )}
 
             {(role === "admin" ||
-              (role === "protectora" &&
-                authUser?.id === animal.owner &&
-                animal.adopter == null)) && (
+              (role === "protectora" && authUser?.id === animal.owner)) && (
               <Button
                 colorScheme="red"
                 width="full"
@@ -518,7 +506,7 @@ const AnimalDetail: React.FC = () => {
         </Box>
       </Flex>
 
-      {/* Dialogo desadoptar */}
+      {/* Diálogo desadoptar */}
       <AlertDialog
         isOpen={isUnadoptOpen}
         leastDestructiveRef={unadoptCancelRef}

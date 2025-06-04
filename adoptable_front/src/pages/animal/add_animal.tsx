@@ -1,12 +1,9 @@
-// src/pages/animal/AddAnimal.tsx
-
 import React, { useState } from "react";
 import {
   Box,
   Heading,
   FormControl,
   FormLabel,
-  Input,
   Select,
   Textarea,
   Checkbox,
@@ -14,6 +11,8 @@ import {
   useToast,
   Flex,
   VStack,
+  Text,
+  Input
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -48,7 +47,7 @@ const AddAnimal: React.FC = () => {
     gender: "male",
     size: "medium",
     activity: "low",
-    city: "",
+    city: "", // ahora se rellenará desde LocationHeader
     species: "",
     breed: "",
     weight: "",
@@ -80,12 +79,19 @@ const AddAnimal: React.FC = () => {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) setImage(e.target.files[0]);
   };
-  const onLocationSelect = (lat: number, lng: number) => {
+
+  // Ahora recibimos (lat, lng, textoCiudad)
+  const onLocationSelect = (lat: number, lng: number, textoCiudad: string) => {
     setLocation([lat, lng]);
+    setForm((f) => ({
+      ...f,
+      city: textoCiudad, // rellenamos city automáticamente
+    }));
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !image || !form.city || !location) {
+    // Validamos que haya nombre, imagen, ciudad y coordenadas
+    if (!form.name || !image || !form.city.trim() || !location) {
       toast({
         title: t("completar_campos_obligatorios"),
         status: "error",
@@ -95,9 +101,9 @@ const AddAnimal: React.FC = () => {
 
     const data = new FormData();
     Object.entries(form).forEach(([k, v]) => data.append(k, String(v)));
-    data.append("image", image);
-    data.append("latitude", String(location[0]));
-    data.append("longitude", String(location[1]));
+    data.append("image", image!);
+    data.append("latitude", String(location![0]));
+    data.append("longitude", String(location![1]));
 
     setLoading(true);
     try {
@@ -156,11 +162,7 @@ const AddAnimal: React.FC = () => {
 
             <FormControl>
               <FormLabel>{t("actividad")}</FormLabel>
-              <Select
-                name="activity"
-                value={form.activity}
-                onChange={onChange}
-              >
+              <Select name="activity" value={form.activity} onChange={onChange}>
                 {ACTIVITIES.map((o) => (
                   <option key={o.value} value={o.value}>
                     {t(o.labelKey)}
@@ -169,18 +171,27 @@ const AddAnimal: React.FC = () => {
               </Select>
             </FormControl>
 
+            {/* Ya no aparece un <Input> independiente para “ciudad”:
+                Se rellenará al pulsar “Usar ubicación” */}
             <FormControl isRequired>
-              <FormLabel>{t("ciudad")}</FormLabel>
-              <Input name="city" value={form.city} onChange={onChange} />
+              <FormLabel>{t("ubicacion_exacta")}</FormLabel>
+              <LocationHeader
+                distance={0}
+                onDistanceChange={() => {}}
+                onLocationSelect={onLocationSelect}
+                showDistance={false}
+              />
             </FormControl>
+            {/* Mostramos al usuario la ciudad seleccionada (texto que escribió) */}
+            {form.city && (
+              <Text fontSize="sm" color="gray.600">
+                {t("ciudad")}: {form.city}
+              </Text>
+            )}
 
             <FormControl>
               <FormLabel>{t("especie")}</FormLabel>
-              <Input
-                name="species"
-                value={form.species}
-                onChange={onChange}
-              />
+              <Input name="species" value={form.species} onChange={onChange} />
             </FormControl>
             <FormControl>
               <FormLabel>{t("raza")}</FormLabel>
@@ -202,15 +213,6 @@ const AddAnimal: React.FC = () => {
             <FormControl>
               <FormLabel>{t("imagen_principal")}</FormLabel>
               <Input type="file" accept="image/*" onChange={onFileChange} />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>{t("ubicacion_exacta")}</FormLabel>
-              <LocationHeader
-                distance={0}
-                onDistanceChange={() => {}}
-                onLocationSelect={onLocationSelect}
-              />
             </FormControl>
 
             <FormControl>

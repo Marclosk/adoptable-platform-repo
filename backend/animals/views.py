@@ -2,7 +2,7 @@
 
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -31,17 +31,16 @@ class AnimalListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Animal.objects.filter(adopter__isnull=True)
-
+        # Solo mostrar animales cuya protectora (owner) esté activa
+        queryset = Animal.objects.filter(adopter__isnull=True, owner__is_active=True)
 
         search = self.request.query_params.get("search", "").strip()
         if search:
             queryset = queryset.filter(name__icontains=search)
 
-
-        user_lat = self.request.query_params.get('user_lat')
-        user_lng = self.request.query_params.get('user_lng')
-        distance_param = self.request.query_params.get('distance')
+        user_lat = self.request.query_params.get("user_lat")
+        user_lng = self.request.query_params.get("user_lng")
+        distance_param = self.request.query_params.get("distance")
 
         if user_lat and user_lng and distance_param:
             try:
@@ -68,6 +67,7 @@ class AnimalListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Recupera, actualiza o borra un animal.
@@ -75,7 +75,8 @@ class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     Además maneja PATCH { adopter: <id> } y PATCH { adopter: null }.
     Cuando se asigna un adoptante, elimina automáticamente su solicitud previa.
     """
-    queryset = Animal.objects.all()
+    # Solo los animales cuya protectora (owner) esté activa pueden recuperarse
+    queryset = Animal.objects.filter(owner__is_active=True)
     serializer_class = AnimalSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
 
@@ -85,14 +86,11 @@ class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
         if "adopter" in request.data:
             adopter_id = request.data.get("adopter")
             if adopter_id is None:
-
                 instance.adopter = None
             else:
-
                 adopter = get_object_or_404(User, pk=adopter_id)
                 instance.adopter = adopter
             instance.save()
-
 
             if adopter_id is not None:
                 AdoptionRequest.objects.filter(
@@ -169,7 +167,6 @@ def adoption_request_view(request, animal_id):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
         )
 
-    # DELETE
     AdoptionRequest.objects.filter(animal=animal, user=request.user).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -187,18 +184,22 @@ def list_animal_requests_view(request, animal_id):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated, IsOwnerOrAdmin])
+@permission_classes([IsAuthenticated])
 def reject_adoption_request_view(request, animal_id, username):
     """
     DELETE /api/animals/{animal_id}/requests/{username}/delete/
-    Permite a la protectora rechazar (borrar) la solicitud
+    Permite al solicitante, a la protectora (dueña del animal) o a un admin borrar la solicitud
     de adopción de un usuario concreto.
     """
     animal = get_object_or_404(Animal, pk=animal_id)
-    user = get_object_or_404(User, username=username)
+    user_obj = get_object_or_404(User, username=username)
 
-    AdoptionRequest.objects.filter(animal=animal, user=user).delete()
+    if request.user != user_obj and request.user != animal.owner and not request.user.is_staff:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    AdoptionRequest.objects.filter(animal=animal, user=user_obj).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 @api_view(["GET"])
@@ -210,9 +211,10 @@ def protectora_metrics(request):
     """
     user = request.user
 
-    total_animals = Animal.objects.filter(owner=user).count()
+    # Contar solo animales cuya protectora esté activa
+    total_animals = Animal.objects.filter(owner=user, owner__is_active=True).count()
     pending_requests = AdoptionRequest.objects.filter(animal__owner=user).count()
-    completed_adoptions = Animal.objects.filter(owner=user, adopter__isnull=False).count()
+    completed_adoptions = Animal.objects.filter(owner=user, owner__is_active=True, adopter__isnull=False).count()
 
     return Response({
         "total_animals": total_animals,
@@ -228,11 +230,12 @@ def protectora_animals(request):
     GET /api/animals/protectora/animals/
     Lista de animales de la protectora que están EN ADOPCIÓN
     (owner=request.user y adopter IS NULL), con cuenta de solicitudes pendientes.
+    Solo si la protectora está activa.
     """
     user = request.user
     qs = (
         Animal.objects
-        .filter(owner=user, adopter__isnull=True)
+        .filter(owner=user, owner__is_active=True, adopter__isnull=True)
         .annotate(pending_requests=Count('adoption_requests'))
     )
     serialized = ProtectoraAnimalSerializer(qs, many=True)
@@ -246,11 +249,12 @@ def protectora_adopted_animals(request):
     GET /api/animals/protectora/adopted/
     Lista de animales de la protectora que están ADOPTADOS
     (owner=request.user y adopter IS NOT NULL), con cuenta de solicitudes recibidas.
+    Solo si la protectora está activa.
     """
     user = request.user
     qs = (
         Animal.objects
-        .filter(owner=user, adopter__isnull=False)
+        .filter(owner=user, owner__is_active=True, adopter__isnull=False)
         .annotate(pending_requests=Count("adoption_requests"))
     )
     serialized = ProtectoraAnimalSerializer(qs, many=True)
@@ -265,9 +269,9 @@ def protectora_metrics_view(request):
     Devuelve las métricas principales para el dashboard de la protectora.
     """
     user = request.user
-    total = Animal.objects.filter(owner=user).count()
+    total = Animal.objects.filter(owner=user, owner__is_active=True).count()
     pending = AdoptionRequest.objects.filter(animal__owner=user).count()
-    completed = Animal.objects.filter(owner=user, adopter__isnull=False).count()
+    completed = Animal.objects.filter(owner=user, owner__is_active=True, adopter__isnull=False).count()
     return Response({
         "total_animals": total,
         "pending_requests": pending,
@@ -285,7 +289,8 @@ def monthly_adoptions_view(request):
     """
     user = request.user
     qs = (
-        Animal.objects.filter(owner=user, adopter__isnull=False)
+        Animal.objects
+        .filter(owner=user, owner__is_active=True, adopter__isnull=False)
         .annotate(month=TruncMonth("updated_at"))
         .values("month")
         .annotate(count=Count("id"))
@@ -307,7 +312,8 @@ def top_requested_animals_view(request):
     """
     user = request.user
     qs = (
-        Animal.objects.filter(owner=user)
+        Animal.objects
+        .filter(owner=user, owner__is_active=True)
         .annotate(req_count=Count("adoption_requests"))
         .order_by("-req_count")[:5]
     )

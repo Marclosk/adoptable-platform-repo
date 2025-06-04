@@ -1,7 +1,9 @@
+// src/components/NavbarInferior.tsx
+
 import React from "react";
 import { Flex, Button, Image, Text } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../../redux/store";
 import type { RootState } from "../../redux/store";
 import { useTranslation } from "react-i18next";
 
@@ -15,7 +17,7 @@ const NavbarInferior: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const role = useSelector((s: RootState) => s.auth.role);
+  const role = useAppSelector((s: RootState) => s.auth.role);
 
   const menuItems: { src: string; labelKey: string; path: string }[] = [
     { src: homeIcon, labelKey: "nav_home", path: "/dashboard" },
@@ -37,8 +39,16 @@ const NavbarInferior: React.FC = () => {
         ]
       : []),
     { src: profileIcon, labelKey: "nav_perfil", path: "/perfil" },
-    { src: donationsIcon, labelKey: "nav_donaciones", path: "/donaciones" },
-    { src: contactIcon, labelKey: "nav_contacto", path: "/contacto" },
+    ...(role !== "admin"
+      ? [
+          {
+            src: donationsIcon,
+            labelKey: "nav_donaciones",
+            path: "/donaciones",
+          },
+          { src: contactIcon, labelKey: "nav_contacto", path: "/contacto" },
+        ]
+      : []),
   ];
 
   return (
@@ -69,7 +79,8 @@ const NavbarInferior: React.FC = () => {
               alt={t(item.labelKey)}
               boxSize="5"
               mb="1"
-              filter={isActive ? "none" : "brightness(0) invert(1)"}
+              filter="brightness(0) invert(1)"
+              opacity={isActive ? 1 : 0.6}
             />
             <Text>{t(item.labelKey)}</Text>
           </Button>

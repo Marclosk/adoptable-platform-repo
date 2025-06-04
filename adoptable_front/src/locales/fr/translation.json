@@ -315,5 +315,46 @@
   "search_placeholder": "Rechercher un chien ou un utilisateur…",
   "search_tab_animals": "Chien",
   "search_tab_users": "Utilisateur",
-  "search_no_results": "Aucun résultat"
+  "search_no_results": "Aucun résultat",
+
+  "error_cargar_mensaje": "Erreur lors du chargement du message",
+  "mensaje_no_encontrado": "Message introuvable",
+  "detalle_mensaje_contacto": "Détails du message de contact",
+  "fecha_envio": "Date d'envoi",
+  "resolver_mensaje": "Résoudre",
+  "mensaje_resuelto": "Message résolu et supprimé",
+  "error_resolver_mensaje": "Erreur lors de la résolution du message",
+  "panel_admin": "Panneau administrateur",
+  "sin_protectoras_pendientes": "Aucun refuge en attente.",
+  "protectora_pendientes": "Refuges en attente",
+  "error_cargar_protectoras_pendientes": "Erreur lors du chargement des refuges",
+  "protectora_validada": "Refuge validé",
+  "error_validar_protectora": "Erreur lors de la validation du refuge",
+  "mensajes_contacto": "Messages de contact",
+  "sin_mensajes_contacto": "Aucun message de contact.",
+  "fecha": "Date",
+  "ver_detalle": "Voir les détails",
+  "error_cargar_mensajes_contacto": "Erreur lors du chargement des messages de contact",
+  "validar": "Valider",
+  "bloquear_usuario": "Bloquer l’utilisateur",
+
+  "usuarios_bloqueados": "Utilisateurs bloqués",
+  "sin_usuarios_bloqueados": "Aucun utilisateur bloqué.",
+  "error_cargar_usuarios_bloqueados": "Erreur lors du chargement des utilisateurs bloqués",
+  "reactivar_usuario": "Réactiver l'utilisateur",
+  "usuario_reactivado": "Utilisateur réactivé",
+  "error_reactivar_usuario": "Erreur lors de la réactivation de l'utilisateur",
+
+  "no_hay_donaciones": "Pas de dons pour le moment",
+  "no_tus_donaciones": "Vous n’avez pas encore fait de dons",
+
+  "recuperar_contraseña": "Récupérer le mot de passe",
+  "restablecer_contraseña_boton": "Réinitialiser le mot de passe",
+  "restableciendo": "Réinitialisation...",
+  "volver_al_login": "Retour à la connexion",
+  "solicitud_rechazada": "Demande rejetée",
+  "error_reset_link_invalido": "Lien de réinitialisation invalide.",
+  "password_restablecida_exito": "Mot de passe réinitialisé avec succès",
+  "error_restablecer_contraseña": "Impossible de réinitialiser le mot de passe"
+
 }

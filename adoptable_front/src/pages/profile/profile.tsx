@@ -1,12 +1,14 @@
 // src/pages/profile/Profile.tsx
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { useAppDispatch, useAppSelector } from "../../redux/store";
 import { useNavigate, useParams } from "react-router-dom";
 import { logoutSuccess } from "../../features/auth/authSlice";
 import { logout } from "../../features/auth/authService";
 import { useTranslation } from "react-i18next";
+import axios from "axios";
+import { getCSRFToken } from "./user_services";
+import { useBreakpointValue } from "@chakra-ui/react";
 
 import { MdLocationOn, MdPhone } from "react-icons/md";
 import Layout from "../../components/layout";
@@ -36,12 +38,13 @@ import {
   AlertDialogFooter,
   Stack,
   Icon,
+  Flex,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 
 import {
   getProfile,
-  getUserProfile, // ← nuevo
+  getUserProfile,
   updateProfile,
   getAdoptionForm,
   submitAdoptionForm,
@@ -65,6 +68,12 @@ const Profile: React.FC = () => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const { userId } = useParams<{ userId?: string }>();
   const { user: authUser, role } = useAppSelector((s) => s.auth);
+  const csrfToken = getCSRFToken();
+
+  // Para tamaños responsivos
+  const avatarSize = useBreakpointValue({ base: "xl", md: "2xl" });
+  const boxPadding = useBreakpointValue({ base: 4, md: 8 });
+  const containerPx = useBreakpointValue({ base: 4, sm: 6, md: 8, lg: 12 });
 
   // Si estamos viendo otro perfil, solo lectura
   const isOwnProfile = !userId || Number(userId) === authUser?.id;
@@ -72,6 +81,7 @@ const Profile: React.FC = () => {
   // Estado común
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Solo para edición (propio)
   const [isEditing, setIsEditing] = useState(false);
@@ -99,6 +109,7 @@ const Profile: React.FC = () => {
     id: number;
     name: string;
   } | null>(null);
+
   const [showAdoptionForm, setShowAdoptionForm] = useState(false);
   const [adopFormValues, setAdopFormValues] = useState<
     Partial<AdoptionFormData>
@@ -133,6 +144,22 @@ const Profile: React.FC = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  const handleSave = async () => {
+    try {
+      const fd = new FormData();
+      if (formData.avatar) fd.append("avatar", formData.avatar);
+      fd.append("location", formData.location);
+      fd.append("phone_number", formData.phone_number);
+      fd.append("bio", formData.bio);
+      await updateProfile(fd);
+      toast({ title: t("perfil_actualizado"), status: "success" });
+      fetchProfile();
+      setIsEditing(false);
+    } catch {
+      toast({ title: t("error_actualizar_perfil"), status: "error" });
+    }
+  };
+
   const toggleAdoptionForm = async () => {
     if (!showAdoptionForm) {
       try {
@@ -155,22 +182,6 @@ const Profile: React.FC = () => {
       }
     } else {
       setShowAdoptionForm(false);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      const fd = new FormData();
-      if (formData.avatar) fd.append("avatar", formData.avatar);
-      fd.append("location", formData.location);
-      fd.append("phone_number", formData.phone_number);
-      fd.append("bio", formData.bio);
-      await updateProfile(fd);
-      toast({ title: t("perfil_actualizado"), status: "success" });
-      fetchProfile();
-      setIsEditing(false);
-    } catch {
-      toast({ title: t("error_actualizar_perfil"), status: "error" });
     }
   };
 
@@ -256,6 +267,34 @@ const Profile: React.FC = () => {
     navigate("/login");
   };
 
+  // === Funcionalidad de bloqueo/desbloqueo para admin ===
+  const handleBlock = async () => {
+    if (!profile) return;
+    setActionLoading(true);
+    try {
+      await axios.put(
+        `/users/admin/block/${profile.id}/`,
+        {},
+        {
+          headers: { "X-CSRFToken": csrfToken },
+          withCredentials: true,
+        }
+      );
+      toast({
+        title: t("usuario_bloqueado") || "Usuario bloqueado",
+        status: "success",
+      });
+      navigate("/admin/dashboard");
+    } catch {
+      toast({
+        title: t("error_bloquear_usuario") || "Error bloqueando usuario",
+        status: "error",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) return <Loader message={t("cargando_perfil")} />;
   if (!profile) return null;
 
@@ -263,12 +302,12 @@ const Profile: React.FC = () => {
   if (!isOwnProfile) {
     return (
       <Layout handleLogout={handleLogout}>
-        <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
+        <Box minH="100vh" bg="gray.50" py={10} px={containerPx}>
           <VStack spacing={8} align="center">
             <Box
               bg="white"
               boxShadow="md"
-              p={8}
+              p={boxPadding}
               borderRadius="lg"
               w="100%"
               maxW="600px"
@@ -277,11 +316,11 @@ const Profile: React.FC = () => {
             >
               <VStack spacing={6} align="center">
                 <Avatar
-                  size="2xl"
+                  size={avatarSize}
                   src={profile.avatar}
                   name={profile.username}
                 />
-                <Heading size="xl" color="teal.600">
+                <Heading fontSize={{ base: "2xl", md: "3xl" }} color="teal.600">
                   {profile.username}
                 </Heading>
                 <Text color="gray.600">
@@ -294,13 +333,26 @@ const Profile: React.FC = () => {
                   {profile.bio || t("sin_biografia")}
                 </Text>
               </VStack>
+
+              {/* Botones de admin: Bloquear / Reactivar */}
+              {role === "admin" && authUser?.id !== profile.id && (
+                <Flex mt={6} justify="center" gap={4}>
+                  <Button
+                    colorScheme="red"
+                    isLoading={actionLoading}
+                    onClick={handleBlock}
+                  >
+                    {t("bloquear_usuario") || "Bloquear usuario"}
+                  </Button>
+                </Flex>
+              )}
             </Box>
 
             {/* Favoritos */}
             <Box
               bg="white"
               boxShadow="md"
-              p={6}
+              p={boxPadding}
               borderRadius="lg"
               w="100%"
               maxW="600px"
@@ -333,7 +385,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="600px"
@@ -367,7 +419,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="600px"
@@ -406,12 +458,12 @@ const Profile: React.FC = () => {
   // === PERFIL PROPIO ===
   return (
     <Layout handleLogout={handleLogout}>
-      <Box minH="100vh" bg="gray.50" py={10} px={{ base: 6, sm: 8, lg: 12 }}>
+      <Box minH="100vh" bg="gray.50" py={10} px={containerPx}>
         <VStack spacing={8} align="center">
           <Box
             bg="white"
             boxShadow="md"
-            p={8}
+            p={boxPadding}
             borderRadius="lg"
             w="100%"
             maxW="800px"
@@ -439,7 +491,7 @@ const Profile: React.FC = () => {
                   {preview && (
                     <Avatar
                       src={preview}
-                      boxSize="100px"
+                      boxSize={{ base: "80px", md: "100px" }}
                       mt={2}
                       border="2px solid"
                       borderColor="teal.200"
@@ -504,7 +556,7 @@ const Profile: React.FC = () => {
             ) : (
               <VStack spacing={6} align="center">
                 <Avatar
-                  size="2xl"
+                  size={avatarSize}
                   src={preview}
                   name={profile.username}
                   border="2px solid"
@@ -567,7 +619,7 @@ const Profile: React.FC = () => {
             <Box
               bg="white"
               boxShadow="md"
-              p={6}
+              p={boxPadding}
               borderRadius="lg"
               w="100%"
               maxW="800px"
@@ -587,7 +639,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="800px"
@@ -624,7 +676,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="800px"
@@ -656,7 +708,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="800px"
@@ -702,7 +754,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="800px"
@@ -733,7 +785,7 @@ const Profile: React.FC = () => {
               <Box
                 bg="white"
                 boxShadow="md"
-                p={6}
+                p={boxPadding}
                 borderRadius="lg"
                 w="100%"
                 maxW="800px"

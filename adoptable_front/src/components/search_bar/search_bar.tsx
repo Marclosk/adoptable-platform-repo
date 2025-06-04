@@ -76,7 +76,13 @@ const SearchBar: React.FC = () => {
           path: `/users/${u.id}/profile`,
         }));
       setSugs([...animals, ...users]);
-      setOpen(animals.length + users.length > 0);
+      const show = animals.length + users.length > 0;
+      setOpen(show);
+      if (show) {
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
+      }
     } catch {
       setSugs([]);
       setOpen(false);
@@ -110,8 +116,8 @@ const SearchBar: React.FC = () => {
     <Popover
       isOpen={open}
       placement="bottom-start"
+      closeOnBlur={false}
       initialFocusRef={inputRef}
-      closeOnBlur
       onClose={() => setOpen(false)}
     >
       <PopoverTrigger>
@@ -126,6 +132,7 @@ const SearchBar: React.FC = () => {
               <FaSearch />
             </InputLeftElement>
             <Input
+              ref={inputRef}
               bg={bg}
               color={color}
               placeholder={t("search_placeholder")}
@@ -139,7 +146,7 @@ const SearchBar: React.FC = () => {
                 if (e.key === "Escape") setOpen(false);
               }}
               borderRadius="md"
-              pl="8" 
+              pl="8"
             />
           </InputGroup>
         </Box>

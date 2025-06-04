@@ -1,3 +1,5 @@
+// src/features/auth/login/login.tsx
+
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +21,8 @@ import {
   Flex,
   Alert,
   AlertIcon,
+  Link,
+  VStack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
@@ -27,12 +31,19 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Estados para login
   const [username, setUsername] = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
   const [formError, setFormError] = useState("");
+
+  // Estados para “Recuperar contraseña”
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetEmailError, setResetEmailError] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,7 +51,7 @@ const Login: React.FC = () => {
     })();
   }, [navigate]);
 
-  const validatePassword = (pwd: string) => {
+  const validatePasswordFormat = (pwd: string) => {
     const regex =
       /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+={}[\]|\\:;"'<>,.?/`~-]{8,}$/;
     return regex.test(pwd);
@@ -59,17 +70,19 @@ const Login: React.FC = () => {
       setPasswordError(t("error_password_required"));
       return;
     }
-    if (!validatePassword(password)) {
+    if (!validatePasswordFormat(password)) {
       setPasswordError(t("error_password_requirements"));
       return;
     }
 
     try {
       const data: LoginResponse = await login({ username, password });
+      // Si el usuario es superusuario => rol “admin”
+      const computedRole = data.user.is_superuser ? "admin" : data.role;
       dispatch(
         loginSuccess({
           user: data.user,
-          role: data.role,
+          role: computedRole,
         })
       );
       navigate("/dashboard");
@@ -98,6 +111,39 @@ const Login: React.FC = () => {
 
   const goToRegister = () => navigate("/register");
 
+  // Enviar petición de recuperación de contraseña
+  const handleSendReset = async () => {
+    setResetEmailError("");
+    setResetMessage("");
+    if (!resetEmail.trim()) {
+      setResetEmailError(t("error_email_required"));
+      return;
+    }
+    // Validación básica de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
+      setResetEmailError(t("error_email_invalid"));
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await axios.post(
+        "/users/password-reset/",
+        { email: resetEmail.trim().toLowerCase() },
+        { withCredentials: true }
+      );
+      setResetMessage(
+        t("recuperar_contraseña") /* re‐using this as “Si ese correo existe…” */
+      );
+    } catch (err: any) {
+      console.error("Error solicitando recuperación de contraseña:", err);
+      setResetEmailError(t("error_restablecer_contraseña"));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <Box
       minH="100vh"
@@ -116,13 +162,7 @@ const Login: React.FC = () => {
         p={6}
       >
         <CardBody>
-          <Heading
-            as="h2"
-            size="xl"
-            textAlign="center"
-            mb={4}
-            color="teal.600"
-          >
+          <Heading as="h2" size="xl" textAlign="center" mb={4} color="teal.600">
             {t("login_heading")}
           </Heading>
 
@@ -137,52 +177,123 @@ const Login: React.FC = () => {
             </Alert>
           )}
 
-          <FormControl isInvalid={!!usernameError} mb={4}>
-            <FormLabel>{t("login_username_label")}</FormLabel>
-            <Input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder={t("placeholder_username")}
-              focusBorderColor="teal.500"
-            />
-            {usernameError && (
-              <FormErrorMessage>{usernameError}</FormErrorMessage>
-            )}
-          </FormControl>
+          {/* === FORMULARIO PRINCIPAL DE LOGIN === */}
+          {!showResetForm && (
+            <VStack spacing={4} align="stretch">
+              <FormControl isInvalid={!!usernameError} mb={4}>
+                <FormLabel>{t("login_username_label")}</FormLabel>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder={t("placeholder_username")}
+                  focusBorderColor="teal.500"
+                />
+                {usernameError && (
+                  <FormErrorMessage>{usernameError}</FormErrorMessage>
+                )}
+              </FormControl>
 
-          <FormControl isInvalid={!!passwordError} mb={6}>
-            <FormLabel>{t("password_label")}</FormLabel>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t("placeholder_password")}
-              onKeyDown={handleKeyDown}
-              focusBorderColor="teal.500"
-            />
-            {passwordError && (
-              <FormErrorMessage>{passwordError}</FormErrorMessage>
-            )}
-          </FormControl>
+              <FormControl isInvalid={!!passwordError} mb={6}>
+                <FormLabel>{t("password_label")}</FormLabel>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("placeholder_password")}
+                  onKeyDown={handleKeyDown}
+                  focusBorderColor="teal.500"
+                />
+                {passwordError && (
+                  <FormErrorMessage>{passwordError}</FormErrorMessage>
+                )}
+              </FormControl>
 
-          <Button
-            colorScheme="teal"
-            onClick={handleLogin}
-            w="full"
-            size="lg"
-            mb={4}
-          >
-            {t("login_button")}
-          </Button>
-
-          <Flex justify="center">
-            <Text fontSize="sm" color="gray.600">
-              {t("login_no_account")}{" "}
-              <Button variant="link" color="teal.500" onClick={goToRegister}>
-                {t("login_register_link")}
+              <Button
+                colorScheme="teal"
+                onClick={handleLogin}
+                w="full"
+                size="lg"
+                mb={2}
+              >
+                {t("login_button")}
               </Button>
-            </Text>
-          </Flex>
+
+              <Flex justify="space-between" align="center">
+                <Text fontSize="sm" color="gray.600">
+                  {t("login_no_account")}{" "}
+                  <Button
+                    variant="link"
+                    color="teal.500"
+                    onClick={goToRegister}
+                  >
+                    {t("login_register_link")}
+                  </Button>
+                </Text>
+
+                <Link
+                  color="teal.500"
+                  fontSize="sm"
+                  cursor="pointer"
+                  onClick={() => {
+                    setShowResetForm(true);
+                    setResetEmail("");
+                    setResetEmailError("");
+                    setResetMessage("");
+                  }}
+                >
+                  {t("recuperar_contraseña")}
+                </Link>
+              </Flex>
+            </VStack>
+          )}
+
+          {/* === FORMULARIO “RECUPERAR CONTRASEÑA” === */}
+          {showResetForm && (
+            <VStack spacing={4} align="stretch">
+              <Text textAlign="center" color="gray.700">
+                {t("recuperar_contraseña")}
+              </Text>
+
+              {resetMessage && (
+                <Alert status="success" mb={4}>
+                  <AlertIcon />
+                  {t("password_restablecida_exito")}
+                </Alert>
+              )}
+
+              <FormControl isInvalid={!!resetEmailError} mb={4}>
+                <FormLabel>{t("placeholder_email")}</FormLabel>
+                <Input
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder={t("placeholder_email")}
+                  focusBorderColor="teal.500"
+                />
+                {resetEmailError && (
+                  <FormErrorMessage>{resetEmailError}</FormErrorMessage>
+                )}
+              </FormControl>
+
+              <Button
+                colorScheme="teal"
+                onClick={handleSendReset}
+                isLoading={resetLoading}
+                w="full"
+              >
+                {t("restablecer_contraseña_boton")}
+              </Button>
+
+              <Link
+                color="teal.500"
+                fontSize="sm"
+                textAlign="center"
+                onClick={() => setShowResetForm(false)}
+                mt={2}
+              >
+                {t("volver_al_login")}
+              </Link>
+            </VStack>
+          )}
         </CardBody>
       </Card>
     </Box>

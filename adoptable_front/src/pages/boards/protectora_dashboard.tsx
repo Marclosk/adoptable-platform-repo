@@ -1,3 +1,5 @@
+// src/pages/protectora/ProtectoraDashboard.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -56,11 +58,16 @@ import {
   Bar,
 } from "recharts";
 
+import { useDispatch } from "react-redux";
+import { logoutSuccess } from "../../features/auth/authSlice";
+import { logout } from "../../features/auth/authService";
+
 const COLORS = ["#38A169", "#ED8936", "#4FD1C5"];
 
 const ProtectoraDashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<MetricsAPI>({
@@ -107,9 +114,19 @@ const ProtectoraDashboard: React.FC = () => {
   const bg = useColorModeValue("white", "gray.700");
   const shadow = useColorModeValue("md", "dark-lg");
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      dispatch(logoutSuccess());
+      navigate("/login");
+    } catch (err) {
+      console.error("Error al cerrar sesión:", err);
+    }
+  };
+
   if (loading) {
     return (
-      <Layout handleLogout={() => navigate("/login")}>
+      <Layout handleLogout={handleLogout}>
         <Flex justify="center" py={20}>
           <Spinner size="xl" color="teal.500" />
         </Flex>
@@ -118,22 +135,21 @@ const ProtectoraDashboard: React.FC = () => {
   }
 
   return (
-    <Layout handleLogout={() => navigate("/login")}>
+    <Layout handleLogout={handleLogout}>
       <Box maxW="1200px" mx="auto" py={8} px={[4, 6, 8]}>
-        <Heading mb={6} color="teal.600">
+        <Heading mb={6} color="teal.600" fontSize={["2xl", "3xl", "4xl"]}>
           {t("panel_protectora")}
         </Heading>
-
 
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
             <Flex align="center" mb={2}>
               <Icon as={FaPaw} boxSize={6} color="teal.500" mr={3} />
-              <Text fontSize="lg" fontWeight="medium">
+              <Text fontSize={["md", "lg"]} fontWeight="medium">
                 {t("total_animales")}
               </Text>
             </Flex>
-            <Text fontSize="3xl" fontWeight="bold">
+            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
               {total_animals}
             </Text>
           </Box>
@@ -145,22 +161,22 @@ const ProtectoraDashboard: React.FC = () => {
                 color="orange.500"
                 mr={3}
               />
-              <Text fontSize="lg" fontWeight="medium">
+              <Text fontSize={["md", "lg"]} fontWeight="medium">
                 {t("solicitudes_pendientes")}
               </Text>
             </Flex>
-            <Text fontSize="3xl" fontWeight="bold">
+            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
               {pending_requests}
             </Text>
           </Box>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
             <Flex align="center" mb={2}>
               <Icon as={FaCheckCircle} boxSize={6} color="green.500" mr={3} />
-              <Text fontSize="lg" fontWeight="medium">
+              <Text fontSize={["md", "lg"]} fontWeight="medium">
                 {t("adopciones_completadas")}
               </Text>
             </Flex>
-            <Text fontSize="3xl" fontWeight="bold">
+            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
               {completed_adoptions}
             </Text>
           </Box>
@@ -168,11 +184,9 @@ const ProtectoraDashboard: React.FC = () => {
 
         <Divider mb={8} />
 
-
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6} mb={8}>
-
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4}>
+            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
               {t("estado_global")}
             </Heading>
             <ResponsiveContainer width="100%" height={180}>
@@ -188,8 +202,8 @@ const ProtectoraDashboard: React.FC = () => {
                   ]}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={30}  
-                  outerRadius={50}  
+                  innerRadius={30}
+                  outerRadius={50}
                   paddingAngle={2}
                   label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
                   labelLine={false}
@@ -224,7 +238,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Box>
 
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4}>
+            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
               {t("adopciones_mensuales")}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
@@ -252,7 +266,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Box>
 
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4}>
+            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
               {t("animales_mas_solicitados")}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
@@ -286,11 +300,18 @@ const ProtectoraDashboard: React.FC = () => {
 
         <Divider mb={8} />
 
-        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
-          <Heading size="md" mb={4}>
+        <Box
+          bg={bg}
+          boxShadow={shadow}
+          borderRadius="lg"
+          p={6}
+          mb={8}
+          overflowX="auto"
+        >
+          <Heading size="md" mb={4} fontSize={["lg", "md"]}>
             {t("animales_en_adopcion")}
           </Heading>
-          <Table variant="simple">
+          <Table variant="simple" size="sm">
             <Thead>
               <Tr>
                 <Th>{t("nombre")}</Th>
@@ -324,11 +345,17 @@ const ProtectoraDashboard: React.FC = () => {
           )}
         </Box>
 
-        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-          <Heading size="md" mb={4}>
+        <Box
+          bg={bg}
+          boxShadow={shadow}
+          borderRadius="lg"
+          p={6}
+          overflowX="auto"
+        >
+          <Heading size="md" mb={4} fontSize={["lg", "md"]}>
             {t("animales_adoptados")}
           </Heading>
-          <Table variant="simple">
+          <Table variant="simple" size="sm">
             <Thead>
               <Tr>
                 <Th>{t("nombre")}</Th>

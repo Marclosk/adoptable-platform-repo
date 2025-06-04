@@ -314,7 +314,45 @@
   "search_placeholder": "Cercar gos o usuari…",
   "search_tab_animals": "Gos",
   "search_tab_users": "Usuari",
-  "search_no_results": "Sense resultats"
+  "search_no_results": "Sense resultats",
 
-  
+  "error_cargar_mensaje": "Error carregant missatge",
+  "mensaje_no_encontrado": "Missatge no trobat",
+  "detalle_mensaje_contacto": "Detall del missatge de contacte",
+  "fecha_envio": "Data d'enviament",
+  "resolver_mensaje": "Resoldre",
+  "mensaje_resuelto": "Missatge resolt i eliminat",
+  "error_resolver_mensaje": "Error en resoldre el missatge",
+  "panel_admin": "Panell administrador",
+  "sin_protectoras_pendientes": "No hi ha protectores pendents.",
+  "protectora_pendientes": "Protectores pendents",
+  "error_cargar_protectoras_pendientes": "Error carregant dades de protectores",
+  "protectora_validada": "Protectora validada",
+  "error_validar_protectora": "Error validant protectora",
+  "mensajes_contacto": "Missatges de contacte",
+  "sin_mensajes_contacto": "No hi ha missatges de contacte.",
+  "fecha": "Data",
+  "ver_detalle": "Veure detall",
+  "error_cargar_mensajes_contacto": "Error carregant missatges de contacte",
+  "validar": "Validar",
+  "bloquear_usuario": "Bloquejar usuari",
+
+  "usuarios_bloqueados": "Usuaris bloquejats",
+  "sin_usuarios_bloqueados": "No hi ha usuaris bloquejats.",
+  "error_cargar_usuarios_bloqueados": "Error carregant usuaris bloquejats",
+  "reactivar_usuario": "Reactivar usuari",
+  "usuario_reactivado": "Usuari reactivat",
+  "error_reactivar_usuario": "Error reactivant l'usuari",
+
+  "no_hay_donaciones": "Encara no hi ha donacions",
+  "no_tus_donaciones": "Encara no has fet cap donació",
+
+  "recuperar_contraseña": "Recupera la contrasenya",
+  "restablecer_contraseña_boton": "Restableix la contrasenya",
+  "restableciendo": "Restablint...",
+  "volver_al_login": "Tornar a l'inici de sessió",
+  "error_reset_link_invalido": "Enllaç de restabliment invàlid.",
+  "password_restablecida_exito": "Contrasenya restablerta amb èxit",
+  "error_restablecer_contraseña": "No s'ha pogut restablir la contrasenya",
+  "solicitud_rechazada": "Sol·licitud rebutjada"
 }

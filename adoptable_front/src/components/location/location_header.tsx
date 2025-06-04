@@ -26,8 +26,10 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useTranslation } from "react-i18next";
-import i18n from "i18next";
+import { useAppDispatch } from "../../redux/store";
+import { setLocation } from "../../redux/slices/location_slice"; // <-- importar acción
 
+// Ajustamos los iconos de Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -36,19 +38,21 @@ L.Icon.Default.mergeOptions({
 });
 
 interface LocationHeaderProps {
-  distance: number;
-  onDistanceChange: (val: number) => void;
-  onLocationSelect: (lat: number, lng: number) => void;
+  distance?: number;
+  onDistanceChange?: (val: number) => void;
+  onLocationSelect: (lat: number, lng: number, textoCiudad: string) => void;
+  /** Si es false, no muestra el slider de distancia */
+  showDistance?: boolean;
 }
 
-const OTHER_LANGS = ["de", "fr", "en"];
-
 const LocationHeader: React.FC<LocationHeaderProps> = ({
-  distance,
-  onDistanceChange,
+  distance = 0,
+  onDistanceChange = () => {},
   onLocationSelect,
+  showDistance = true,
 }) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch(); // <-- hook de dispatch
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,54 +65,33 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(
-        searchQuery
-      )}`
-    );
-    const data = await res.json();
-    if (data?.length) {
-      const { lat, lon } = data[0];
-      setMarkerPos([+lat, +lon]);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(
+          searchQuery
+        )}`
+      );
+      const data = await res.json();
+      if (data?.length) {
+        const { lat, lon } = data[0];
+        setMarkerPos([+lat, +lon]);
+      }
+    } catch (err) {
+      console.warn("Error en geocoding:", err);
     }
   };
 
   const applyLocation = async () => {
     if (!markerPos) return;
     const [lat, lng] = markerPos;
-    onLocationSelect(lat, lng);
+
+    // 1) llamamos al callback que viene del padre
+    onLocationSelect(lat, lng, searchQuery);
+
+    // 2) despachamos a Redux
+    dispatch(setLocation({ lat, lng, cityText: searchQuery }));
+
     setIsOpen(false);
-
-    try {
-      const rev = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${lat}&lon=${lng}`
-      );
-      const revData = await rev.json();
-      const cc: string = revData.address?.country_code?.toLowerCase() || "";
-
-      let lang = "en"; 
-
-      if (cc === "es") {
-        const region = (
-          revData.address.state ||
-          revData.address.region ||
-          ""
-        ).toLowerCase();
-        if (region.includes("catal")) {
-          lang = "ca";
-        } else {
-          lang = "es";
-        }
-      } else if (OTHER_LANGS.includes(cc)) {
-        lang = cc;
-      }
-
-      await i18n.changeLanguage(lang);
-      console.log("Idioma cambiado a", lang);
-    } catch (err) {
-      console.warn("Error detectando idioma, fallback a inglés", err);
-      await i18n.changeLanguage("en");
-    }
   };
 
   return (
@@ -116,9 +99,15 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
       <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" mb={6}>
         <Flex align="center" wrap="wrap" gap={2} mb={4}>
           <Image src={locationIcon} alt={t("location_icon_alt")} w={6} />
-          <Text fontSize="lg" fontWeight="medium" color="gray.700">
-            {t("ubicacion_a_distancia", { distance: localDistance })}
-          </Text>
+          {showDistance ? (
+            <Text fontSize="lg" fontWeight="medium" color="gray.700">
+              {t("ubicacion_a_distancia", { distance: localDistance })}
+            </Text>
+          ) : (
+            <Text fontSize="lg" fontWeight="medium" color="gray.700">
+              {t("ubicacion_exacta")}
+            </Text>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -130,21 +119,23 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
           </Button>
         </Flex>
 
-        <Slider
-          aria-label="distance-slider"
-          min={0}
-          max={100}
-          step={5}
-          value={localDistance}
-          onChange={(val) => setLocalDistance(val)}
-          onChangeEnd={(val) => onDistanceChange(val)}
-          colorScheme="teal"
-        >
-          <SliderTrack bg="gray.200">
-            <SliderFilledTrack bg="teal.500" />
-          </SliderTrack>
-          <SliderThumb boxSize={5} bg="teal.500" />
-        </Slider>
+        {showDistance && (
+          <Slider
+            aria-label="distance-slider"
+            min={0}
+            max={100}
+            step={5}
+            value={localDistance}
+            onChange={(val) => setLocalDistance(val)}
+            onChangeEnd={(val) => onDistanceChange(val)}
+            colorScheme="teal"
+          >
+            <SliderTrack bg="gray.200">
+              <SliderFilledTrack bg="teal.500" />
+            </SliderTrack>
+            <SliderThumb boxSize={5} bg="teal.500" />
+          </Slider>
+        )}
       </Box>
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="2xl">

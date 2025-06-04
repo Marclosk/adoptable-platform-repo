@@ -9,7 +9,13 @@ const API_URL_logout = "http://localhost:8000/users/logout/";
 
 export interface LoginResponse {
   message: string;
-  user: { id: number; username: string; email: string };
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    is_staff: boolean;
+    is_superuser: boolean;
+  };
   role: "adoptante" | "protectora";
 }
 

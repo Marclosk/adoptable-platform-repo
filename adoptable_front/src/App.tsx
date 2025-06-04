@@ -21,6 +21,9 @@ import ContactPage from "./pages/contact/contact";
 import AddAnimal from "./pages/animal/add_animal";
 import AnimalRequests from "./pages/protectora/animal_requests";
 import ProtectoraDashboard from "./pages/boards/protectora_dashboard";
+import AdminDashboard from "./pages/boards/admin_dashboard";
+import ContactDetail from "./pages/contact/contact_detail";
+import ResetPassword from "./pages/reset_password/reset_password";
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -56,6 +59,9 @@ const App: React.FC = () => {
         <Route path="/animals/:id/requests" element={<AnimalRequests />} />
         <Route path="/protectora/dashboard" element={<ProtectoraDashboard />} />
         <Route path="/users/:userId/profile" element={<Profile />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/contact/:id" element={<ContactDetail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   );
