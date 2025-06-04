@@ -1,44 +1,49 @@
 // src/pages/profile/user_services.ts
 
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = "http://localhost:8000/users";
+const API_URL = 'http://localhost:8000/users';
 
-export const fetchCSRFToken = async () => {
+export const fetchCSRFToken = async (): Promise<void> => {
   try {
-    const response = await axios.get("http://localhost:8000/csrf-token/", {
+    const response = await axios.get('http://localhost:8000/csrf-token/', {
       withCredentials: true,
     });
     document.cookie = `csrftoken=${response.data.csrfToken}; path=/`;
-  } catch (error) {
-    console.error("Error obteniendo el CSRF token:", error);
+  } catch (error: unknown) {
+    console.error('Error obteniendo el CSRF token:', error);
   }
 };
 
 export const getCSRFToken = (): string => {
   const match = document.cookie.match(/csrftoken=([^;]+)/);
-  return match ? match[1] : "";
+  return match ? match[1] : '';
 };
 
-export const getProfile = async (): Promise<any> => {
+export const getProfile = async (): Promise<unknown> => {
   try {
     const response = await axios.get(`${API_URL}/profile/`, {
       withCredentials: true,
       headers: {
-        "X-CSRFToken": getCSRFToken(),
+        'X-CSRFToken': getCSRFToken(),
       },
     });
     return response.data;
-  } catch (error: any) {
-    console.error(
-      "Error obteniendo el perfil:",
-      error.response?.data || error.message
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error obteniendo el perfil:', error.response?.data);
+    } else if (error instanceof Error) {
+      console.error('Error obteniendo el perfil:', error.message);
+    } else {
+      console.error('Error obteniendo el perfil:', error);
+    }
     throw error;
   }
 };
 
-export const updateProfile = async (profileData: FormData): Promise<any> => {
+export const updateProfile = async (
+  profileData: FormData
+): Promise<unknown> => {
   try {
     const response = await axios.put(
       `${API_URL}/profile/update/`,
@@ -46,16 +51,19 @@ export const updateProfile = async (profileData: FormData): Promise<any> => {
       {
         withCredentials: true,
         headers: {
-          "X-CSRFToken": getCSRFToken(),
+          'X-CSRFToken': getCSRFToken(),
         },
       }
     );
     return response.data;
-  } catch (error: any) {
-    console.error(
-      "Error actualizando el perfil:",
-      error.response?.data || error.message
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error actualizando el perfil:', error.response?.data);
+    } else if (error instanceof Error) {
+      console.error('Error actualizando el perfil:', error.message);
+    } else {
+      console.error('Error actualizando el perfil:', error);
+    }
     throw error;
   }
 };
@@ -83,14 +91,20 @@ export const getAdoptionForm = async (): Promise<AdoptionFormAPI> => {
       adoption_form: AdoptionFormAPI;
     }>(`${API_URL}/profile/adoption-form/`, {
       withCredentials: true,
-      headers: { "X-CSRFToken": getCSRFToken() },
+      headers: { 'X-CSRFToken': getCSRFToken() },
     });
     return response.data.adoption_form;
-  } catch (error: any) {
-    console.error(
-      "Error obteniendo formulario de adopción:",
-      error.response?.data || error.message
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        'Error obteniendo formulario de adopción:',
+        error.response?.data
+      );
+    } else if (error instanceof Error) {
+      console.error('Error obteniendo formulario de adopción:', error.message);
+    } else {
+      console.error('Error obteniendo formulario de adopción:', error);
+    }
     throw error;
   }
 };
@@ -109,21 +123,41 @@ export const submitAdoptionForm = async (
     }>(`${API_URL}/profile/adoption-form/`, payload, {
       withCredentials: true,
       headers: {
-        "X-CSRFToken": getCSRFToken(),
-        "Content-Type": "application/json",
+        'X-CSRFToken': getCSRFToken(),
+        'Content-Type': 'application/json',
       },
     });
     return response.data.adoption_form;
-  } catch (error: any) {
-    console.error(
-      "Error enviando formulario de adopción:",
-      error.response?.data || error.message
-    );
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        'Error enviando formulario de adopción:',
+        error.response?.data
+      );
+    } else if (error instanceof Error) {
+      console.error('Error enviando formulario de adopción:', error.message);
+    } else {
+      console.error('Error enviando formulario de adopción:', error);
+    }
     throw error;
   }
 };
 
-export const getUserProfile = async (userId: number) => {
-  const resp = await axios.get(`${API_URL}/${userId}/profile/`);
-  return resp.data;
+export const getUserProfile = async (userId: number): Promise<unknown> => {
+  try {
+    const resp = await axios.get(`${API_URL}/${userId}/profile/`);
+    return resp.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error(
+        'Error obteniendo perfil de usuario:',
+        error.response?.data
+      );
+    } else if (error instanceof Error) {
+      console.error('Error obteniendo perfil de usuario:', error.message);
+    } else {
+      console.error('Error obteniendo perfil de usuario:', error);
+    }
+    throw error;
+  }
 };

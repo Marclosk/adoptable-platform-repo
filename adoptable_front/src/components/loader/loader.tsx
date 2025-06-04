@@ -1,6 +1,12 @@
-import React from "react";
-import { Center, VStack, Spinner, Text, useColorModeValue } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import {
+  Center,
+  VStack,
+  Spinner,
+  Text,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 interface LoaderProps {
   messageKey?: string;
@@ -9,14 +15,14 @@ interface LoaderProps {
 
 const Loader: React.FC<LoaderProps> = ({ messageKey, message }) => {
   const { t } = useTranslation();
-  const bg = useColorModeValue("transparent", "transparent");
-  const textColor = useColorModeValue("teal.500", "teal.300");
+  const bg = useColorModeValue('transparent', 'transparent');
+  const textColor = useColorModeValue('teal.500', 'teal.300');
 
   const displayText = messageKey
     ? t(messageKey)
     : message
-    ? message
-    : t("cargando");
+      ? message
+      : t('cargando');
 
   return (
     <Center w="100%" h="100%" bg={bg} py={10}>

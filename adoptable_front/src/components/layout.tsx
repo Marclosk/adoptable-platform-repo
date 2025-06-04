@@ -1,12 +1,12 @@
 // src/components/layout/Layout.tsx
 
-import React, { useEffect } from "react";
-import { Flex, Box } from "@chakra-ui/react";
-import { useAppDispatch } from "../redux/hooks";
-import NavbarSuperior from "./navbar/navbar_superior";
-import NavbarInferior from "./navbar/navbar_inferior";
-import Footer from "./navbar/footer";
-import { fetchProfile } from "../redux/slices/profileSlice";
+import React, { useEffect } from 'react';
+import { Flex, Box } from '@chakra-ui/react';
+import { useAppDispatch } from '../redux/hooks';
+import NavbarSuperior from './navbar/navbar_superior';
+import NavbarInferior from './navbar/navbar_inferior';
+import Footer from './navbar/footer';
+import { fetchProfile } from '../redux/slices/profileSlice';
 
 interface LayoutProps {
   children: React.ReactNode;

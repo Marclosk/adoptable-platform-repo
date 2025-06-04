@@ -1,17 +1,17 @@
 // src/components/NavbarInferior.tsx
 
-import React from "react";
-import { Flex, Button, Image, Text } from "@chakra-ui/react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAppSelector } from "../../redux/store";
-import type { RootState } from "../../redux/store";
-import { useTranslation } from "react-i18next";
+import React from 'react';
+import { Flex, Button, Image, Text } from '@chakra-ui/react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAppSelector } from '../../redux/store';
+import type { RootState } from '../../redux/store';
+import { useTranslation } from 'react-i18next';
 
-import homeIcon from "../../assets/icons/home-icon.svg";
-import dashboardIcon from "../../assets/icons/dashboard-icon.svg";
-import profileIcon from "../../assets/icons/profile-icon.svg";
-import donationsIcon from "../../assets/icons/donations-icon.svg";
-import contactIcon from "../../assets/icons/contact-icon.svg";
+import homeIcon from '../../assets/icons/home-icon.svg';
+import dashboardIcon from '../../assets/icons/dashboard-icon.svg';
+import profileIcon from '../../assets/icons/profile-icon.svg';
+import donationsIcon from '../../assets/icons/donations-icon.svg';
+import contactIcon from '../../assets/icons/contact-icon.svg';
 
 const NavbarInferior: React.FC = () => {
   const { t } = useTranslation();
@@ -20,33 +20,33 @@ const NavbarInferior: React.FC = () => {
   const role = useAppSelector((s: RootState) => s.auth.role);
 
   const menuItems: { src: string; labelKey: string; path: string }[] = [
-    { src: homeIcon, labelKey: "nav_home", path: "/dashboard" },
-    ...(role === "protectora"
+    { src: homeIcon, labelKey: 'nav_home', path: '/dashboard' },
+    ...(role === 'protectora'
       ? [
           {
             src: dashboardIcon,
-            labelKey: "nav_panel",
-            path: "/protectora/dashboard",
+            labelKey: 'nav_panel',
+            path: '/protectora/dashboard',
           },
         ]
-      : role === "admin"
-      ? [
-          {
-            src: dashboardIcon,
-            labelKey: "nav_admin",
-            path: "/admin/dashboard",
-          },
-        ]
-      : []),
-    { src: profileIcon, labelKey: "nav_perfil", path: "/perfil" },
-    ...(role !== "admin"
+      : role === 'admin'
+        ? [
+            {
+              src: dashboardIcon,
+              labelKey: 'nav_admin',
+              path: '/admin/dashboard',
+            },
+          ]
+        : []),
+    { src: profileIcon, labelKey: 'nav_perfil', path: '/perfil' },
+    ...(role !== 'admin'
       ? [
           {
             src: donationsIcon,
-            labelKey: "nav_donaciones",
-            path: "/donaciones",
+            labelKey: 'nav_donaciones',
+            path: '/donaciones',
           },
-          { src: contactIcon, labelKey: "nav_contacto", path: "/contacto" },
+          { src: contactIcon, labelKey: 'nav_contacto', path: '/contacto' },
         ]
       : []),
   ];
@@ -60,17 +60,17 @@ const NavbarInferior: React.FC = () => {
       align="center"
       boxShadow="md"
     >
-      {menuItems.map((item) => {
+      {menuItems.map(item => {
         const isActive = location.pathname === item.path;
         return (
           <Button
             key={item.path}
             variant="ghost"
-            color={isActive ? "white" : "teal.100"}
+            color={isActive ? 'white' : 'teal.100'}
             onClick={() => {
               if (!isActive) navigate(item.path);
             }}
-            _hover={{ color: "white", bg: "teal.700" }}
+            _hover={{ color: 'white', bg: 'teal.700' }}
             flexDirection="column"
             fontSize="xs"
           >

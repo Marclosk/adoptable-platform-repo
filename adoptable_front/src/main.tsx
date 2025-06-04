@@ -8,7 +8,6 @@ import GlobalStyles from './styles/global/globalStyles';
 import theme from './theme/theme';
 import 'leaflet/dist/leaflet.css';
 
-// Este import ya inicializa i18n con el detector
 import './i18n';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
@@ -19,5 +18,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <App />
       </Provider>
     </ChakraProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

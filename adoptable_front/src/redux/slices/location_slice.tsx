@@ -1,6 +1,6 @@
 // src/redux/slices/locationSlice.ts
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface LocationState {
   lat: number | null;
@@ -11,11 +11,11 @@ export interface LocationState {
 const initialState: LocationState = {
   lat: null,
   lng: null,
-  cityText: "",
+  cityText: '',
 };
 
 const locationSlice = createSlice({
-  name: "location",
+  name: 'location',
   initialState,
   reducers: {
     setLocation(
@@ -29,7 +29,7 @@ const locationSlice = createSlice({
     clearLocation(state) {
       state.lat = null;
       state.lng = null;
-      state.cityText = "";
+      state.cityText = '';
     },
   },
 });

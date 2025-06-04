@@ -1,18 +1,18 @@
 // src/pages/profile/Profile.tsx
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import { useNavigate, useParams } from "react-router-dom";
-import { logoutSuccess } from "../../features/auth/authSlice";
-import { logout } from "../../features/auth/authService";
-import { useTranslation } from "react-i18next";
-import axios from "axios";
-import { getCSRFToken } from "./user_services";
-import { useBreakpointValue } from "@chakra-ui/react";
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useAppDispatch, useAppSelector } from '../../redux/store';
+import { useNavigate, useParams } from 'react-router-dom';
+import { logoutSuccess } from '../../features/auth/authSlice';
+import { logout } from '../../features/auth/authService';
+import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { getCSRFToken } from './user_services';
+import { useBreakpointValue } from '@chakra-ui/react';
 
-import { MdLocationOn, MdPhone } from "react-icons/md";
-import Layout from "../../components/layout";
-import Loader from "../../components/loader/loader";
+import { MdLocationOn, MdPhone } from 'react-icons/md';
+import Layout from '../../components/layout';
+import Loader from '../../components/loader/loader';
 import {
   Box,
   Avatar,
@@ -39,8 +39,8 @@ import {
   Stack,
   Icon,
   Flex,
-} from "@chakra-ui/react";
-import { EditIcon } from "@chakra-ui/icons";
+} from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
 
 import {
   getProfile,
@@ -49,16 +49,54 @@ import {
   getAdoptionForm,
   submitAdoptionForm,
   AdoptionFormAPI,
-} from "./user_services";
+} from './user_services';
 import {
   unadoptAnimal,
   cancelAdoptionRequest,
   removeFavorite,
-} from "../card_detail/animal_services";
+} from '../card_detail/animal_services';
 import {
   AdoptionForm,
   AdoptionFormData,
-} from "../../components/adoption_form/adoption_form";
+} from '../../components/adoption_form/adoption_form';
+
+// Definición de tipo para el perfil de usuario
+interface UserFavorite {
+  id: number;
+  name: string;
+}
+
+interface UserAdoptedPet {
+  id: number;
+  name: string;
+  adopter_username?: string;
+}
+
+interface UserRequest {
+  id: number;
+  animal: {
+    id: number;
+    name: string;
+  };
+}
+
+interface UserEnAdopcion {
+  id: number;
+  name: string;
+}
+
+interface ProfileType {
+  id: number;
+  username: string;
+  avatar?: string;
+  location?: string;
+  phone_number?: string;
+  bio?: string;
+  favorites?: UserFavorite[];
+  adopted?: UserAdoptedPet[];
+  requests?: UserRequest[];
+  en_adopcion?: UserEnAdopcion[];
+}
 
 const Profile: React.FC = () => {
   const { t } = useTranslation();
@@ -67,11 +105,11 @@ const Profile: React.FC = () => {
   const toast = useToast();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const { userId } = useParams<{ userId?: string }>();
-  const { user: authUser, role } = useAppSelector((s) => s.auth);
+  const { user: authUser, role } = useAppSelector(s => s.auth);
   const csrfToken = getCSRFToken();
 
   // Para tamaños responsivos
-  const avatarSize = useBreakpointValue({ base: "xl", md: "2xl" });
+  const avatarSize = useBreakpointValue({ base: 'xl', md: '2xl' });
   const boxPadding = useBreakpointValue({ base: 4, md: 8 });
   const containerPx = useBreakpointValue({ base: 4, sm: 6, md: 8, lg: 12 });
 
@@ -79,7 +117,7 @@ const Profile: React.FC = () => {
   const isOwnProfile = !userId || Number(userId) === authUser?.id;
 
   // Estado común
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -92,11 +130,11 @@ const Profile: React.FC = () => {
     bio: string;
   }>({
     avatar: null,
-    location: "",
-    phone_number: "",
-    bio: "",
+    location: '',
+    phone_number: '',
+    bio: '',
   });
-  const [preview, setPreview] = useState<string>("");
+  const [preview, setPreview] = useState<string>('');
 
   // Solo para propio: adopción/desadopción solicitudes
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -118,23 +156,23 @@ const Profile: React.FC = () => {
   const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
-      const data = isOwnProfile
-        ? await getProfile()
-        : await getUserProfile(Number(userId));
+      const data = (
+        isOwnProfile ? await getProfile() : await getUserProfile(Number(userId))
+      ) as ProfileType;
       setProfile(data);
       // preparar preview y formData solo si es propio
       if (isOwnProfile) {
-        setPreview(data.avatar || "");
+        setPreview(data.avatar || '');
         setFormData({
           avatar: null,
-          location: data.location || "",
-          phone_number: data.phone_number || "",
-          bio: data.bio || "",
+          location: data.location || '',
+          phone_number: data.phone_number || '',
+          bio: data.bio || '',
         });
         setIsEditing(false);
       }
     } catch {
-      toast({ title: t("error_cargar_perfil"), status: "error" });
+      toast({ title: t('error_cargar_perfil'), status: 'error' });
     } finally {
       setLoading(false);
     }
@@ -147,16 +185,16 @@ const Profile: React.FC = () => {
   const handleSave = async () => {
     try {
       const fd = new FormData();
-      if (formData.avatar) fd.append("avatar", formData.avatar);
-      fd.append("location", formData.location);
-      fd.append("phone_number", formData.phone_number);
-      fd.append("bio", formData.bio);
+      if (formData.avatar) fd.append('avatar', formData.avatar);
+      fd.append('location', formData.location);
+      fd.append('phone_number', formData.phone_number);
+      fd.append('bio', formData.bio);
       await updateProfile(fd);
-      toast({ title: t("perfil_actualizado"), status: "success" });
+      toast({ title: t('perfil_actualizado'), status: 'success' });
       fetchProfile();
       setIsEditing(false);
     } catch {
-      toast({ title: t("error_actualizar_perfil"), status: "error" });
+      toast({ title: t('error_actualizar_perfil'), status: 'error' });
     }
   };
 
@@ -170,15 +208,15 @@ const Profile: React.FC = () => {
           phone: existing.phone,
           email: existing.email,
           motivation: existing.reason,
-          hasExperience: existing.experience !== "",
+          hasExperience: existing.experience !== '',
           experienceDescription: existing.experience,
-          hasOtherPets: existing.has_other_pets ? "yes" : "no",
+          hasOtherPets: existing.has_other_pets ? 'yes' : 'no',
           otherPetTypes: existing.other_pet_types,
           references: existing.references,
         });
         setShowAdoptionForm(true);
       } catch {
-        toast({ title: t("error_cargar_datos_adopcion"), status: "error" });
+        toast({ title: t('error_cargar_datos_adopcion'), status: 'error' });
       }
     } else {
       setShowAdoptionForm(false);
@@ -188,21 +226,24 @@ const Profile: React.FC = () => {
   const handleAdoptionSubmit = async (data: AdoptionFormData) => {
     try {
       const payload: AdoptionFormAPI = {
-        full_name: data.fullName,
-        address: data.address,
-        phone: data.phone,
-        email: data.email,
-        reason: data.motivation,
-        experience: data.hasExperience ? data.experienceDescription : "",
-        has_other_pets: data.hasOtherPets === "yes",
-        other_pet_types: data.hasOtherPets === "yes" ? data.otherPetTypes : "",
-        references: data.references,
+        full_name: data.fullName as string,
+        address: data.address as string,
+        phone: data.phone as string,
+        email: data.email as string,
+        reason: data.motivation as string,
+        experience: data.hasExperience
+          ? (data.experienceDescription as string)
+          : '',
+        has_other_pets: data.hasOtherPets === 'yes',
+        other_pet_types:
+          data.hasOtherPets === 'yes' ? (data.otherPetTypes as string) : '',
+        references: data.references as string,
       };
       await submitAdoptionForm(payload);
-      toast({ title: t("solicitud_guardada"), status: "success" });
+      toast({ title: t('solicitud_guardada'), status: 'success' });
       setShowAdoptionForm(false);
     } catch {
-      toast({ title: t("error_guardar_formulario"), status: "error" });
+      toast({ title: t('error_guardar_formulario'), status: 'error' });
     }
   };
 
@@ -219,12 +260,12 @@ const Profile: React.FC = () => {
     try {
       await unadoptAnimal(petToUnadopt.id);
       toast({
-        title: t("desadoptacion_exito", { name: petToUnadopt.name }),
-        status: "success",
+        title: t('desadoptacion_exito', { name: petToUnadopt.name }),
+        status: 'success',
       });
       fetchProfile();
     } catch {
-      toast({ title: t("error_desadoptar"), status: "error" });
+      toast({ title: t('error_desadoptar'), status: 'error' });
     } finally {
       closeUnadoptDialog();
     }
@@ -235,12 +276,12 @@ const Profile: React.FC = () => {
     try {
       await cancelAdoptionRequest(requestToCancel.id);
       toast({
-        title: t("solicitud_cancelada", { name: requestToCancel.name }),
-        status: "info",
+        title: t('solicitud_cancelada', { name: requestToCancel.name }),
+        status: 'info',
       });
       fetchProfile();
     } catch {
-      toast({ title: t("error_cancelar_solicitud"), status: "error" });
+      toast({ title: t('error_cancelar_solicitud'), status: 'error' });
     } finally {
       setRequestToCancel(null);
     }
@@ -249,22 +290,26 @@ const Profile: React.FC = () => {
   const handleRemoveFavorite = async (animalId: number) => {
     try {
       await removeFavorite(animalId);
-      toast({ title: t("favorito_eliminado"), status: "info" });
+      toast({ title: t('favorito_eliminado'), status: 'info' });
       if (isOwnProfile) fetchProfile();
       else
-        setProfile((p: any) => ({
-          ...p,
-          favorites: p.favorites.filter((f: any) => f.id !== animalId),
-        }));
+        setProfile((p: ProfileType | null) =>
+          p
+            ? {
+                ...p,
+                favorites: p.favorites?.filter(f => f.id !== animalId),
+              }
+            : p
+        );
     } catch {
-      toast({ title: t("error_eliminar_favorito"), status: "error" });
+      toast({ title: t('error_eliminar_favorito'), status: 'error' });
     }
   };
 
   const handleLogout = async () => {
     await logout();
     dispatch(logoutSuccess());
-    navigate("/login");
+    navigate('/login');
   };
 
   // === Funcionalidad de bloqueo/desbloqueo para admin ===
@@ -276,26 +321,26 @@ const Profile: React.FC = () => {
         `/users/admin/block/${profile.id}/`,
         {},
         {
-          headers: { "X-CSRFToken": csrfToken },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
       toast({
-        title: t("usuario_bloqueado") || "Usuario bloqueado",
-        status: "success",
+        title: t('usuario_bloqueado') || 'Usuario bloqueado',
+        status: 'success',
       });
-      navigate("/admin/dashboard");
+      navigate('/admin/dashboard');
     } catch {
       toast({
-        title: t("error_bloquear_usuario") || "Error bloqueando usuario",
-        status: "error",
+        title: t('error_bloquear_usuario') || 'Error bloqueando usuario',
+        status: 'error',
       });
     } finally {
       setActionLoading(false);
     }
   };
 
-  if (loading) return <Loader message={t("cargando_perfil")} />;
+  if (loading) return <Loader message={t('cargando_perfil')} />;
   if (!profile) return null;
 
   // === PERFIL AJENO (solo lectura) ===
@@ -320,29 +365,29 @@ const Profile: React.FC = () => {
                   src={profile.avatar}
                   name={profile.username}
                 />
-                <Heading fontSize={{ base: "2xl", md: "3xl" }} color="teal.600">
+                <Heading fontSize={{ base: '2xl', md: '3xl' }} color="teal.600">
                   {profile.username}
                 </Heading>
                 <Text color="gray.600">
-                  {profile.location || t("ubicacion_no_especificada")}
+                  {profile.location || t('ubicacion_no_especificada')}
                 </Text>
                 <Text color="gray.600">
-                  {profile.phone_number || t("telefono_no_disponible")}
+                  {profile.phone_number || t('telefono_no_disponible')}
                 </Text>
                 <Text textAlign="center" color="gray.700">
-                  {profile.bio || t("sin_biografia")}
+                  {profile.bio || t('sin_biografia')}
                 </Text>
               </VStack>
 
               {/* Botones de admin: Bloquear / Reactivar */}
-              {role === "admin" && authUser?.id !== profile.id && (
+              {role === 'admin' && authUser?.id !== profile.id && (
                 <Flex mt={6} justify="center" gap={4}>
                   <Button
                     colorScheme="red"
                     isLoading={actionLoading}
                     onClick={handleBlock}
                   >
-                    {t("bloquear_usuario") || "Bloquear usuario"}
+                    {t('bloquear_usuario') || 'Bloquear usuario'}
                   </Button>
                 </Flex>
               )}
@@ -358,11 +403,11 @@ const Profile: React.FC = () => {
               maxW="600px"
             >
               <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                {t("favoritos")}
+                {t('favoritos')}
               </Heading>
               <Wrap justify="center" spacing={3}>
-                {profile.favorites?.length ? (
-                  profile.favorites.map((fav: any) => (
+                {profile.favorites && profile.favorites.length ? (
+                  profile.favorites.map((fav: UserFavorite) => (
                     <Tag
                       key={fav.id}
                       size="md"
@@ -375,7 +420,7 @@ const Profile: React.FC = () => {
                     </Tag>
                   ))
                 ) : (
-                  <Text color="gray.500">{t("no_tienes_favoritos")}</Text>
+                  <Text color="gray.500">{t('no_tienes_favoritos')}</Text>
                 )}
               </Wrap>
             </Box>
@@ -391,11 +436,11 @@ const Profile: React.FC = () => {
                 maxW="600px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("adoptados_perfil")}
+                  {t('adoptados_perfil')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.adopted.length ? (
-                    profile.adopted.map((pet: any) => (
+                    profile.adopted.map((pet: UserAdoptedPet) => (
                       <Tag
                         key={pet.id}
                         size="md"
@@ -408,7 +453,7 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_has_adoptado")}</Text>
+                    <Text color="gray.500">{t('no_has_adoptado')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -425,11 +470,11 @@ const Profile: React.FC = () => {
                 maxW="600px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("solicitudes_adopcion_perfil")}
+                  {t('solicitudes_adopcion_perfil')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
                   {profile.requests.length ? (
-                    profile.requests.map((req: any) => (
+                    profile.requests.map((req: UserRequest) => (
                       <Tag
                         key={req.id}
                         size="md"
@@ -444,7 +489,7 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_has_solicitado")}</Text>
+                    <Text color="gray.500">{t('no_has_solicitado')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -473,17 +518,17 @@ const Profile: React.FC = () => {
             {isEditing ? (
               <VStack spacing={6} align="stretch">
                 <Heading size="lg" color="teal.600" textAlign="center">
-                  {t("editar_perfil")}
+                  {t('editar_perfil')}
                 </Heading>
                 <FormControl>
-                  <FormLabel>{t("avatar")}</FormLabel>
+                  <FormLabel>{t('avatar')}</FormLabel>
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={e => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        setFormData((f) => ({ ...f, avatar: file }));
+                        setFormData(f => ({ ...f, avatar: file }));
                         setPreview(URL.createObjectURL(file));
                       }
                     }}
@@ -491,7 +536,7 @@ const Profile: React.FC = () => {
                   {preview && (
                     <Avatar
                       src={preview}
-                      boxSize={{ base: "80px", md: "100px" }}
+                      boxSize={{ base: '80px', md: '100px' }}
                       mt={2}
                       border="2px solid"
                       borderColor="teal.200"
@@ -499,12 +544,12 @@ const Profile: React.FC = () => {
                   )}
                 </FormControl>
                 <FormControl>
-                  <FormLabel>{t("ubicacion")}</FormLabel>
+                  <FormLabel>{t('ubicacion')}</FormLabel>
                   <Input
                     name="location"
                     value={formData.location}
-                    onChange={(e) =>
-                      setFormData((f) => ({
+                    onChange={e =>
+                      setFormData(f => ({
                         ...f,
                         location: e.target.value,
                       }))
@@ -513,12 +558,12 @@ const Profile: React.FC = () => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>{t("telefono")}</FormLabel>
+                  <FormLabel>{t('telefono')}</FormLabel>
                   <Input
                     name="phone_number"
                     value={formData.phone_number}
-                    onChange={(e) =>
-                      setFormData((f) => ({
+                    onChange={e =>
+                      setFormData(f => ({
                         ...f,
                         phone_number: e.target.value,
                       }))
@@ -527,12 +572,12 @@ const Profile: React.FC = () => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>{t("biografia")}</FormLabel>
+                  <FormLabel>{t('biografia')}</FormLabel>
                   <Textarea
                     name="bio"
                     value={formData.bio}
-                    onChange={(e) =>
-                      setFormData((f) => ({
+                    onChange={e =>
+                      setFormData(f => ({
                         ...f,
                         bio: e.target.value,
                       }))
@@ -542,14 +587,14 @@ const Profile: React.FC = () => {
                 </FormControl>
                 <HStack justify="center" spacing={4}>
                   <Button colorScheme="teal" onClick={handleSave}>
-                    {t("guardar_cambios")}
+                    {t('guardar_cambios')}
                   </Button>
                   <Button
                     variant="outline"
                     colorScheme="teal"
                     onClick={() => setIsEditing(false)}
                   >
-                    {t("cancelar")}
+                    {t('cancelar')}
                   </Button>
                 </HStack>
               </VStack>
@@ -568,24 +613,24 @@ const Profile: React.FC = () => {
                 <Stack spacing={4} w="full" pt={2}>
                   <HStack spacing={2}>
                     <Icon as={MdLocationOn} boxSize={5} color="teal.500" />
-                    <Text fontWeight="semibold">{t("ubicacion")}:</Text>
+                    <Text fontWeight="semibold">{t('ubicacion')}:</Text>
                     <Text color="gray.600">
-                      {profile.location || t("ubicacion_no_especificada")}
+                      {profile.location || t('ubicacion_no_especificada')}
                     </Text>
                   </HStack>
 
                   <HStack spacing={2}>
                     <Icon as={MdPhone} boxSize={5} color="teal.500" />
-                    <Text fontWeight="semibold">{t("telefono")}:</Text>
+                    <Text fontWeight="semibold">{t('telefono')}:</Text>
                     <Text color="gray.600">
-                      {profile.phone_number || t("telefono_no_disponible")}
+                      {profile.phone_number || t('telefono_no_disponible')}
                     </Text>
                   </HStack>
 
                   <VStack align="start" spacing={1}>
-                    <Text fontWeight="semibold">{t("biografia")}:</Text>
+                    <Text fontWeight="semibold">{t('biografia')}:</Text>
                     <Text color="gray.700" whiteSpace="pre-line">
-                      {profile.bio || t("sin_biografia")}
+                      {profile.bio || t('sin_biografia')}
                     </Text>
                   </VStack>
                 </Stack>
@@ -597,17 +642,17 @@ const Profile: React.FC = () => {
                     size="sm"
                     onClick={() => setIsEditing(true)}
                   >
-                    {t("editar_perfil")}
+                    {t('editar_perfil')}
                   </Button>
-                  {role === "adoptante" && (
+                  {role === 'adoptante' && (
                     <Button
                       colorScheme="purple"
                       size="sm"
                       onClick={toggleAdoptionForm}
                     >
                       {showAdoptionForm
-                        ? t("ocultar_formulario")
-                        : t("mostrar_formulario_adopcion")}
+                        ? t('ocultar_formulario')
+                        : t('mostrar_formulario_adopcion')}
                     </Button>
                   )}
                 </HStack>
@@ -615,7 +660,7 @@ const Profile: React.FC = () => {
             )}
           </Box>
 
-          {role === "adoptante" && showAdoptionForm && (
+          {role === 'adoptante' && showAdoptionForm && (
             <Box
               bg="white"
               boxShadow="md"
@@ -625,7 +670,7 @@ const Profile: React.FC = () => {
               maxW="800px"
             >
               <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                {t("formulario_adopcion")}
+                {t('formulario_adopcion')}
               </Heading>
               <AdoptionForm
                 initialValues={adopFormValues}
@@ -634,7 +679,7 @@ const Profile: React.FC = () => {
             </Box>
           )}
 
-          {role === "adoptante" && (
+          {role === 'adoptante' && (
             <>
               <Box
                 bg="white"
@@ -645,11 +690,11 @@ const Profile: React.FC = () => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("favoritos")}
+                  {t('favoritos')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
-                  {profile.favorites?.length > 0 ? (
-                    profile.favorites.map((fav: any) => (
+                  {profile.favorites && profile.favorites.length > 0 ? (
+                    profile.favorites.map((fav: UserFavorite) => (
                       <Tag
                         key={fav.id}
                         size="md"
@@ -660,7 +705,7 @@ const Profile: React.FC = () => {
                       >
                         <TagLabel>{fav.name}</TagLabel>
                         <TagCloseButton
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             handleRemoveFavorite(fav.id);
                           }}
@@ -668,7 +713,7 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_tienes_favoritos")}</Text>
+                    <Text color="gray.500">{t('no_tienes_favoritos')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -682,11 +727,11 @@ const Profile: React.FC = () => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("adoptados_perfil")}
+                  {t('adoptados_perfil')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
-                  {profile.adopted?.length > 0 ? (
-                    profile.adopted.map((pet: any) => (
+                  {profile.adopted && profile.adopted.length > 0 ? (
+                    profile.adopted.map((pet: UserAdoptedPet) => (
                       <Tag
                         key={pet.id}
                         size="md"
@@ -696,11 +741,11 @@ const Profile: React.FC = () => {
                         onClick={() => navigate(`/card_detail/${pet.id}`)}
                       >
                         <TagLabel>{pet.name}</TagLabel>
-                        <TagCloseButton onClick={(e) => e.stopPropagation()} />
+                        <TagCloseButton onClick={e => e.stopPropagation()} />
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_has_adoptado")}</Text>
+                    <Text color="gray.500">{t('no_has_adoptado')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -714,11 +759,11 @@ const Profile: React.FC = () => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("solicitudes_adopcion_perfil")}
+                  {t('solicitudes_adopcion_perfil')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
-                  {profile.requests?.length > 0 ? (
-                    profile.requests.map((req: any) => (
+                  {profile.requests && profile.requests.length > 0 ? (
+                    profile.requests.map((req: UserRequest) => (
                       <Tag
                         key={req.id}
                         size="md"
@@ -731,7 +776,7 @@ const Profile: React.FC = () => {
                       >
                         <TagLabel>{req.animal.name}</TagLabel>
                         <TagCloseButton
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             setRequestToCancel({
                               id: req.id,
@@ -742,14 +787,14 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_has_solicitado")}</Text>
+                    <Text color="gray.500">{t('no_has_solicitado')}</Text>
                   )}
                 </Wrap>
               </Box>
             </>
           )}
 
-          {role === "protectora" && (
+          {role === 'protectora' && (
             <>
               <Box
                 bg="white"
@@ -760,11 +805,11 @@ const Profile: React.FC = () => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("en_adopcion")}
+                  {t('en_adopcion')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
-                  {profile.en_adopcion?.length > 0 ? (
-                    profile.en_adopcion.map((a: any) => (
+                  {profile.en_adopcion && profile.en_adopcion.length > 0 ? (
+                    profile.en_adopcion.map((a: UserEnAdopcion) => (
                       <Tag
                         key={a.id}
                         size="md"
@@ -777,7 +822,7 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_perros_en_adopcion")}</Text>
+                    <Text color="gray.500">{t('no_perros_en_adopcion')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -791,11 +836,11 @@ const Profile: React.FC = () => {
                 maxW="800px"
               >
                 <Heading size="md" color="teal.600" mb={4} textAlign="center">
-                  {t("adoptados_protectora")}
+                  {t('adoptados_protectora')}
                 </Heading>
                 <Wrap justify="center" spacing={3}>
-                  {profile.adopted?.length > 0 ? (
-                    profile.adopted.map((pet: any) => (
+                  {profile.adopted && profile.adopted.length > 0 ? (
+                    profile.adopted.map((pet: UserAdoptedPet) => (
                       <Tag
                         key={pet.id}
                         size="md"
@@ -822,7 +867,7 @@ const Profile: React.FC = () => {
                       </Tag>
                     ))
                   ) : (
-                    <Text color="gray.500">{t("no_completado_adopcion")}</Text>
+                    <Text color="gray.500">{t('no_completado_adopcion')}</Text>
                   )}
                 </Wrap>
               </Box>
@@ -837,21 +882,21 @@ const Profile: React.FC = () => {
             <AlertDialogOverlay>
               <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  {t("confirmar_desadopcion")}
+                  {t('confirmar_desadopcion')}
                 </AlertDialogHeader>
                 <AlertDialogBody>
                   {petToUnadopt &&
-                    t("confirmar_desadopcion_text", {
+                    t('confirmar_desadopcion_text', {
                       name: petToUnadopt.name,
                       adopter: petToUnadopt.adopter,
                     })}
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button ref={cancelRef} onClick={closeUnadoptDialog}>
-                    {t("cancelar")}
+                    {t('cancelar')}
                   </Button>
                   <Button colorScheme="red" onClick={confirmUnadopt} ml={3}>
-                    {t("si_desadoptar")}
+                    {t('si_desadoptar')}
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -866,10 +911,10 @@ const Profile: React.FC = () => {
             <AlertDialogOverlay>
               <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                  {t("cancelar_solicitud")}
+                  {t('cancelar_solicitud')}
                 </AlertDialogHeader>
                 <AlertDialogBody>
-                  {t("confirmar_cancelar_solicitud_text", {
+                  {t('confirmar_cancelar_solicitud_text', {
                     name: requestToCancel?.name,
                   })}
                 </AlertDialogBody>
@@ -878,14 +923,14 @@ const Profile: React.FC = () => {
                     ref={cancelRef}
                     onClick={() => setRequestToCancel(null)}
                   >
-                    {t("cancelar")}
+                    {t('cancelar')}
                   </Button>
                   <Button
                     colorScheme="orange"
                     onClick={confirmCancelRequest}
                     ml={3}
                   >
-                    {t("si_cancelar")}
+                    {t('si_cancelar')}
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>

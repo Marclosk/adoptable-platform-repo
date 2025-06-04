@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from 'react';
 import {
   SimpleGrid,
   LinkBox,
@@ -12,17 +12,17 @@ import {
   VStack,
   useColorModeValue,
   Icon,
-} from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+} from '@chakra-ui/react';
+import { Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FaDog,
   FaMapMarkerAlt,
   FaBirthdayCake,
   FaRulerCombined,
   FaHeartbeat,
-} from "react-icons/fa";
-import { GiDogHouse } from "react-icons/gi";
+} from 'react-icons/fa';
+import { GiDogHouse } from 'react-icons/gi';
 
 interface Dog {
   id: number;
@@ -43,13 +43,13 @@ interface DogCardsProps {
 const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
   const { t } = useTranslation();
 
-  const cardBg = useColorModeValue("white", "gray.700");
-  const shadow = useColorModeValue("md", "dark-lg");
-  const fallback = "/images/default_image.jpg";
+  const cardBg = useColorModeValue('white', 'gray.700');
+  const shadow = useColorModeValue('md', 'dark-lg');
+  const fallback = '/images/default_image.jpg';
 
   return (
     <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={8}>
-      {dogs.map((dog) => (
+      {dogs.map(dog => (
         <LinkBox
           key={dog.id}
           bg={cardBg}
@@ -57,7 +57,7 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
           overflow="hidden"
           boxShadow={shadow}
           transition="all 0.3s"
-          _hover={{ transform: "translateY(-4px)", boxShadow: "xl" }}
+          _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl' }}
         >
           <AspectRatio ratio={4 / 3}>
             <Image
@@ -73,7 +73,7 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
               <LinkOverlay
                 as={RouterLink}
                 to={`/card_detail/${dog.id}`}
-                _hover={{ textDecoration: "none" }}
+                _hover={{ textDecoration: 'none' }}
               >
                 <Text fontSize="2xl" fontWeight="bold" color="teal.600">
                   <Icon as={FaDog} mr={2} /> {dog.name}
@@ -100,7 +100,7 @@ const DogCards: React.FC<DogCardsProps> = ({ dogs }) => {
               </Text>
 
               <Text fontSize="sm" color="gray.600" noOfLines={2}>
-                {t("card_raza", { breed: dog.breed })}
+                {t('card_raza', { breed: dog.breed })}
               </Text>
             </VStack>
           </Box>

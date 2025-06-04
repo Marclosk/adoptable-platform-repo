@@ -1,11 +1,11 @@
-import axios from "axios";
-import { getCSRFToken } from "./session/token";
+import axios from 'axios';
+import { getCSRFToken } from './session/token';
 
 axios.defaults.withCredentials = true;
 
-const API_URL_login = "http://localhost:8000/users/login/";
-const API_URL_register = "http://localhost:8000/users/register/";
-const API_URL_logout = "http://localhost:8000/users/logout/";
+const API_URL_login = 'http://localhost:8000/users/login/';
+const API_URL_register = 'http://localhost:8000/users/register/';
+const API_URL_logout = 'http://localhost:8000/users/logout/';
 
 export interface LoginResponse {
   message: string;
@@ -16,7 +16,7 @@ export interface LoginResponse {
     is_staff: boolean;
     is_superuser: boolean;
   };
-  role: "adoptante" | "protectora";
+  role: 'adoptante' | 'protectora';
 }
 
 interface RegisterCredentials {
@@ -42,17 +42,14 @@ export const login = async ({
       username,
       password,
     });
-    console.log("✅ Respuesta del servidor:", response.data);
+    console.log('✅ Respuesta del servidor:', response.data);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
-      // Logueamos todo response.data para depurar
-      console.error("❌ Error en login:", error.response?.data);
-      // Volvemos a lanzar el AxiosError para mantener response.data en el catch de Login.tsx
+      console.error('❌ Error en login:', error.response?.data);
       throw error;
     }
-    // Cualquier otro error
-    console.error("❌ Error inesperado en login:", error);
+    console.error('❌ Error inesperado en login:', error);
     throw error;
   }
 };
@@ -65,20 +62,20 @@ export const logout = async () => {
       {},
       {
         headers: {
-          "X-CSRFToken": csrfToken,
+          'X-CSRFToken': csrfToken,
         },
         withCredentials: true,
       }
     );
     console.log(response.data.message);
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error(
-        "Error al cerrar sesión:",
+        'Error al cerrar sesión:',
         error.response?.data || error.message
       );
     } else {
-      console.error("Error al cerrar sesión:", error);
+      console.error('Error al cerrar sesión:', error);
     }
   }
 };
@@ -105,20 +102,20 @@ export const register = async ({
       shelter_name,
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const data = error.response?.data;
       const firstError =
-        typeof data === "object"
+        typeof data === 'object'
           ? Object.values(data)[0]
           : error.response?.data?.detail;
       throw new Error(
         Array.isArray(firstError)
           ? firstError[0]
-          : firstError || "Error desconocido"
+          : firstError || 'Error desconocido'
       );
     } else {
-      throw new Error("Error desconocido");
+      throw new Error('Error desconocido');
     }
   }
 };

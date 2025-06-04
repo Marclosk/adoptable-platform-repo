@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Flex,
@@ -17,20 +17,21 @@ import {
   ModalFooter,
   ModalCloseButton,
   Input,
-} from "@chakra-ui/react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import locationIcon from "../../assets/icons/location-icon.svg";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { useTranslation } from "react-i18next";
-import { useAppDispatch } from "../../redux/store";
-import { setLocation } from "../../redux/slices/location_slice"; // <-- importar acción
+} from '@chakra-ui/react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import locationIcon from '../../assets/icons/location-icon.svg';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useTranslation } from 'react-i18next';
+import { useAppDispatch } from '../../redux/store';
+import { setLocation } from '../../redux/slices/location_slice';
 
-// Ajustamos los iconos de Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)[
+  '_getIconUrl'
+];
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -41,7 +42,6 @@ interface LocationHeaderProps {
   distance?: number;
   onDistanceChange?: (val: number) => void;
   onLocationSelect: (lat: number, lng: number, textoCiudad: string) => void;
-  /** Si es false, no muestra el slider de distancia */
   showDistance?: boolean;
 }
 
@@ -52,10 +52,10 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
   showDistance = true,
 }) => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch(); // <-- hook de dispatch
+  const dispatch = useAppDispatch();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
   const [localDistance, setLocalDistance] = useState(distance);
 
@@ -77,20 +77,15 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
         setMarkerPos([+lat, +lon]);
       }
     } catch (err) {
-      console.warn("Error en geocoding:", err);
+      console.warn('Error en geocoding:', err);
     }
   };
 
-  const applyLocation = async () => {
+  const applyLocation = () => {
     if (!markerPos) return;
     const [lat, lng] = markerPos;
-
-    // 1) llamamos al callback que viene del padre
     onLocationSelect(lat, lng, searchQuery);
-
-    // 2) despachamos a Redux
     dispatch(setLocation({ lat, lng, cityText: searchQuery }));
-
     setIsOpen(false);
   };
 
@@ -98,14 +93,14 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
     <>
       <Box bg="white" p={4} borderRadius="lg" boxShadow="sm" mb={6}>
         <Flex align="center" wrap="wrap" gap={2} mb={4}>
-          <Image src={locationIcon} alt={t("location_icon_alt")} w={6} />
+          <Image src={locationIcon} alt={t('location_icon_alt')} w={6} />
           {showDistance ? (
             <Text fontSize="lg" fontWeight="medium" color="gray.700">
-              {t("ubicacion_a_distancia", { distance: localDistance })}
+              {t('ubicacion_a_distancia', { distance: localDistance })}
             </Text>
           ) : (
             <Text fontSize="lg" fontWeight="medium" color="gray.700">
-              {t("ubicacion_exacta")}
+              {t('ubicacion_exacta')}
             </Text>
           )}
           <Button
@@ -115,7 +110,7 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
             ml="auto"
             onClick={() => setIsOpen(true)}
           >
-            {t("cambiar_ubicacion")}
+            {t('cambiar_ubicacion')}
           </Button>
         </Flex>
 
@@ -126,8 +121,8 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
             max={100}
             step={5}
             value={localDistance}
-            onChange={(val) => setLocalDistance(val)}
-            onChangeEnd={(val) => onDistanceChange(val)}
+            onChange={val => setLocalDistance(val)}
+            onChangeEnd={val => onDistanceChange(val)}
             colorScheme="teal"
           >
             <SliderTrack bg="gray.200">
@@ -141,31 +136,31 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="2xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{t("seleccionar_ubicacion")}</ModalHeader>
+          <ModalHeader>{t('seleccionar_ubicacion')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Flex gap={2} mb={4}>
               <Input
-                placeholder={t("placeholder_buscar_ciudad")}
+                placeholder={t('placeholder_buscar_ciudad')}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 flex="1"
                 borderColor="gray.300"
               />
               <Button colorScheme="teal" onClick={handleSearch}>
-                {t("buscar")}
+                {t('buscar')}
               </Button>
             </Flex>
             <Box h="400px" borderRadius="md" overflow="hidden">
               <MapContainer
                 center={markerPos ?? [20, 0]}
                 zoom={markerPos ? 12 : 2}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {markerPos && (
                   <Marker position={markerPos}>
-                    <Popup>{t("ubicacion_seleccionada")}</Popup>
+                    <Popup>{t('ubicacion_seleccionada')}</Popup>
                   </Marker>
                 )}
               </MapContainer>
@@ -178,10 +173,10 @@ const LocationHeader: React.FC<LocationHeaderProps> = ({
               onClick={applyLocation}
               isDisabled={!markerPos}
             >
-              {t("usar_ubicacion")}
+              {t('usar_ubicacion')}
             </Button>
             <Button variant="ghost" onClick={() => setIsOpen(false)}>
-              {t("cancelar")}
+              {t('cancelar')}
             </Button>
           </ModalFooter>
         </ModalContent>

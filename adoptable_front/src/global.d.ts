@@ -1,1 +1,1 @@
-declare module "leaflet-geosearch";
+declare module 'leaflet-geosearch';

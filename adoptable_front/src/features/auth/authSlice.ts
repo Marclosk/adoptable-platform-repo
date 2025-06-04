@@ -1,12 +1,12 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface AuthState {
   user: { id: number; username: string; email: string } | null;
-  role: "adoptante" | "protectora" | "admin" | null;
+  role: 'adoptante' | 'protectora' | 'admin' | null;
   error: string | null;
 }
 
-const saved = localStorage.getItem("authState");
+const saved = localStorage.getItem('authState');
 const initialState: AuthState = saved
   ? JSON.parse(saved)
   : {
@@ -16,21 +16,21 @@ const initialState: AuthState = saved
     };
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState,
   reducers: {
     loginSuccess: (
       state,
       action: PayloadAction<{
         user: { id: number; username: string; email: string };
-        role: "adoptante" | "protectora" | "admin";
+        role: 'adoptante' | 'protectora' | 'admin';
       }>
     ) => {
       state.user = action.payload.user;
       state.role = action.payload.role;
       state.error = null;
       localStorage.setItem(
-        "authState",
+        'authState',
         JSON.stringify({
           user: state.user,
           role: state.role,
@@ -39,15 +39,15 @@ const authSlice = createSlice({
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
-      state.user  = null;
-      state.role  = null;
-      localStorage.removeItem("authState");
+      state.user = null;
+      state.role = null;
+      localStorage.removeItem('authState');
     },
-    logoutSuccess: (state) => {
-      state.user  = null;
-      state.role  = null;
+    logoutSuccess: state => {
+      state.user = null;
+      state.role = null;
       state.error = null;
-      localStorage.removeItem("authState");
+      localStorage.removeItem('authState');
     },
   },
 });

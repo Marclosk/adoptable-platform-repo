@@ -1,6 +1,6 @@
 // src/pages/protectora/ProtectoraDashboard.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Flex,
@@ -18,16 +18,16 @@ import {
   Th,
   Td,
   Button,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
 import {
   FaPaw,
   FaClipboardList,
   FaCheckCircle,
   FaChevronRight,
-} from "react-icons/fa";
-import Layout from "../../components/layout";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+} from 'react-icons/fa';
+import Layout from '../../components/layout';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import {
   getProtectoraMetrics,
@@ -40,7 +40,7 @@ import {
   ProtectoraMetrics as MetricsAPI,
   MonthlyAdoption,
   TopRequested,
-} from "../card_detail/animal_services";
+} from '../card_detail/animal_services';
 
 import {
   PieChart,
@@ -56,13 +56,13 @@ import {
   CartesianGrid,
   BarChart,
   Bar,
-} from "recharts";
+} from 'recharts';
 
-import { useDispatch } from "react-redux";
-import { logoutSuccess } from "../../features/auth/authSlice";
-import { logout } from "../../features/auth/authService";
+import { useDispatch } from 'react-redux';
+import { logoutSuccess } from '../../features/auth/authSlice';
+import { logout } from '../../features/auth/authService';
 
-const COLORS = ["#38A169", "#ED8936", "#4FD1C5"];
+const COLORS = ['#38A169', '#ED8936', '#4FD1C5'];
 
 const ProtectoraDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -111,16 +111,16 @@ const ProtectoraDashboard: React.FC = () => {
   }, []);
 
   const { total_animals, pending_requests, completed_adoptions } = metrics;
-  const bg = useColorModeValue("white", "gray.700");
-  const shadow = useColorModeValue("md", "dark-lg");
+  const bg = useColorModeValue('white', 'gray.700');
+  const shadow = useColorModeValue('md', 'dark-lg');
 
   const handleLogout = async () => {
     try {
       await logout();
       dispatch(logoutSuccess());
-      navigate("/login");
+      navigate('/login');
     } catch (err) {
-      console.error("Error al cerrar sesión:", err);
+      console.error('Error al cerrar sesión:', err);
     }
   };
 
@@ -137,19 +137,19 @@ const ProtectoraDashboard: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box maxW="1200px" mx="auto" py={8} px={[4, 6, 8]}>
-        <Heading mb={6} color="teal.600" fontSize={["2xl", "3xl", "4xl"]}>
-          {t("panel_protectora")}
+        <Heading mb={6} color="teal.600" fontSize={['2xl', '3xl', '4xl']}>
+          {t('panel_protectora')}
         </Heading>
 
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
             <Flex align="center" mb={2}>
               <Icon as={FaPaw} boxSize={6} color="teal.500" mr={3} />
-              <Text fontSize={["md", "lg"]} fontWeight="medium">
-                {t("total_animales")}
+              <Text fontSize={['md', 'lg']} fontWeight="medium">
+                {t('total_animales')}
               </Text>
             </Flex>
-            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
+            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
               {total_animals}
             </Text>
           </Box>
@@ -161,22 +161,22 @@ const ProtectoraDashboard: React.FC = () => {
                 color="orange.500"
                 mr={3}
               />
-              <Text fontSize={["md", "lg"]} fontWeight="medium">
-                {t("solicitudes_pendientes")}
+              <Text fontSize={['md', 'lg']} fontWeight="medium">
+                {t('solicitudes_pendientes')}
               </Text>
             </Flex>
-            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
+            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
               {pending_requests}
             </Text>
           </Box>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
             <Flex align="center" mb={2}>
               <Icon as={FaCheckCircle} boxSize={6} color="green.500" mr={3} />
-              <Text fontSize={["md", "lg"]} fontWeight="medium">
-                {t("adopciones_completadas")}
+              <Text fontSize={['md', 'lg']} fontWeight="medium">
+                {t('adopciones_completadas')}
               </Text>
             </Flex>
-            <Text fontSize={["2xl", "3xl"]} fontWeight="bold">
+            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
               {completed_adoptions}
             </Text>
           </Box>
@@ -186,17 +186,17 @@ const ProtectoraDashboard: React.FC = () => {
 
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6} mb={8}>
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
-              {t("estado_global")}
+            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+              {t('estado_global')}
             </Heading>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={[
-                    { name: t("adoptados"), value: completed_adoptions },
-                    { name: t("pendientes"), value: pending_requests },
+                    { name: t('adoptados'), value: completed_adoptions },
+                    { name: t('pendientes'), value: pending_requests },
                     {
-                      name: t("disponibles"),
+                      name: t('disponibles'),
                       value: total_animals - completed_adoptions,
                     },
                   ]}
@@ -226,11 +226,11 @@ const ProtectoraDashboard: React.FC = () => {
                   verticalAlign="middle"
                   align="right"
                   iconType="square"
-                  formatter={(value) => String(value)}
+                  formatter={value => String(value)}
                   wrapperStyle={{
-                    top: "50%",
+                    top: '50%',
                     right: 0,
-                    transform: "translateY(-50%)",
+                    transform: 'translateY(-50%)',
                   }}
                 />
               </PieChart>
@@ -238,13 +238,13 @@ const ProtectoraDashboard: React.FC = () => {
           </Box>
 
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
-              {t("adopciones_mensuales")}
+            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+              {t('adopciones_mensuales')}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
               <LineChart
                 data={monthlyAdoptions}
-                key={monthlyAdoptions.map((d) => d.count).join(",")}
+                key={monthlyAdoptions.map(d => d.count).join(',')}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
@@ -266,14 +266,14 @@ const ProtectoraDashboard: React.FC = () => {
           </Box>
 
           <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={["lg", "md"]}>
-              {t("animales_mas_solicitados")}
+            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+              {t('animales_mas_solicitados')}
             </Heading>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={topRequested}
                 margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
-                key={topRequested.map((d) => d.count).join(",")}
+                key={topRequested.map(d => d.count).join(',')}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
@@ -308,19 +308,19 @@ const ProtectoraDashboard: React.FC = () => {
           mb={8}
           overflowX="auto"
         >
-          <Heading size="md" mb={4} fontSize={["lg", "md"]}>
-            {t("animales_en_adopcion")}
+          <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+            {t('animales_en_adopcion')}
           </Heading>
           <Table variant="simple" size="sm">
             <Thead>
               <Tr>
-                <Th>{t("nombre")}</Th>
-                <Th isNumeric>{t("solicitudes")}</Th>
-                <Th textAlign="right">{t("acciones")}</Th>
+                <Th>{t('nombre')}</Th>
+                <Th isNumeric>{t('solicitudes')}</Th>
+                <Th textAlign="right">{t('acciones')}</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {availableAnimals.map((a) => (
+              {availableAnimals.map(a => (
                 <Tr key={a.id}>
                   <Td>{a.name}</Td>
                   <Td isNumeric>{a.pending_requests}</Td>
@@ -331,7 +331,7 @@ const ProtectoraDashboard: React.FC = () => {
                       rightIcon={<FaChevronRight />}
                       onClick={() => navigate(`/animals/${a.id}/requests`)}
                     >
-                      {t("ver")}
+                      {t('ver')}
                     </Button>
                   </Td>
                 </Tr>
@@ -340,7 +340,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Table>
           {availableAnimals.length === 0 && (
             <Text textAlign="center" mt={4} color="gray.500">
-              {t("no_tienes_animales_en_adopcion")}
+              {t('no_tienes_animales_en_adopcion')}
             </Text>
           )}
         </Box>
@@ -352,19 +352,19 @@ const ProtectoraDashboard: React.FC = () => {
           p={6}
           overflowX="auto"
         >
-          <Heading size="md" mb={4} fontSize={["lg", "md"]}>
-            {t("animales_adoptados")}
+          <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+            {t('animales_adoptados')}
           </Heading>
           <Table variant="simple" size="sm">
             <Thead>
               <Tr>
-                <Th>{t("nombre")}</Th>
-                <Th>{t("adoptado_por")}</Th>
-                <Th textAlign="right">{t("acciones")}</Th>
+                <Th>{t('nombre')}</Th>
+                <Th>{t('adoptado_por')}</Th>
+                <Th textAlign="right">{t('acciones')}</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {adoptedAnimals.map((a) => (
+              {adoptedAnimals.map(a => (
                 <Tr key={a.id}>
                   <Td>{a.name}</Td>
                   <Td>{a.adopter_username}</Td>
@@ -375,7 +375,7 @@ const ProtectoraDashboard: React.FC = () => {
                       rightIcon={<FaChevronRight />}
                       onClick={() => navigate(`/animals/${a.id}/requests`)}
                     >
-                      {t("ver")}
+                      {t('ver')}
                     </Button>
                   </Td>
                 </Tr>
@@ -384,7 +384,7 @@ const ProtectoraDashboard: React.FC = () => {
           </Table>
           {adoptedAnimals.length === 0 && (
             <Text textAlign="center" mt={4} color="gray.500">
-              {t("no_tienes_animales_adoptados")}
+              {t('no_tienes_animales_adoptados')}
             </Text>
           )}
         </Box>

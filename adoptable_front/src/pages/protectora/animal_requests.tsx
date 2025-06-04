@@ -1,10 +1,10 @@
 // src/pages/protectora/AnimalRequests.tsx
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../../redux/store";
-import { useTranslation } from "react-i18next";
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Heading,
@@ -29,19 +29,30 @@ import {
   FormControl,
   FormLabel,
   Select,
-} from "@chakra-ui/react";
-import Layout from "../../components/layout";
-import Loader from "../../components/loader/loader";
+} from '@chakra-ui/react';
+import Layout from '../../components/layout';
+import Loader from '../../components/loader/loader';
 import {
   getAnimalById,
   listAdoptionRequestsForAnimal,
   cancelAdoptionRequestForUser,
   adoptAnimal,
   AdoptionRequest,
-} from "../card_detail/animal_services";
+} from '../card_detail/animal_services';
 
-import { logoutSuccess } from "../../features/auth/authSlice";
-import { logout } from "../../features/auth/authService";
+import { logoutSuccess } from '../../features/auth/authSlice';
+import { logout } from '../../features/auth/authService';
+
+interface Animal {
+  id: number;
+  name: string;
+  city: string;
+  image?: string | { url: string };
+  imageUrl?: string;
+  age: string;
+  breed: string;
+  adopter?: unknown;
+}
 
 const AnimalRequests: React.FC = () => {
   const { t } = useTranslation();
@@ -52,12 +63,13 @@ const AnimalRequests: React.FC = () => {
 
   const role = useSelector((s: RootState) => s.auth.role);
 
-  const [animal, setAnimal] = useState<any>(null);
+  // Se sustituye `any` por `Animal | null`
+  const [animal, setAnimal] = useState<Animal | null>(null);
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Para selección y marcado de adoptante
-  const [selectedAdopter, setSelectedAdopter] = useState<number | "">("");
+  const [selectedAdopter, setSelectedAdopter] = useState<number | ''>('');
   const [adoptLoading, setAdoptLoading] = useState<boolean>(false);
 
   // Diálogo de rechazo
@@ -70,8 +82,8 @@ const AnimalRequests: React.FC = () => {
   const [toReject, setToReject] = useState<AdoptionRequest | null>(null);
 
   useEffect(() => {
-    if (role !== "protectora") {
-      navigate("/dashboard");
+    if (role !== 'protectora') {
+      navigate('/dashboard');
     }
   }, [role, navigate]);
 
@@ -85,7 +97,7 @@ const AnimalRequests: React.FC = () => {
         setRequests(reqs);
       } catch (err) {
         console.error(err);
-        toast({ title: t("error_cargando_datos"), status: "error" });
+        toast({ title: t('error_cargando_datos'), status: 'error' });
       } finally {
         setLoading(false);
       }
@@ -108,11 +120,11 @@ const AnimalRequests: React.FC = () => {
     if (!toReject || !animal) return;
     try {
       await cancelAdoptionRequestForUser(animal.id, toReject.user.username);
-      toast({ title: t("solicitud_rechazada"), status: "info" });
-      setRequests((prev) => prev.filter((r) => r.id !== toReject.id));
+      toast({ title: t('solicitud_rechazada'), status: 'info' });
+      setRequests(prev => prev.filter(r => r.id !== toReject.id));
     } catch (err) {
       console.error(err);
-      toast({ title: t("error_rechazar"), status: "error" });
+      toast({ title: t('error_rechazar'), status: 'error' });
     } finally {
       onRejectClose();
       setToReject(null);
@@ -124,11 +136,11 @@ const AnimalRequests: React.FC = () => {
     setAdoptLoading(true);
     try {
       await adoptAnimal(animal.id, Number(selectedAdopter));
-      toast({ title: t("animal_marcado_adoptado"), status: "success" });
-      navigate("/protectora/dashboard");
+      toast({ title: t('animal_marcado_adoptado'), status: 'success' });
+      navigate('/protectora/dashboard');
     } catch (err) {
       console.error(err);
-      toast({ title: t("error_al_adoptar"), status: "error" });
+      toast({ title: t('error_al_adoptar'), status: 'error' });
     } finally {
       setAdoptLoading(false);
     }
@@ -138,16 +150,16 @@ const AnimalRequests: React.FC = () => {
     try {
       await logout();
       dispatch(logoutSuccess());
-      navigate("/login");
+      navigate('/login');
     } catch (err) {
-      console.error("Error al cerrar sesión:", err);
+      console.error('Error al cerrar sesión:', err);
     }
   };
 
   if (loading) {
     return (
       <Layout handleLogout={handleLogout}>
-        <Loader message={t("cargando_solicitudes")} />
+        <Loader message={t('cargando_solicitudes')} />
       </Layout>
     );
   }
@@ -157,7 +169,7 @@ const AnimalRequests: React.FC = () => {
       <Layout handleLogout={handleLogout}>
         <Box textAlign="center" mt={12}>
           <Text fontSize="2xl" fontWeight="bold" color="red.500">
-            {t("animal_no_encontrado")}
+            {t('animal_no_encontrado')}
           </Text>
         </Box>
       </Layout>
@@ -165,8 +177,8 @@ const AnimalRequests: React.FC = () => {
   }
 
   const urlFromImage =
-    typeof animal.image === "string" ? animal.image : animal.image?.url;
-  const imgUrl = animal.imageUrl || urlFromImage || "/images/default_image.jpg";
+    typeof animal.image === 'string' ? animal.image : animal.image?.url;
+  const imgUrl = animal.imageUrl || urlFromImage || '/images/default_image.jpg';
 
   return (
     <Layout handleLogout={handleLogout}>
@@ -195,13 +207,13 @@ const AnimalRequests: React.FC = () => {
         {/* Selector de adoptante */}
         <Box my={6} bg="white" p={4} borderRadius="md" boxShadow="sm">
           <FormControl>
-            <FormLabel>{t("selecciona_solicitante")}</FormLabel>
+            <FormLabel>{t('selecciona_solicitante')}</FormLabel>
             <Select
-              placeholder={t("selecciona_solicitante")}
+              placeholder={t('selecciona_solicitante')}
               value={selectedAdopter}
-              onChange={(e) => setSelectedAdopter(Number(e.target.value) || "")}
+              onChange={e => setSelectedAdopter(Number(e.target.value) || '')}
             >
-              {requests.map((r) => (
+              {requests.map(r => (
                 <option key={r.id} value={r.user.id}>
                   {r.user.username}
                 </option>
@@ -215,19 +227,19 @@ const AnimalRequests: React.FC = () => {
             isDisabled={!selectedAdopter}
             isLoading={adoptLoading}
           >
-            {t("marcar_como_adoptado")}
+            {t('marcar_como_adoptado')}
           </Button>
         </Box>
 
         {/* Lista de solicitudes */}
         <Heading size="lg" mb={4}>
-          {t("solicitudes_recibidas")} ({requests.length})
+          {t('solicitudes_recibidas')} ({requests.length})
         </Heading>
         {requests.length === 0 ? (
-          <Text color="gray.500">{t("no_hay_solicitudes_pendientes")}</Text>
+          <Text color="gray.500">{t('no_hay_solicitudes_pendientes')}</Text>
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-            {requests.map((r) => (
+            {requests.map(r => (
               <Box
                 key={r.id}
                 bg="white"
@@ -235,7 +247,7 @@ const AnimalRequests: React.FC = () => {
                 borderRadius="lg"
                 p={6}
                 boxShadow="sm"
-                _hover={{ boxShadow: "md" }}
+                _hover={{ boxShadow: 'md' }}
               >
                 <VStack align="start" spacing={3}>
                   <Flex justify="space-between" w="100%">
@@ -251,34 +263,34 @@ const AnimalRequests: React.FC = () => {
                     color="gray.700"
                   >
                     <Text>
-                      <b>{t("nombre")}:</b> {r.form_data.full_name}
+                      <b>{t('nombre')}:</b> {r.form_data.full_name}
                     </Text>
                     <Text>
-                      <b>{t("direccion")}:</b> {r.form_data.address}
+                      <b>{t('direccion')}:</b> {r.form_data.address}
                     </Text>
                     <Text>
-                      <b>{t("telefono")}:</b> {r.form_data.phone}
+                      <b>{t('telefono')}:</b> {r.form_data.phone}
                     </Text>
                     <Text>
-                      <b>{t("correo_electronico")}:</b> {r.form_data.email}
+                      <b>{t('correo_electronico')}:</b> {r.form_data.email}
                     </Text>
                     <Text>
-                      <b>{t("motivacion")}:</b> {r.form_data.reason}
+                      <b>{t('motivacion')}:</b> {r.form_data.reason}
                     </Text>
                     {r.form_data.experience && (
                       <Text>
-                        <b>{t("experiencia")}:</b> {r.form_data.experience}
+                        <b>{t('experiencia')}:</b> {r.form_data.experience}
                       </Text>
                     )}
                     <Text>
-                      <b>{t("otras_mascotas")}:</b>{" "}
+                      <b>{t('otras_mascotas')}:</b>{' '}
                       {r.form_data.has_other_pets
                         ? r.form_data.other_pet_types
-                        : t("no")}
+                        : t('no')}
                     </Text>
                     {r.form_data.references && (
                       <Text>
-                        <b>{t("referencias")}:</b> {r.form_data.references}
+                        <b>{t('referencias')}:</b> {r.form_data.references}
                       </Text>
                     )}
                   </VStack>
@@ -289,7 +301,7 @@ const AnimalRequests: React.FC = () => {
                     alignSelf="end"
                     onClick={() => openRejectDialog(r)}
                   >
-                    {t("rechazar")}
+                    {t('rechazar')}
                   </Button>
                 </VStack>
               </Box>
@@ -306,20 +318,20 @@ const AnimalRequests: React.FC = () => {
           <AlertDialogOverlay>
             <AlertDialogContent>
               <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                {t("rechazar_solicitud")}
+                {t('rechazar_solicitud')}
               </AlertDialogHeader>
               <AlertDialogBody>
                 {toReject &&
-                  t("confirmar_rechazar_solicitud", {
+                  t('confirmar_rechazar_solicitud', {
                     username: toReject.user.username,
                   })}
               </AlertDialogBody>
               <AlertDialogFooter>
                 <Button ref={cancelRef} onClick={onRejectClose}>
-                  {t("cancelar")}
+                  {t('cancelar')}
                 </Button>
                 <Button colorScheme="red" onClick={handleConfirmReject} ml={3}>
-                  {t("si_rechazar")}
+                  {t('si_rechazar')}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>

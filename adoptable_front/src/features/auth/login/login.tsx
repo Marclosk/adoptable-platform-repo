@@ -1,12 +1,10 @@
-// src/features/auth/login/login.tsx
-
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { loginSuccess, loginFailure } from "../authSlice";
-import { login, LoginResponse } from "../authService";
-import { checkSession } from "../session/checkSession";
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { loginSuccess, loginFailure } from '../authSlice';
+import { login, LoginResponse } from '../authService';
+import { checkSession } from '../session/checkSession';
 import {
   Box,
   Button,
@@ -23,31 +21,29 @@ import {
   AlertIcon,
   Link,
   VStack,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+} from '@chakra-ui/react';
+import { useTranslation } from 'react-i18next';
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Estados para login
-  const [username, setUsername] = useState("");
-  const [usernameError, setUsernameError] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [formError, setFormError] = useState("");
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formError, setFormError] = useState('');
 
-  // Estados para “Recuperar contraseña”
   const [showResetForm, setShowResetForm] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
-  const [resetEmailError, setResetEmailError] = useState("");
-  const [resetMessage, setResetMessage] = useState("");
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetEmailError, setResetEmailError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
-      if (await checkSession()) navigate("/dashboard");
+      if (await checkSession()) navigate('/dashboard');
     })();
   }, [navigate]);
 
@@ -58,87 +54,82 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = async () => {
-    setUsernameError("");
-    setPasswordError("");
-    setFormError("");
+    setUsernameError('');
+    setPasswordError('');
+    setFormError('');
 
     if (!username) {
-      setUsernameError(t("error_username_required"));
+      setUsernameError(t('error_username_required'));
       return;
     }
     if (!password) {
-      setPasswordError(t("error_password_required"));
+      setPasswordError(t('error_password_required'));
       return;
     }
     if (!validatePasswordFormat(password)) {
-      setPasswordError(t("error_password_requirements"));
+      setPasswordError(t('error_password_requirements'));
       return;
     }
 
     try {
       const data: LoginResponse = await login({ username, password });
-      // Si el usuario es superusuario => rol “admin”
-      const computedRole = data.user.is_superuser ? "admin" : data.role;
+      const computedRole = data.user.is_superuser ? 'admin' : data.role;
       dispatch(
         loginSuccess({
           user: data.user,
           role: computedRole,
         })
       );
-      navigate("/dashboard");
-    } catch (err: any) {
-      dispatch(loginFailure(err.message));
-      console.error("Error durante el inicio de sesión:", err);
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      dispatch(loginFailure((err as Error).message));
+      console.error('Error durante el inicio de sesión:', err);
 
       if (axios.isAxiosError(err) && err.response) {
         const status = err.response.status;
         if (status === 403) {
-          setFormError(t("error_account_not_approved"));
+          setFormError(t('error_account_not_approved'));
         } else if (status === 401) {
-          setFormError(t("error_invalid_credentials"));
+          setFormError(t('error_invalid_credentials'));
         } else {
-          setFormError(t("error_server"));
+          setFormError(t('error_server'));
         }
       } else {
-        setFormError(t("error_server"));
+        setFormError(t('error_server'));
       }
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleLogin();
+    if (e.key === 'Enter') handleLogin();
   };
 
-  const goToRegister = () => navigate("/register");
+  const goToRegister = () => navigate('/register');
 
-  // Enviar petición de recuperación de contraseña
   const handleSendReset = async () => {
-    setResetEmailError("");
-    setResetMessage("");
+    setResetEmailError('');
+    setResetMessage('');
     if (!resetEmail.trim()) {
-      setResetEmailError(t("error_email_required"));
+      setResetEmailError(t('error_email_required'));
       return;
     }
-    // Validación básica de formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(resetEmail)) {
-      setResetEmailError(t("error_email_invalid"));
+      setResetEmailError(t('error_email_invalid'));
       return;
     }
 
     setResetLoading(true);
     try {
       await axios.post(
-        "/users/password-reset/",
+        '/users/password-reset/',
         { email: resetEmail.trim().toLowerCase() },
         { withCredentials: true }
       );
-      setResetMessage(
-        t("recuperar_contraseña") /* re‐using this as “Si ese correo existe…” */
-      );
-    } catch (err: any) {
-      console.error("Error solicitando recuperación de contraseña:", err);
-      setResetEmailError(t("error_restablecer_contraseña"));
+      setResetMessage(t('recuperar_contraseña'));
+    } catch (err: unknown) {
+      console.error('Error solicitando recuperación de contraseña:', err);
+      setResetEmailError(t('error_restablecer_contraseña'));
     } finally {
       setResetLoading(false);
     }
@@ -163,11 +154,11 @@ const Login: React.FC = () => {
       >
         <CardBody>
           <Heading as="h2" size="xl" textAlign="center" mb={4} color="teal.600">
-            {t("login_heading")}
+            {t('login_heading')}
           </Heading>
 
           <Text fontSize="md" textAlign="center" mb={6} color="gray.600">
-            {t("login_subtitle")}
+            {t('login_subtitle')}
           </Text>
 
           {formError && (
@@ -177,15 +168,14 @@ const Login: React.FC = () => {
             </Alert>
           )}
 
-          {/* === FORMULARIO PRINCIPAL DE LOGIN === */}
           {!showResetForm && (
             <VStack spacing={4} align="stretch">
               <FormControl isInvalid={!!usernameError} mb={4}>
-                <FormLabel>{t("login_username_label")}</FormLabel>
+                <FormLabel>{t('login_username_label')}</FormLabel>
                 <Input
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder={t("placeholder_username")}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder={t('placeholder_username')}
                   focusBorderColor="teal.500"
                 />
                 {usernameError && (
@@ -194,12 +184,12 @@ const Login: React.FC = () => {
               </FormControl>
 
               <FormControl isInvalid={!!passwordError} mb={6}>
-                <FormLabel>{t("password_label")}</FormLabel>
+                <FormLabel>{t('password_label')}</FormLabel>
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("placeholder_password")}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder={t('placeholder_password')}
                   onKeyDown={handleKeyDown}
                   focusBorderColor="teal.500"
                 />
@@ -215,18 +205,18 @@ const Login: React.FC = () => {
                 size="lg"
                 mb={2}
               >
-                {t("login_button")}
+                {t('login_button')}
               </Button>
 
               <Flex justify="space-between" align="center">
                 <Text fontSize="sm" color="gray.600">
-                  {t("login_no_account")}{" "}
+                  {t('login_no_account')}{' '}
                   <Button
                     variant="link"
                     color="teal.500"
                     onClick={goToRegister}
                   >
-                    {t("login_register_link")}
+                    {t('login_register_link')}
                   </Button>
                 </Text>
 
@@ -236,37 +226,36 @@ const Login: React.FC = () => {
                   cursor="pointer"
                   onClick={() => {
                     setShowResetForm(true);
-                    setResetEmail("");
-                    setResetEmailError("");
-                    setResetMessage("");
+                    setResetEmail('');
+                    setResetEmailError('');
+                    setResetMessage('');
                   }}
                 >
-                  {t("recuperar_contraseña")}
+                  {t('recuperar_contraseña')}
                 </Link>
               </Flex>
             </VStack>
           )}
 
-          {/* === FORMULARIO “RECUPERAR CONTRASEÑA” === */}
           {showResetForm && (
             <VStack spacing={4} align="stretch">
               <Text textAlign="center" color="gray.700">
-                {t("recuperar_contraseña")}
+                {t('recuperar_contraseña')}
               </Text>
 
               {resetMessage && (
                 <Alert status="success" mb={4}>
                   <AlertIcon />
-                  {t("password_restablecida_exito")}
+                  {t('password_restablecida_exito')}
                 </Alert>
               )}
 
               <FormControl isInvalid={!!resetEmailError} mb={4}>
-                <FormLabel>{t("placeholder_email")}</FormLabel>
+                <FormLabel>{t('placeholder_email')}</FormLabel>
                 <Input
                   value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder={t("placeholder_email")}
+                  onChange={e => setResetEmail(e.target.value)}
+                  placeholder={t('placeholder_email')}
                   focusBorderColor="teal.500"
                 />
                 {resetEmailError && (
@@ -280,7 +269,7 @@ const Login: React.FC = () => {
                 isLoading={resetLoading}
                 w="full"
               >
-                {t("restablecer_contraseña_boton")}
+                {t('restablecer_contraseña_boton')}
               </Button>
 
               <Link
@@ -290,7 +279,7 @@ const Login: React.FC = () => {
                 onClick={() => setShowResetForm(false)}
                 mt={2}
               >
-                {t("volver_al_login")}
+                {t('volver_al_login')}
               </Link>
             </VStack>
           )}

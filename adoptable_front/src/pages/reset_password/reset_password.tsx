@@ -1,6 +1,6 @@
 // src/features/auth/resetPassword/ResetPassword.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -11,11 +11,11 @@ import {
   Heading,
   useToast,
   VStack,
-  Text
-} from "@chakra-ui/react";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { useTranslation } from "react-i18next";
+  Text,
+} from '@chakra-ui/react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 interface QueryParams {
   uid: string;
@@ -29,20 +29,20 @@ const ResetPassword: React.FC = () => {
   const toast = useToast();
 
   // Extraer uid y token de la query string
-  const [params, setParams] = useState<QueryParams>({ uid: "", token: "" });
+  const [params, setParams] = useState<QueryParams>({ uid: '', token: '' });
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const uid = searchParams.get("uid") || "";
-    const token = searchParams.get("token") || "";
+    const uid = searchParams.get('uid') || '';
+    const token = searchParams.get('token') || '';
     setParams({ uid, token });
   }, [location.search]);
 
   // Estado local del formulario
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [newPasswordError, setNewPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPasswordError, setNewPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Validación simple: mínimo 8 caracteres, al menos una mayúscula y un dígito
@@ -52,26 +52,26 @@ const ResetPassword: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    setNewPasswordError("");
-    setConfirmPasswordError("");
+    setNewPasswordError('');
+    setConfirmPasswordError('');
 
     if (!newPassword) {
-      setNewPasswordError(t("error_password_required"));
+      setNewPasswordError(t('error_password_required'));
       return;
     }
     if (!validatePassword(newPassword)) {
-      setNewPasswordError(t("error_password_requirements"));
+      setNewPasswordError(t('error_password_requirements'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setConfirmPasswordError(t("error_confirm_password"));
+      setConfirmPasswordError(t('error_confirm_password'));
       return;
     }
 
     if (!params.uid || !params.token) {
       toast({
-        title: t("error_reset_link_invalido"),
-        status: "error",
+        title: t('error_reset_link_invalido'),
+        status: 'error',
       });
       return;
     }
@@ -80,7 +80,7 @@ const ResetPassword: React.FC = () => {
     try {
       // Llamada al endpoint de confirmación de Django
       await axios.put(
-        "/users/password-reset-confirm/",
+        '/users/password-reset-confirm/',
         {
           uid: params.uid,
           token: params.token,
@@ -89,21 +89,22 @@ const ResetPassword: React.FC = () => {
         {
           withCredentials: true,
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         }
       );
       toast({
-        title: t("password_restablecida_exito"),
-        status: "success",
+        title: t('password_restablecida_exito'),
+        status: 'success',
       });
-      navigate("/login");
-    } catch (err: any) {
-      console.error("Error al restablecer contraseña:", err);
-      const msg =
-        err.response?.data?.detail ||
-        t("error_restablecer_contraseña");
-      toast({ title: msg, status: "error" });
+      navigate('/login');
+    } catch (err: unknown) {
+      console.error('Error al restablecer contraseña:', err);
+      let msg = t('error_restablecer_contraseña');
+      if (axios.isAxiosError(err)) {
+        msg = err.response?.data?.detail || msg;
+      }
+      toast({ title: msg, status: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -127,17 +128,17 @@ const ResetPassword: React.FC = () => {
         p={6}
       >
         <Heading size="lg" textAlign="center" mb={6} color="teal.600">
-          {t("recuperar_contraseña")}
+          {t('recuperar_contraseña')}
         </Heading>
 
         <VStack spacing={4} align="stretch">
           <FormControl isInvalid={!!newPasswordError}>
-            <FormLabel>{t("password_label")}</FormLabel>
+            <FormLabel>{t('password_label')}</FormLabel>
             <Input
               type="password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={t("password_label")}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder={t('password_label')}
               focusBorderColor="teal.500"
             />
             {newPasswordError && (
@@ -146,12 +147,12 @@ const ResetPassword: React.FC = () => {
           </FormControl>
 
           <FormControl isInvalid={!!confirmPasswordError}>
-            <FormLabel>{t("confirm_password")}</FormLabel>
+            <FormLabel>{t('confirm_password')}</FormLabel>
             <Input
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t("placeholder_confirm_password")}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder={t('placeholder_confirm_password')}
               focusBorderColor="teal.500"
             />
             {confirmPasswordError && (
@@ -163,18 +164,18 @@ const ResetPassword: React.FC = () => {
             colorScheme="teal"
             onClick={handleSubmit}
             isLoading={submitting}
-            loadingText={t("restableciendo")}
+            loadingText={t('restableciendo')}
           >
-            {t("restablecer_contraseña_boton")}
+            {t('restablecer_contraseña_boton')}
           </Button>
 
           <Text fontSize="sm" textAlign="center" color="gray.600">
             <Button
               variant="link"
               colorScheme="teal"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate('/login')}
             >
-              {t("volver_al_login")}
+              {t('volver_al_login')}
             </Button>
           </Text>
         </VStack>

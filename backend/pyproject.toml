@@ -25,6 +25,51 @@ geopy = "^2.4.1"
 python-dotenv = "^1.1.0"
 
 
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.2.0"
+black = "^25.1.0"
+isort = "^6.0.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.flake8]
+max-line-length = 88
+exclude = [
+  ".venv",
+  "__pycache__",
+  "migrations",
+  "env",
+  "venv",
+  "static",
+  "media",
+  "node_modules"
+]
+extend-ignore = [
+  "E203",  
+  "W503"   
+]
+select = [
+  "E",     
+  "F",    
+  "W",     
+  "C90"    
+]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["tu_app_principal", "otra_app"]  
+default_section = "THIRDPARTY"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+combine_as_imports = true
+skip = [
+  "migrations",
+  ".venv",
+  "venv",
+  "__pycache__"
+]
+

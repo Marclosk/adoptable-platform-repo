@@ -1,15 +1,14 @@
-// src/styles/GlobalStyles.tsx
+import React from 'react';
+import { Global } from '@emotion/react';
 
-import { Global } from "@emotion/react";
-
-const GlobalStyles = () => (
+const GlobalStyles: React.FC = () => (
   <Global
     styles={`
       html, body {
         height: 100%;
         margin: 0;
         padding: 0;
-        background-color: #F7FAFC; /* now matches the app’s light gray background */
+        background-color: #F7FAFC; 
       }
 
       #root {

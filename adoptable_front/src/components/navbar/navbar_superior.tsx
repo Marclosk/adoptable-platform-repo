@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   Flex,
   Heading,
@@ -14,23 +14,23 @@ import {
   useColorModeValue,
   HStack,
   IconButton,
-} from "@chakra-ui/react";
-import { FaSignOutAlt, FaGlobe } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { getProfile } from "../../pages/profile/user_services";
-import { useTranslation } from "react-i18next";
-import SearchBar from "../search_bar/search_bar";
+} from '@chakra-ui/react';
+import { FaSignOutAlt, FaGlobe } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { getProfile } from '../../pages/profile/user_services';
+import { useTranslation } from 'react-i18next';
+import SearchBar from '../search_bar/search_bar';
 
 interface NavbarSuperiorProps {
   handleLogout: () => void;
 }
 
 const AVAILABLE_LANGUAGES: { code: string; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "de", label: "Deutsch" },
-  { code: "fr", label: "Français" },
-  { code: "ca", label: "Català" },
-  { code: "es", label: "Español" },
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'ca', label: 'Català' },
+  { code: 'es', label: 'Español' },
 ];
 
 const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
@@ -43,11 +43,11 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
     last_name: string;
     email: string;
     avatar?: string;
-  }>({ username: "", first_name: "", last_name: "", email: "" });
+  }>({ username: '', first_name: '', last_name: '', email: '' });
 
-  const menuBg = useColorModeValue("white", "gray.800");
-  const headerBg = useColorModeValue("gray.50", "gray.700");
-  const menuColor = useColorModeValue("gray.800", "white");
+  const menuBg = useColorModeValue('white', 'gray.800');
+  const headerBg = useColorModeValue('gray.50', 'gray.700');
+  const menuColor = useColorModeValue('gray.800', 'white');
 
   useEffect(() => {
     (async () => {
@@ -61,13 +61,13 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
   }, []);
 
   const displayName =
-    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    [user.first_name, user.last_name].filter(Boolean).join(' ') ||
     user.username;
   const avatarSrc = user.avatar;
 
   const changeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
-    localStorage.setItem("i18nextLng", lang);
+    localStorage.setItem('i18nextLng', lang);
   };
 
   return (
@@ -97,7 +97,7 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
             aria-label="Seleccionar idioma"
             variant="ghost"
             color="white"
-            _hover={{ bg: "teal.600" }}
+            _hover={{ bg: 'teal.600' }}
           />
           <MenuList
             bg={menuBg}
@@ -107,11 +107,11 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
             mt={1}
             minW="120px"
           >
-            {AVAILABLE_LANGUAGES.map((lang) => (
+            {AVAILABLE_LANGUAGES.map(lang => (
               <MenuItem
                 key={lang.code}
                 onClick={() => changeLanguage(lang.code)}
-                _hover={{ bg: "teal.100", color: "teal.800" }}
+                _hover={{ bg: 'teal.100', color: 'teal.800' }}
               >
                 {lang.label}
               </MenuItem>
@@ -161,18 +161,18 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
             <Divider />
 
             <MenuItem
-              onClick={() => navigate("/perfil")}
-              _hover={{ bg: "teal.100", color: "teal.800" }}
+              onClick={() => navigate('/perfil')}
+              _hover={{ bg: 'teal.100', color: 'teal.800' }}
             >
-              {t("nav_perfil")}
+              {t('nav_perfil')}
             </MenuItem>
 
             <MenuItem
               icon={<FaSignOutAlt />}
               onClick={handleLogout}
-              _hover={{ bg: "teal.100", color: "teal.800" }}
+              _hover={{ bg: 'teal.100', color: 'teal.800' }}
             >
-              {t("logout")}
+              {t('logout')}
             </MenuItem>
           </MenuList>
         </Menu>

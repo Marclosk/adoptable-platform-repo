@@ -1,7 +1,7 @@
 // src/pages/donations/donations_services.ts
 
-import axios from "axios";
-import { fetchCSRFToken, getCSRFToken } from "../profile/user_services";
+import axios from 'axios';
+import { fetchCSRFToken, getCSRFToken } from '../profile/user_services';
 
 export interface Donation {
   id: number;
@@ -12,7 +12,7 @@ export interface Donation {
 }
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  baseURL: 'http://localhost:8000/api/',
   withCredentials: true,
 });
 
@@ -20,7 +20,7 @@ const api = axios.create({
  * Fetch all donations (incluye anonimo flag para cada entrada)
  */
 export const fetchDonations = async (): Promise<Donation[]> => {
-  const resp = await api.get<Donation[]>("donations/");
+  const resp = await api.get<Donation[]>('donations/');
   return resp.data;
 };
 
@@ -39,13 +39,13 @@ export const donate = async (
   await fetchCSRFToken();
 
   const resp = await api.post<Donation>(
-    "donations/add/",
+    'donations/add/',
     { cantidad: amount, anonimo },
     {
       headers: {
-        "X-CSRFToken": getCSRFToken(),
+        'X-CSRFToken': getCSRFToken(),
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     }
   );

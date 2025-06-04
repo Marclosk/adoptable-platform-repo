@@ -24,10 +24,18 @@ i18n
 
     detection: {
       // Ahora primero comprueba navigator, luego localStorage, luego URL…
-      order: ['navigator','localStorage','querystring','cookie','htmlTag','path','subdomain'],
+      order: [
+        'navigator',
+        'localStorage',
+        'querystring',
+        'cookie',
+        'htmlTag',
+        'path',
+        'subdomain',
+      ],
       lookupLocalStorage: 'i18nextLng',
       lookupQuerystring: 'lng',
-      caches: ['localStorage'], 
+      caches: ['localStorage'],
     },
 
     interpolation: { escapeValue: false },
