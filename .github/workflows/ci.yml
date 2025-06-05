@@ -63,7 +63,7 @@ jobs:
 
       - name: Run flake8 (backend)
         working-directory: ./backend
-        run: poetry run flake8 .
+        run: poetry run flake8 --config .flake8 .
 
       - name: Run migrations (backend)
         working-directory: ./backend

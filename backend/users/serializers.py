@@ -1,7 +1,6 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
 from rest_framework import serializers
 
 from animals.models import Animal
@@ -67,8 +66,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         role = validated_data.pop("role", "adoptante")
-        shelter_name = validated_data.pop("shelter_name", "")
-        localidad = validated_data.pop("localidad", "")
+        validated_data.pop("shelter_name", "")
+        validated_data.pop("localidad", "")
 
         user = User.objects.create_user(
             username=validated_data["username"],

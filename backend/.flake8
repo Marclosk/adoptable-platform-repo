@@ -1,0 +1,28 @@
+# backend/.flake8
+[flake8]
+# Max. longitud de línea que quieres permitir (por ejemplo 120)
+max-line-length = 120
+
+# Excluye todas las carpetas "migrations" en cualquier nivel
+exclude =
+    **/migrations/**,
+    .venv,
+    __pycache__,
+    env,
+    venv,
+    static,
+    media,
+    node_modules
+
+# Ignora E501 (línea muy larga) y las advertencias típicas de Black
+extend-ignore =
+    E203,
+    W503,
+    E501
+
+# Comprueba errores de tipo E, F, W y C90 (excepto E501, que ya lo estamos ignorando)
+select =
+    E,
+    F,
+    W,
+    C90

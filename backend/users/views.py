@@ -7,10 +7,9 @@ from django.contrib.auth.tokens import (
     default_token_generator,
 )
 from django.core.mail import send_mail
-from django.db.models import Count, Q
-from django.db.models.functions import TruncMonth
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils.encoding import force_bytes, force_str
+from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
