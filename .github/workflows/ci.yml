@@ -5,6 +5,9 @@ on:
   pull_request: {}
 
 jobs:
+  # -------------------------------------------------------
+  # JOB: Backend (Django + Poetry + Linters + Tests)
+  # -------------------------------------------------------
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
@@ -18,96 +21,129 @@ jobs:
           POSTGRES_PASSWORD: admin
         ports:
           - 5432:5432
+        # Healthcheck para esperar a que el contenedor esté listo
         options: >-
           --health-cmd="pg_isready -U marc -d adoptable_db"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=5
 
-    # Aquí le decimos a Django que use localhost, no "db".
+    # Variables de entorno usadas por settings.py (load_dotenv busca un .env, pero como no existe,
+    # Django tomará estas vars directamente de aquí)
     env:
-      DATABASE_URL: postgres://marc:admin@localhost:5432/adoptable_db
-      POETRY_VIRTUALENVS_CREATE: "false"
-      POETRY_NO_INTERACTION: "1"
-      DB_HOST: localhost
-      DB_PORT: 5432
-      POSTGRES_DB: adoptable_db
+      # Para que Django use estas credenciales en lugar de "db"
+      POSTGRES_DB_NAME: adoptable_db
       POSTGRES_USER: marc
       POSTGRES_PASSWORD: admin
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
+      # Si usas Django_SECRET_KEY, DEBUG, ALLOWED_HOSTS, etc., puedes definirlos aquí también:
+      DJANGO_SECRET_KEY: dummy-secret-key
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "localhost"
+
+      # Email (opcional, si tus tests no envían correos reales, puedes dejar estas vacías)
+      EMAIL_HOST: smtp.example.com
+      EMAIL_PORT: "587"
+      EMAIL_USE_TLS: "True"
+      EMAIL_HOST_USER: dummy@example.com
+      EMAIL_HOST_PASSWORD: dummy-password
+      DEFAULT_FROM_EMAIL: dummy@example.com
+
+      # Para que Poetry no intente crear virtualenvs adentro del repositorio
+      POETRY_VIRTUALENVS_CREATE: "false"
+      POETRY_NO_INTERACTION: "1"
 
     steps:
+      # 1) Traer el código
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2) Instalar Python 3.10
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      # 3) Instalar Poetry
       - name: Install Poetry
         run: pip install poetry
 
+      # 4) Instalar dependencias (backend) sin instalar el propio paquete --no-root
       - name: Install dependencies (backend)
         working-directory: ./backend
         run: poetry install --no-root
 
+      # 5) Esperar a que Postgres esté listo
       - name: Wait for Postgres to be ready
         run: |
-          until pg_isready -h localhost -p 5432 -U marc; do
+          until pg_isready -h localhost -p 5432 -U marc -d adoptable_db; do
             echo "Esperando a Postgres…"
-            sleep 3
+            sleep 2
           done
 
+      # 6) Ejecutar Black en modo “check”
       - name: Run black check (backend)
         working-directory: ./backend
         run: poetry run black --check .
 
+      # 7) Ejecutar Flake8 usando el config que tengas en backend/.flake8
       - name: Run flake8 (backend)
         working-directory: ./backend
         run: poetry run flake8 --config .flake8 .
 
-      # ------------> Aquí forzamos DB_HOST=localhost <------------
+      # 8) Ejecutar Isort en modo “check-only”
+      - name: Run isort check (backend)
+        working-directory: ./backend
+        run: poetry run isort --check-only .
+
+      # 9) Correr migraciones
       - name: Run migrations (backend)
         working-directory: ./backend
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
         run: python manage.py migrate
 
+      # 10) Correr tests de Django
       - name: Run Django tests
         working-directory: ./backend
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
         run: python manage.py test
 
+  # -------------------------------------------------------
+  # JOB: Frontend (Vite + Node + Linters + Tests + Build)
+  # -------------------------------------------------------
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
     needs: backend
 
     steps:
+      # 1) Traer el código
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2) Configurar Node.js (versión 18)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
 
+      # 3) Instalar dependencias del frontend
       - name: Install frontend dependencies
         working-directory: ./adoptable_front
         run: npm ci
 
+      # 4) Ejecución de ESLint en frontend
       - name: Run ESLint (frontend)
         working-directory: ./adoptable_front
         run: npm run lint
 
+      # 5) Ejecución de tests en frontend
       - name: Run frontend tests
         working-directory: ./adoptable_front
         run: npm test
 
+      # 6) Construcción del bundle de producción
       - name: Build production bundle (frontend)
         working-directory: ./adoptable_front
         run: npm run build
