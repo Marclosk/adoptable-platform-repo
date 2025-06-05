@@ -10,22 +10,55 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('animals', '0001_initial'),
+        ("animals", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AdopterProfile',
+            name="AdopterProfile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('avatar', models.ImageField(default='default.jpg', upload_to='profile_images')),
-                ('location', models.CharField(blank=True, max_length=100, null=True)),
-                ('phone_number', models.CharField(blank=True, max_length=20, null=True)),
-                ('bio', models.TextField(blank=True, null=True)),
-                ('adopted', models.ManyToManyField(blank=True, related_name='adopted_by', to='animals.animal')),
-                ('favorites', models.ManyToManyField(blank=True, related_name='favorited_by', to='animals.animal')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "avatar",
+                    models.ImageField(
+                        default="default.jpg", upload_to="profile_images"
+                    ),
+                ),
+                ("location", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "phone_number",
+                    models.CharField(blank=True, max_length=20, null=True),
+                ),
+                ("bio", models.TextField(blank=True, null=True)),
+                (
+                    "adopted",
+                    models.ManyToManyField(
+                        blank=True, related_name="adopted_by", to="animals.animal"
+                    ),
+                ),
+                (
+                    "favorites",
+                    models.ManyToManyField(
+                        blank=True, related_name="favorited_by", to="animals.animal"
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

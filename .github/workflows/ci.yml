@@ -2,85 +2,106 @@ name: CI
 
 on:
   push:
-    branches: [main, frontend-login-create]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [main]
+    branches: [ "main", "develop" ]
 
 jobs:
+  # ----------------------------
+  #  JOB: Backend (Django + Poetry)
+  # ----------------------------
   backend:
+    name: Backend CI
     runs-on: ubuntu-latest
+
     services:
-      db:
-        image: postgres:13
-        ports:
-          - 5432:5432
+      postgres:
+        image: postgres:15
         env:
+          POSTGRES_DB: adoptable_db
           POSTGRES_USER: marc
           POSTGRES_PASSWORD: admin
-          POSTGRES_DB: adoptable_db
+        ports:
+          - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U marc -d adoptable_db"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd="pg_isready -U marc -d adoptable_db"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgres://marc:admin@localhost:5432/adoptable_db
+      POETRY_VIRTUALENVS_CREATE: "false"
+      POETRY_NO_INTERACTION: "1"
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
       - name: Install Poetry
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
+        run: pip install poetry
 
-      - name: Install dependencies with Poetry
-        run: |
-          cd backend
-          poetry install
+      - name: Install dependencies
+        run: poetry install
 
-      - name: Set DATABASE_URL environment variable
+      - name: Wait for Postgres to be ready
         run: |
-          echo "DATABASE_URL=postgres://marc:admin@localhost:5432/adoptable_db" >> $GITHUB_ENV
-
-      - name: Verify DATABASE_URL
-        run: echo $DATABASE_URL
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          for i in {1..10}; do
-            nc -z localhost 5432 && echo "PostgreSQL is ready" && exit 0
-            echo "Waiting for PostgreSQL..."
-            sleep 5
+          until pg_isready -h localhost -p 5432 -U marc; do
+            echo "Esperando a Postgres…"
+            sleep 3
           done
-          echo "PostgreSQL not responding" && exit 1
 
-      - name: Run backend tests
+      - name: Run black check
         run: |
-          cd backend
-          poetry run pytest
+          poetry run black --check .
 
+      - name: Run flake8
+        run: |
+          poetry run flake8 .
+
+      - name: Run migrations
+        run: |
+          python manage.py migrate
+
+      - name: Run Django tests
+        run: |
+          python manage.py test
+
+  # ----------------------------
+  #  JOB: Frontend (Vite + Node)
+  # ----------------------------
   frontend:
+    name: Frontend CI
     runs-on: ubuntu-latest
+    needs: backend
+
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "18"
+          cache: "npm"
 
       - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm install
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
 
       - name: Run frontend tests
-        run: |
-          cd frontend
-          npm run test
+        working-directory: ./frontend
+        run: npm test
+
+      - name: Build production bundle
+        working-directory: ./frontend
+        run: npm run build

@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animals', '0008_alter_adoptionrequest_options_and_more'),
+        ("animals", "0008_alter_adoptionrequest_options_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='adoptionrequest',
-            name='form_data',
-            field=models.JSONField(blank=True, default=dict, help_text='Datos completos del formulario de adopción'),
+            model_name="adoptionrequest",
+            name="form_data",
+            field=models.JSONField(
+                blank=True,
+                default=dict,
+                help_text="Datos completos del formulario de adopción",
+            ),
         ),
     ]

@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animals', '0002_animal_latitude_animal_longitude'),
+        ("animals", "0002_animal_latitude_animal_longitude"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='animal',
-            name='characteristics',
+            model_name="animal",
+            name="characteristics",
             field=models.JSONField(blank=True, default=dict, null=True),
         ),
         migrations.AlterField(
-            model_name='animal',
-            name='extra_images',
+            model_name="animal",
+            name="extra_images",
             field=models.JSONField(blank=True, default=dict, null=True),
         ),
     ]

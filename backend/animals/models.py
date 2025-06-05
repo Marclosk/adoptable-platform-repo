@@ -1,38 +1,44 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from decimal import Decimal
-from django.conf import settings
+
 
 class Animal(models.Model):
     GENDER_CHOICES = [
-        ('male', 'Macho'),
-        ('female', 'Hembra'),
+        ("male", "Macho"),
+        ("female", "Hembra"),
     ]
 
     SIZE_CHOICES = [
-        ('small', 'Pequeño'),
-        ('medium', 'Mediano'),
-        ('large', 'Grande'),
+        ("small", "Pequeño"),
+        ("medium", "Mediano"),
+        ("large", "Grande"),
     ]
 
     ACTIVITY_CHOICES = [
-        ('low', 'Baja'),
-        ('medium', 'Media'),
-        ('high', 'Alta'),
+        ("low", "Baja"),
+        ("medium", "Media"),
+        ("high", "Alta"),
     ]
 
-    name = models.CharField(max_length=100, default='Nombre del animal')
-    age = models.CharField(max_length=50, default='0 años')
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='male')
-    size = models.CharField(max_length=10, choices=SIZE_CHOICES, default='medium')
-    activity = models.CharField(max_length=10, choices=ACTIVITY_CHOICES, default='low')
-    city = models.CharField(max_length=100, default='Ciudad desconocida')
-    biography = models.TextField(default='Biografía no disponible')
+    name = models.CharField(max_length=100, default="Nombre del animal")
+    age = models.CharField(max_length=50, default="0 años")
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default="male")
+    size = models.CharField(max_length=10, choices=SIZE_CHOICES, default="medium")
+    activity = models.CharField(max_length=10, choices=ACTIVITY_CHOICES, default="low")
+    city = models.CharField(max_length=100, default="Ciudad desconocida")
+    biography = models.TextField(default="Biografía no disponible")
 
-    species = models.CharField(max_length=50, default='Especie desconocida')
-    breed = models.CharField(max_length=100, blank=True, null=True, default='Raza desconocida')
+    species = models.CharField(max_length=50, default="Especie desconocida")
+    breed = models.CharField(
+        max_length=100, blank=True, null=True, default="Raza desconocida"
+    )
 
-    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal('0.0'))
+    weight = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal("0.0")
+    )
     characteristics = models.JSONField(blank=True, null=True, default=dict)
 
     owner = models.ForeignKey(
@@ -41,7 +47,7 @@ class Animal(models.Model):
         related_name="animals",
         null=True,
         blank=True,
-        help_text="Usuario/protectora que creó este registro"
+        help_text="Usuario/protectora que creó este registro",
     )
     adopter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -49,7 +55,7 @@ class Animal(models.Model):
         related_name="adopted_animals",
         null=True,
         blank=True,
-        help_text="Usuario que ha adoptado este animal"
+        help_text="Usuario que ha adoptado este animal",
     )
     since = models.DateField(default=timezone.localdate)
 
@@ -58,7 +64,9 @@ class Animal(models.Model):
     microchipped = models.BooleanField(default=False)
     dewormed = models.BooleanField(default=False)
 
-    image = models.ImageField(upload_to='animal_images/', default='animal_images/default_image.jpg')
+    image = models.ImageField(
+        upload_to="animal_images/", default="animal_images/default_image.jpg"
+    )
     extra_images = models.JSONField(blank=True, null=True, default=dict)
 
     latitude = models.FloatField(null=True, blank=True)
@@ -75,20 +83,16 @@ class AdoptionRequest(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="adoption_requests",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     animal = models.ForeignKey(
-        Animal,
-        related_name="adoption_requests",
-        on_delete=models.CASCADE
+        Animal, related_name="adoption_requests", on_delete=models.CASCADE
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Nuevo campo para guardar el JSON del formulario
     form_data = models.JSONField(
-        blank=True,
-        default=dict,
-        help_text="Datos completos del formulario de adopción"
+        blank=True, default=dict, help_text="Datos completos del formulario de adopción"
     )
 
     class Meta:

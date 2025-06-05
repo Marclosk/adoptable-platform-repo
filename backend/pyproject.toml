@@ -24,16 +24,19 @@ django-storages = "^1.14.5"
 geopy = "^2.4.1"
 python-dotenv = "^1.1.0"
 
-
-[tool.poetry.group.dev.dependencies]
-flake8 = "^7.2.0"
-black = "^25.1.0"
-isort = "^6.0.1"
+[tool.poetry.dev-dependencies]
+flake8 = "^6.0.0"
+black = "^24.0.0"
+isort = "^5.12.0"
+# opcionalmente, si quieres un analizador estático más estricto:
+# pylint = "^2.18.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+# ----------------------------
+# Configuración de Flake8
 [tool.flake8]
 max-line-length = 88
 exclude = [
@@ -47,20 +50,22 @@ exclude = [
   "node_modules"
 ]
 extend-ignore = [
-  "E203",  
-  "W503"   
+  "E203",
+  "W503"
 ]
 select = [
-  "E",     
-  "F",    
-  "W",     
-  "C90"    
+  "E",
+  "F",
+  "W",
+  "C90"
 ]
 
+# ----------------------------
+# Configuración de Isort
 [tool.isort]
 profile = "black"
-line_length = 88
-known_first_party = ["tu_app_principal", "otra_app"]  
+line_length = 130
+known_first_party = ["mi_app_principal", "otra_app"]  # cámbialo por el nombre real de tus apps
 default_section = "THIRDPARTY"
 multi_line_output = 3
 include_trailing_comma = true
@@ -73,3 +78,20 @@ skip = [
   "__pycache__"
 ]
 
+# ----------------------------
+# Configuración de Black
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.venv
+  | env
+  | venv
+  | build
+  | dist
+  | migrations
+  | __pycache__
+)/
+'''

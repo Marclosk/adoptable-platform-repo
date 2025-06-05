@@ -1,43 +1,38 @@
 # backend/app/views.py
 
-from rest_framework import status, generics
-from rest_framework.response import Response
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    parser_classes
-)
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from django.contrib.auth import authenticate, login, logout
-from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.db.models import Q, Count
-from django.db.models.functions import TruncMonth
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
-from django.utils.http import urlsafe_base64_decode
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
+from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth.tokens import (
+    PasswordResetTokenGenerator,
+    default_token_generator,
+)
+from django.core.mail import send_mail
+from django.db.models import Count, Q
+from django.db.models.functions import TruncMonth
+from django.shortcuts import get_object_or_404
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from animals.models import AdoptionRequest, Animal
 from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
+
+from .models import AdopterProfile, ProtectoraApproval
 from .serializers import (
     AdopterListSerializer,
+    AdopterProfileSerializer,
     RegisterSerializer,
     UserSerializer,
-    AdopterProfileSerializer,
 )
-from .models import AdopterProfile, ProtectoraApproval   
 
 User = get_user_model()
 
 
-
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def register_view(request):
     role = request.data.get("role", "adoptante")
@@ -48,7 +43,7 @@ def register_view(request):
     if User.objects.filter(email=email).exists():
         return Response(
             {"email": ["Ya existe un usuario registrado con este correo."]},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     serializer = RegisterSerializer(data=request.data)
@@ -84,16 +79,15 @@ def register_view(request):
     user.is_active = True
     user.save()
     return Response(
-        {"message": "Usuario creado correctamente!"},
-        status=status.HTTP_201_CREATED
+        {"message": "Usuario creado correctamente!"}, status=status.HTTP_201_CREATED
     )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
+    username = request.data.get("username")
+    password = request.data.get("password")
 
     # Primero buscamos al usuario para ver si existe y su estado
     try:
@@ -105,15 +99,14 @@ def login_view(request):
     if user_obj and not user_obj.is_active:
         return Response(
             {"error": "Tu cuenta está pendiente de aprobación."},
-            status=status.HTTP_403_FORBIDDEN
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     # Autenticamos
     user = authenticate(request, username=username, password=password)
     if user is None:
         return Response(
-            {"error": "Credenciales inválidas"},
-            status=status.HTTP_401_UNAUTHORIZED
+            {"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED
         )
 
     # Login y respuesta
@@ -123,41 +116,44 @@ def login_view(request):
 
     return Response(
         {"message": "Login successful!", "user": user_data, "role": role},
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def logout_view(request):
     logout(request)
     response = Response({"message": "Logout successful!"}, status=status.HTTP_200_OK)
-    response.delete_cookie('sessionid', path='/')
-    response.delete_cookie('csrftoken', path='/')
+    response.delete_cookie("sessionid", path="/")
+    response.delete_cookie("csrftoken", path="/")
     return response
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def check_session(request):
     if request.user.is_authenticated:
         return Response({"message": "Session is valid!"}, status=status.HTTP_200_OK)
-    return Response({"message": "Session is invalid, please log in."}, status=status.HTTP_401_UNAUTHORIZED)
+    return Response(
+        {"message": "Session is invalid, please log in."},
+        status=status.HTTP_401_UNAUTHORIZED,
+    )
 
 
-@api_view(['POST', 'DELETE'])
+@api_view(["POST", "DELETE"])
 @permission_classes([IsAuthenticated])
 def favorite_animal(request, animal_id):
     profile = request.user.profile
     animal = get_object_or_404(Animal, pk=animal_id)
-    if request.method == 'POST':
+    if request.method == "POST":
         profile.favorites.add(animal)
     else:
         profile.favorites.remove(animal)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(["GET", "POST", "DELETE"])
 @permission_classes([IsAuthenticated])
 def adoption_request_view(request, animal_id):
     """
@@ -173,7 +169,7 @@ def adoption_request_view(request, animal_id):
         serializer = AdoptionRequestSerializer(qs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         AdoptionRequest.objects.get_or_create(user=user, animal=animal)
         return Response(status=status.HTTP_201_CREATED)
 
@@ -182,28 +178,30 @@ def adoption_request_view(request, animal_id):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     user = request.user
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
-    user_data['role'] = role
+    user_data["role"] = role
 
     # perfil adoptante
     if not user.is_staff:
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
-            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         profile_data = AdopterProfileSerializer(profile).data
         fav_qs = profile.favorites.all()
-        profile_data['favorites'] = AnimalSerializer(fav_qs, many=True).data
+        profile_data["favorites"] = AnimalSerializer(fav_qs, many=True).data
         adopted_qs = Animal.objects.filter(adopter=user)
-        profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
+        profile_data["adopted"] = AnimalSerializer(adopted_qs, many=True).data
         req_qs = AdoptionRequest.objects.filter(user=user)
-        profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
+        profile_data["requests"] = AdoptionRequestSerializer(req_qs, many=True).data
 
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
@@ -217,15 +215,18 @@ def get_profile(request):
 
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
-    return Response({
-        **user_data,
-        **profile_data,
-        "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
-        "adopted":    AnimalSerializer(adopted_owner_qs, many=True).data,
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {
+            **user_data,
+            **profile_data,
+            "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
+            "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
-@api_view(['PUT'])
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_profile(request):
@@ -238,7 +239,9 @@ def update_profile(request):
     try:
         profile = user.profile
     except AdopterProfile.DoesNotExist:
-        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
+        )
 
     serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
     if not serializer.is_valid():
@@ -246,31 +249,34 @@ def update_profile(request):
     serializer.save()
 
     user_data = UserSerializer(user).data
-    role = 'protectora' if user.is_staff else 'adoptante'
-    user_data['role'] = role
+    role = "protectora" if user.is_staff else "adoptante"
+    user_data["role"] = role
 
     # campos recién guardados
     profile_data = serializer.data
 
-    if role == 'adoptante':
+    if role == "adoptante":
         fav_qs = profile.favorites.all()
-        profile_data['favorites'] = AnimalSerializer(fav_qs, many=True).data
+        profile_data["favorites"] = AnimalSerializer(fav_qs, many=True).data
         adopted_qs = Animal.objects.filter(adopter=user)
-        profile_data['adopted'] = AnimalSerializer(adopted_qs, many=True).data
+        profile_data["adopted"] = AnimalSerializer(adopted_qs, many=True).data
         req_qs = AdoptionRequest.objects.filter(user=user)
-        profile_data['requests'] = AdoptionRequestSerializer(req_qs, many=True).data
+        profile_data["requests"] = AdoptionRequestSerializer(req_qs, many=True).data
 
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
     # protectora
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
-    return Response({
-        **user_data,
-        **profile_data,
-        'en_adopcion': AnimalSerializer(en_adopcion_qs, many=True).data,
-        'adopted':     AnimalSerializer(adopted_owner_qs, many=True).data,
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {
+            **user_data,
+            **profile_data,
+            "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
+            "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 class AdopterListView(generics.ListAPIView):
@@ -279,20 +285,22 @@ class AdopterListView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
 
-@api_view(['DELETE'])
+@api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def cancel_adoption_request_view(request, req_id):
     deleted, _ = AdoptionRequest.objects.filter(pk=req_id, user=request.user).delete()
     if deleted:
         return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response({'detail': 'No encontrado o sin permisos'}, status=status.HTTP_404_NOT_FOUND)
+    return Response(
+        {"detail": "No encontrado o sin permisos"}, status=status.HTTP_404_NOT_FOUND
+    )
 
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def adoption_form_view(request):
     profile = request.user.profile
-    if request.method == 'GET':
+    if request.method == "GET":
         return Response({"adoption_form": profile.adoption_form})
     form_data = request.data.get("adoption_form", {})
     profile.adoption_form = form_data
@@ -312,7 +320,9 @@ def user_profile_view(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     # --- NUEVO: si está bloqueado, devolvemos 404 ---
     if not user.is_active:
-        return Response({"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND
+        )
 
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
@@ -322,7 +332,9 @@ def user_profile_view(request, user_id):
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
-            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         profile_data = AdopterProfileSerializer(profile).data
         fav_qs = profile.favorites.all()
         profile_data["favorites"] = AnimalSerializer(fav_qs, many=True).data
@@ -341,12 +353,16 @@ def user_profile_view(request, user_id):
 
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
-    return Response({
-        **user_data,
-        **profile_data,
-        "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
-        "adopted":     AnimalSerializer(adopted_owner_qs, many=True).data,
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {
+            **user_data,
+            **profile_data,
+            "en_adopcion": AnimalSerializer(en_adopcion_qs, many=True).data,
+            "adopted": AnimalSerializer(adopted_owner_qs, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
 
 # --- BÚSQUEDA DE USUARIOS ---
 @api_view(["GET"])
@@ -363,15 +379,16 @@ def user_search(request):
 
     # --- MODIFICADO: añadimos is_active=True para que no aparezcan bloqueados ---
     qs = User.objects.filter(
-        Q(username__icontains=q) |
-        Q(first_name__icontains=q) |
-        Q(last_name__icontains=q),
-        is_active=True
+        Q(username__icontains=q)
+        | Q(first_name__icontains=q)
+        | Q(last_name__icontains=q),
+        is_active=True,
     )
     serializer = AdopterListSerializer(qs, many=True)
     return Response(serializer.data)
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_pending_protectoras(request):
     """
@@ -380,18 +397,18 @@ def list_pending_protectoras(request):
     Solo accesible por administrador (is_superuser=True).
     """
     if not request.user.is_superuser:
-        return Response({'detail': 'No tienes permiso.'}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
+        )
 
     pending_qs = User.objects.filter(
-        is_staff=True,
-        is_active=False,
-        protectora_approval__approved=False
+        is_staff=True, is_active=False, protectora_approval__approved=False
     )
     serializer = UserSerializer(pending_qs, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def validate_protectora(request, user_id):
     """
@@ -400,7 +417,9 @@ def validate_protectora(request, user_id):
     Solo accesible por administrador (is_superuser=True).
     """
     if not request.user.is_superuser:
-        return Response({'detail': 'No tienes permiso.'}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
+        )
     protectora = get_object_or_404(User, pk=user_id, is_staff=True, is_active=False)
     # Activamos la cuenta
     protectora.is_active = True
@@ -410,26 +429,36 @@ def validate_protectora(request, user_id):
     if pa:
         pa.approved = True
         pa.save()
-    return Response({'message': 'Protectora validada correctamente.'}, status=status.HTTP_200_OK)
+    return Response(
+        {"message": "Protectora validada correctamente."}, status=status.HTTP_200_OK
+    )
+
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def block_user(request, user_id):
     """
     PUT /api/users/admin/block/{user_id}/
-    Bloquea a un usuario (adoptante o protectora). 
+    Bloquea a un usuario (adoptante o protectora).
     - Si es adoptante → is_active=False
     - Si es protectora previamente aprobada → is_active=False (dejando approved=True)
     """
     if not request.user.is_superuser:
-        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
+        )
 
     if request.user.id == user_id:
-        return Response({"detail": "No puedes bloquearte a ti mismo."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "No puedes bloquearte a ti mismo."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     target = get_object_or_404(User, pk=user_id)
     if not target.is_active:
-        return Response({"detail": "Usuario ya bloqueado."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Usuario ya bloqueado."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     # Desactivamos la cuenta.
     target.is_active = False
@@ -442,7 +471,9 @@ def block_user(request, user_id):
             pa.approved = True
             pa.save()
 
-    return Response({"message": "Usuario bloqueado correctamente."}, status=status.HTTP_200_OK)
+    return Response(
+        {"message": "Usuario bloqueado correctamente."}, status=status.HTTP_200_OK
+    )
 
 
 @api_view(["PUT"])
@@ -454,15 +485,21 @@ def unblock_user(request, user_id):
     Se pone is_active=True.
     """
     if not request.user.is_superuser:
-        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
+        )
 
     target = get_object_or_404(User, pk=user_id)
     if target.is_active:
-        return Response({"detail": "Usuario ya activo."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Usuario ya activo."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     target.is_active = True
     target.save()
-    return Response({"message": "Usuario reactivado correctamente."}, status=status.HTTP_200_OK)
+    return Response(
+        {"message": "Usuario reactivado correctamente."}, status=status.HTTP_200_OK
+    )
 
 
 @api_view(["DELETE"])
@@ -473,17 +510,27 @@ def delete_user(request, user_id):
     Borra al usuario de la base de datos (irrevocable). Solo superuser.
     """
     if not request.user.is_superuser:
-        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
+        )
 
     # Evitar que el admin se borre a sí mismo por accidente
     if request.user.id == user_id:
-        return Response({"detail": "No puedes eliminarte a ti mismo."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "No puedes eliminarte a ti mismo."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     target = get_object_or_404(User, pk=user_id)
     target.delete()
-    return Response({"message": "Usuario eliminado correctamente."}, status=status.HTTP_204_NO_CONTENT)
+    return Response(
+        {"message": "Usuario eliminado correctamente."},
+        status=status.HTTP_204_NO_CONTENT,
+    )
+
 
 # backend/app/users/views.py
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -500,26 +547,24 @@ def list_blocked_users(request):
 
     adoptantes_qs = User.objects.filter(is_staff=False, is_active=False)
     protectoras_qs = User.objects.filter(
-        is_staff=True,
-        is_active=False,
-        protectora_approval__approved=True
+        is_staff=True, is_active=False, protectora_approval__approved=True
     )
     blocked_qs = adoptantes_qs.union(protectoras_qs)
     serializer = UserSerializer(blocked_qs, many=True)
     return Response(serializer.data, status=200)
 
-@api_view(['POST'])
+
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def password_reset_request(request):
     """
     Solicita envío de correo para recuperación de contraseña.
     Siempre responde 200 aunque el email no exista, para no filtrar usuarios.
     """
-    email = request.data.get('email', '').strip().lower()
+    email = request.data.get("email", "").strip().lower()
     if not email:
         return Response(
-            {"error": "Debe proporcionar un email."},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "Debe proporcionar un email."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
@@ -533,9 +578,11 @@ def password_reset_request(request):
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        # Construimos link de recuperación. 
+        # Construimos link de recuperación.
         # Ajusta FRONTEND_RESET_URL a la URL real de tu frontend donde el usuario consuma token+uid.
-        frontend_reset_url = getattr(settings, 'FRONTEND_RESET_URL', 'http://localhost:3000/reset-password')
+        frontend_reset_url = getattr(
+            settings, "FRONTEND_RESET_URL", "http://localhost:3000/reset-password"
+        )
         reset_link = f"{frontend_reset_url}?uid={uidb64}&token={token}"
 
         # Enviamos correo
@@ -554,17 +601,19 @@ def password_reset_request(request):
             message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
-            fail_silently=False
+            fail_silently=False,
         )
 
     # Siempre devolvemos este mensaje para evitar filtrar si el email estaba o no en BD.
     return Response(
-        {"message": "Si ese correo existe en nuestro sistema, se ha enviado un enlace de recuperación."},
-        status=status.HTTP_200_OK
+        {
+            "message": "Si ese correo existe en nuestro sistema, se ha enviado un enlace de recuperación."
+        },
+        status=status.HTTP_200_OK,
     )
 
 
-@api_view(['PUT'])
+@api_view(["PUT"])
 @permission_classes([AllowAny])
 def password_reset_confirm(request):
     """
@@ -579,7 +628,7 @@ def password_reset_confirm(request):
     if not uid or not token or not new_password:
         return Response(
             {"detail": "Debe proporcionar uid, token y new_password."},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     try:
@@ -591,9 +640,13 @@ def password_reset_confirm(request):
 
     # Validamos el token:
     if not PasswordResetTokenGenerator().check_token(user, token):
-        return Response({"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     # Actualizamos la contraseña:
     user.set_password(new_password)
     user.save()
-    return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)
+    return Response(
+        {"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK
+    )

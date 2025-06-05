@@ -9,35 +9,103 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Animal',
+            name="Animal",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(default='Nombre del animal', max_length=100)),
-                ('age', models.CharField(default='0 años', max_length=50)),
-                ('gender', models.CharField(choices=[('male', 'Macho'), ('female', 'Hembra')], default='male', max_length=10)),
-                ('size', models.CharField(choices=[('small', 'Pequeño'), ('medium', 'Mediano'), ('large', 'Grande')], default='medium', max_length=10)),
-                ('activity', models.CharField(choices=[('low', 'Baja'), ('medium', 'Media'), ('high', 'Alta')], default='low', max_length=10)),
-                ('city', models.CharField(default='Ciudad desconocida', max_length=100)),
-                ('biography', models.TextField(default='Biografía no disponible')),
-                ('species', models.CharField(default='Especie desconocida', max_length=50)),
-                ('breed', models.CharField(blank=True, default='Raza desconocida', max_length=100, null=True)),
-                ('weight', models.DecimalField(blank=True, decimal_places=2, default=Decimal('0.0'), max_digits=5, null=True)),
-                ('characteristics', models.JSONField(default=dict)),
-                ('shelter', models.CharField(default='Protectora desconocida', max_length=150)),
-                ('since', models.DateField(default=django.utils.timezone.now)),
-                ('vaccinated', models.BooleanField(default=False)),
-                ('sterilized', models.BooleanField(default=False)),
-                ('microchipped', models.BooleanField(default=False)),
-                ('dewormed', models.BooleanField(default=False)),
-                ('image', models.ImageField(default='animal_images/default_image.jpg', upload_to='animal_images/')),
-                ('extra_images', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(default="Nombre del animal", max_length=100)),
+                ("age", models.CharField(default="0 años", max_length=50)),
+                (
+                    "gender",
+                    models.CharField(
+                        choices=[("male", "Macho"), ("female", "Hembra")],
+                        default="male",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "size",
+                    models.CharField(
+                        choices=[
+                            ("small", "Pequeño"),
+                            ("medium", "Mediano"),
+                            ("large", "Grande"),
+                        ],
+                        default="medium",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "activity",
+                    models.CharField(
+                        choices=[
+                            ("low", "Baja"),
+                            ("medium", "Media"),
+                            ("high", "Alta"),
+                        ],
+                        default="low",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "city",
+                    models.CharField(default="Ciudad desconocida", max_length=100),
+                ),
+                ("biography", models.TextField(default="Biografía no disponible")),
+                (
+                    "species",
+                    models.CharField(default="Especie desconocida", max_length=50),
+                ),
+                (
+                    "breed",
+                    models.CharField(
+                        blank=True,
+                        default="Raza desconocida",
+                        max_length=100,
+                        null=True,
+                    ),
+                ),
+                (
+                    "weight",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        default=Decimal("0.0"),
+                        max_digits=5,
+                        null=True,
+                    ),
+                ),
+                ("characteristics", models.JSONField(default=dict)),
+                (
+                    "shelter",
+                    models.CharField(default="Protectora desconocida", max_length=150),
+                ),
+                ("since", models.DateField(default=django.utils.timezone.now)),
+                ("vaccinated", models.BooleanField(default=False)),
+                ("sterilized", models.BooleanField(default=False)),
+                ("microchipped", models.BooleanField(default=False)),
+                ("dewormed", models.BooleanField(default=False)),
+                (
+                    "image",
+                    models.ImageField(
+                        default="animal_images/default_image.jpg",
+                        upload_to="animal_images/",
+                    ),
+                ),
+                ("extra_images", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
     ]

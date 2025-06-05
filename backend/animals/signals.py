@@ -1,10 +1,13 @@
+import math
+
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from geopy.geocoders import Nominatim
-from .models import Animal
-import math 
 
-geolocator = Nominatim(user_agent="my_app")  
+from .models import Animal
+
+geolocator = Nominatim(user_agent="my_app")
+
 
 @receiver(pre_save, sender=Animal)
 def geocode_city(sender, instance, **kwargs):
@@ -29,14 +32,15 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     Retorna la distancia en kilómetros entre dos puntos
     (lat1, lon1) y (lat2, lon2) usando la fórmula de Haversine.
     """
-    R = 6371.0  
+    R = 6371.0
     d_lat = math.radians(lat2 - lat1)
     d_lon = math.radians(lon2 - lon1)
-    a = (math.sin(d_lat / 2) ** 2 +
-         math.cos(math.radians(lat1)) *
-         math.cos(math.radians(lat2)) *
-         math.sin(d_lon / 2) ** 2)
+    a = (
+        math.sin(d_lat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(d_lon / 2) ** 2
+    )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     distance = R * c
     return distance
-

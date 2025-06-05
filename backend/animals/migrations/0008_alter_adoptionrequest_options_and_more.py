@@ -7,17 +7,17 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animals', '0007_adoptionrequest'),
+        ("animals", "0007_adoptionrequest"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='adoptionrequest',
-            options={'ordering': ('-created_at',)},
+            name="adoptionrequest",
+            options={"ordering": ("-created_at",)},
         ),
         migrations.AlterUniqueTogether(
-            name='adoptionrequest',
-            unique_together={('user', 'animal')},
+            name="adoptionrequest",
+            unique_together={("user", "animal")},
         ),
     ]

@@ -1,15 +1,18 @@
 # backend/app/serializers.py
 
 from rest_framework import serializers
-from .models import Animal, AdoptionRequest
+
 from users.serializers import AdopterListSerializer  # serializer de usuario/adoptante
+
+from .models import AdoptionRequest, Animal
+
 
 class AnimalSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     adopter = serializers.PrimaryKeyRelatedField(
         queryset=serializers.CurrentUserDefault(),  # o User.objects.all()
         allow_null=True,
-        required=False
+        required=False,
     )
     adopter_username = serializers.SerializerMethodField()
 

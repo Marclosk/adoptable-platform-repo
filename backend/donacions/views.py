@@ -1,9 +1,10 @@
 # src/apps/donations/views.py
 
+from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
+
 from .models import Donacion
 from .serializers import DonacionSerializer
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -13,6 +14,7 @@ class ListaDonacionesView(generics.ListAPIView):
     Lista todas las donaciones, ordenadas por fecha descendente.
     Solo donaiones de usuarios activos.
     """
+
     serializer_class = DonacionSerializer
     permission_classes = []  # público
 
@@ -25,6 +27,7 @@ class CrearDonacionView(generics.CreateAPIView):
     """
     Permite hacer una donación; espera un campo `anonimo` booleano.
     """
+
     serializer_class = DonacionSerializer
     permission_classes = [permissions.IsAuthenticated]
 

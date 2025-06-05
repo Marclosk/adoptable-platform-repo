@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: adoptable_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: adoptable_db
+      POSTGRES_USER: marc
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
+    container_name: adoptable_minio
+    command: server /data --console-address ":9001"
+    expose:
+      - "9000"
+      - "9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mc",
+          "alias",
+          "set",
+          "local",
+          "http://127.0.0.1:9000",
+          "minioadmin",
+          "minioadmin",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: adoptable_backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - DJANGO_SETTINGS_ENV=Production
+      - DATABASE_URL=postgres://marc:admin@db:5432/adoptable_db
+      - USE_MINIO=TRUE
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_STORAGE_BUCKET_NAME=public
+    depends_on:
+      - db
+      - minio
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./adoptable_front
+      dockerfile: Dockerfile
+    container_name: adoptable_frontend
+    volumes:
+      - ./adoptable_front:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+networks:
+  app_network:
+
+volumes:
+  postgres_data:
+  minio_data:

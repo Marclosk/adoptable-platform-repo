@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_alter_adopterprofile_avatar'),
+        ("users", "0003_alter_adopterprofile_avatar"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='adopterprofile',
-            name='adoption_form',
+            model_name="adopterprofile",
+            name="adoption_form",
             field=models.JSONField(blank=True, default=dict),
         ),
     ]

@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animals', '0003_alter_animal_characteristics_and_more'),
+        ("animals", "0003_alter_animal_characteristics_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='animal',
-            name='since',
+            model_name="animal",
+            name="since",
             field=models.DateField(default=django.utils.timezone.localdate),
         ),
     ]

@@ -8,18 +8,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animals', '0004_alter_animal_since'),
+        ("animals", "0004_alter_animal_since"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='animal',
-            name='shelter',
+            model_name="animal",
+            name="shelter",
         ),
         migrations.AddField(
-            model_name='animal',
-            name='owner',
-            field=models.ForeignKey(blank=True, help_text='Usuario/protectora que creó este registro', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='animals', to=settings.AUTH_USER_MODEL),
+            model_name="animal",
+            name="owner",
+            field=models.ForeignKey(
+                blank=True,
+                help_text="Usuario/protectora que creó este registro",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="animals",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

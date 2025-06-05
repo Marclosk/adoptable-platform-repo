@@ -1,7 +1,9 @@
 # contact/serializers.py
 
 from rest_framework import serializers
+
 from .models import ContactMessage
+
 
 class ContactMessageSerializer(serializers.ModelSerializer):
     """
@@ -9,6 +11,7 @@ class ContactMessageSerializer(serializers.ModelSerializer):
     para asegurarnos de exponer id, nombre, email, mensaje y created_at,
     sin alterar el endpoint público de 'contact_view'.
     """
+
     class Meta:
         model = ContactMessage
         fields = [
