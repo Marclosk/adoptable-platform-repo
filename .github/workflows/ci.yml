@@ -4,7 +4,6 @@ on:
   push: {}
   pull_request: {}
 
-
 jobs:
   # ----------------------------
   #  JOB: Backend (Django + Poetry)
@@ -29,6 +28,7 @@ jobs:
           --health-retries=5
 
     env:
+      # Apunta a la BD del servicio postgres
       DATABASE_URL: postgres://marc:admin@localhost:5432/adoptable_db
       POETRY_VIRTUALENVS_CREATE: "false"
       POETRY_NO_INTERACTION: "1"
@@ -45,7 +45,10 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
 
-      - name: Install dependencies
+      # ───────────────────────────────────────────────
+      # Ahora le indicamos que instale desde backend/
+      - name: Install dependencies (backend)
+        working-directory: ./backend
         run: poetry install
 
       - name: Wait for Postgres to be ready
@@ -55,21 +58,21 @@ jobs:
             sleep 3
           done
 
-      - name: Run black check
-        run: |
-          poetry run black --check .
+      - name: Run black check (backend)
+        working-directory: ./backend
+        run: poetry run black --check .
 
-      - name: Run flake8
-        run: |
-          poetry run flake8 .
+      - name: Run flake8 (backend)
+        working-directory: ./backend
+        run: poetry run flake8 .
 
-      - name: Run migrations
-        run: |
-          python manage.py migrate
+      - name: Run migrations (backend)
+        working-directory: ./backend
+        run: python manage.py migrate
 
       - name: Run Django tests
-        run: |
-          python manage.py test
+        working-directory: ./backend
+        run: python manage.py test
 
   # ----------------------------
   #  JOB: Frontend (Vite + Node)
@@ -89,18 +92,20 @@ jobs:
           node-version: "18"
           cache: "npm"
 
+      # ───────────────────────────────────────────────
+      # Asumiendo que tu carpeta de frontend es 'adoptable_front'
       - name: Install frontend dependencies
-        working-directory: ./frontend
+        working-directory: ./adoptable_front
         run: npm ci
 
-      - name: Run ESLint
-        working-directory: ./frontend
+      - name: Run ESLint (frontend)
+        working-directory: ./adoptable_front
         run: npm run lint
 
       - name: Run frontend tests
-        working-directory: ./frontend
+        working-directory: ./adoptable_front
         run: npm test
 
-      - name: Build production bundle
-        working-directory: ./frontend
+      - name: Build production bundle (frontend)
+        working-directory: ./adoptable_front
         run: npm run build
