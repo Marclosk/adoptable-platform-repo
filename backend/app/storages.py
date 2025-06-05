@@ -1,32 +1,44 @@
+# backend/app/storages.py
+
+from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 
-
 class PublicMediaStorage(S3Boto3Storage):
-    location = "public"
-    default_acl = "public-read"
+    location       = ""
+    default_acl    = "public-read"
     file_overwrite = False
+
+    bucket_name   = settings.AWS_STORAGE_BUCKET_NAME  # “public”
+    custom_domain = settings.AWS_S3_CUSTOM_DOMAIN     # “localhost:9000/public”
+    url_protocol  = "http:"
+
+    def __init__(self, **kwargs):
+        kwargs["endpoint_url"] = settings.AWS_S3_ENDPOINT_URL  # “http://minio:9000”
+        super().__init__(**kwargs)
 
 
 class PrivateMediaStorage(S3Boto3Storage):
-    location = "private"
-    default_acl = "private"
+    location       = ""
+    default_acl    = "public-read"
     file_overwrite = False
-    custom_domain = False
+
+    bucket_name   = settings.AWS_STORAGE_BUCKET_NAME
+    custom_domain = settings.AWS_S3_CUSTOM_DOMAIN     # “localhost:9000/public”
+
+    def __init__(self, **kwargs):
+        kwargs["endpoint_url"] = settings.AWS_S3_ENDPOINT_URL
+        super().__init__(**kwargs)
 
 
-class PublicS3Boto3Storage(S3Boto3Storage):
-    """
-    Storage Bucket for public data (static files)
-    """
-
-    bucket_acl = "download"
-    default_acl = "download"
-    bucket_name = "public"
+class PublicStaticStorage(S3Boto3Storage):
+    bucket_acl         = "download"
+    default_acl        = "download"
+    bucket_name        = settings.AWS_STORAGE_BUCKET_NAME   # “public”
     auto_create_bucket = True
 
-    def __init__(self, acl=None, bucket=None, **settings):
-        if acl is not None:
-            self.bucket_acl = acl
-        if bucket is not None:
-            self.bucket_name = bucket
-        super().__init__(**settings)
+    custom_domain = False
+    url_protocol  = "http:"
+
+    def __init__(self, **kwargs):
+        kwargs["endpoint_url"] = settings.AWS_S3_ENDPOINT_URL
+        super().__init__(**kwargs)

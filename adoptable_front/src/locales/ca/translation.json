@@ -354,5 +354,7 @@
   "error_reset_link_invalido": "Enllaç de restabliment invàlid.",
   "password_restablecida_exito": "Contrasenya restablerta amb èxit",
   "error_restablecer_contraseña": "No s'ha pogut restablir la contrasenya",
+  "error_usuario_no_encontrado": "Usuari no trobat",
+  "revisa_tu_correo": "Revisa el teu correu",
   "solicitud_rechazada": "Sol·licitud rebutjada"
 }
