@@ -28,7 +28,6 @@ jobs:
           --health-retries=5
 
     env:
-      # Apunta a la BD del servicio postgres
       DATABASE_URL: postgres://marc:admin@localhost:5432/adoptable_db
       POETRY_VIRTUALENVS_CREATE: "false"
       POETRY_NO_INTERACTION: "1"
@@ -45,13 +44,13 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
 
-      # ───────────────────────────────────────────────
-      # Ahora le indicamos que instale desde backend/
       - name: Install dependencies (backend)
         working-directory: ./backend
-        run: poetry install
+        run: |
+          poetry install --no-root
 
       - name: Wait for Postgres to be ready
+        # Se ejecuta en el runner, no hace falta working-directory aquí
         run: |
           until pg_isready -h localhost -p 5432 -U marc; do
             echo "Esperando a Postgres…"
@@ -92,9 +91,8 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      # ───────────────────────────────────────────────
-      # Asumiendo que tu carpeta de frontend es 'adoptable_front'
       - name: Install frontend dependencies
+        # Ajusta la ruta si tu carpeta realmente no se llama 'adoptable_front'
         working-directory: ./adoptable_front
         run: npm ci
 
