@@ -109,10 +109,12 @@ const Login: React.FC = () => {
   const handleSendReset = async () => {
     setResetEmailError('');
     setResetMessage('');
+
     if (!resetEmail.trim()) {
       setResetEmailError(t('error_email_required'));
       return;
     }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(resetEmail)) {
       setResetEmailError(t('error_email_invalid'));
@@ -121,15 +123,32 @@ const Login: React.FC = () => {
 
     setResetLoading(true);
     try {
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:8000/users/password-reset/',
         { email: resetEmail.trim().toLowerCase() },
         { withCredentials: true }
       );
-      setResetMessage(t('recuperar_contraseña'));
+
+      // Si el backend responde 200 y message == "revisa_tu_correo"
+      if (
+        response.status === 200 &&
+        response.data.message === 'revisa_tu_correo'
+      ) {
+        setResetMessage(t('revisa_tu_correo'));
+      }
     } catch (err: unknown) {
-      console.error('Error solicitando recuperación de contraseña:', err);
-      setResetEmailError(t('error_restablecer_contraseña'));
+      if (axios.isAxiosError(err) && err.response) {
+        // Capturamos el 418 + error_usuario_no_encontrado
+        if (err.response.status === 418) {
+          setResetEmailError(t('error_usuario_no_encontrado'));
+        } else {
+          console.error('Error solicitando recuperación de contraseña:', err);
+          setResetEmailError(t('error_restablecer_contraseña'));
+        }
+      } else {
+        console.error('Error solicitando recuperación de contraseña:', err);
+        setResetEmailError(t('error_restablecer_contraseña'));
+      }
     } finally {
       setResetLoading(false);
     }
@@ -246,7 +265,7 @@ const Login: React.FC = () => {
               {resetMessage && (
                 <Alert status="success" mb={4}>
                   <AlertIcon />
-                  {t('password_restablecida_exito')}
+                  {resetMessage}
                 </Alert>
               )}
 

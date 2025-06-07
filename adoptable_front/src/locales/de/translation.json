@@ -353,5 +353,7 @@
   "solicitud_rechazada": "Anfrage abgelehnt",
   "error_reset_link_invalido": "Ungültiger Wiederherstellungslink.",
   "password_restablecida_exito": "Passwort erfolgreich zurückgesetzt",
+  "error_usuario_no_encontrado": "Benutzer nicht gefunden",
+  "revisa_tu_correo": "Überprüfe deine E-Mails",
   "error_restablecer_contraseña": "Passwort konnte nicht zurückgesetzt werden"
 }

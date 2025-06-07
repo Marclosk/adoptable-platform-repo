@@ -1,6 +1,6 @@
 # backend/app/settings.py
 
-import os
+import os, sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -9,6 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carga variables de entorno desde .env
 load_dotenv(BASE_DIR / ".env")
+
+
+print("––––––––––––– ENTORNO CARGADO ––––––––––––")
+print("DEBUG       =", os.getenv("DJANGO_DEBUG"))
+print("EMAIL_HOST  =", os.getenv("EMAIL_HOST"))
+print("EMAIL_USER  =", os.getenv("EMAIL_HOST_USER"))
+print("DEFAULT_FROM_EMAIL =", os.getenv("DEFAULT_FROM_EMAIL"))
+print("CSRF_TRUSTED_ORIGINS =", os.getenv("CSRF_TRUSTED_ORIGINS"))
+print("–––––––––––––––––––––––––––––––––––––––––", file=sys.stdout)
 
 # ===== Django básico =====
 
@@ -114,12 +123,12 @@ CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 # ===== Correo electrónico =====
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "marcfakemail22@gmail.com"
+EMAIL_HOST_PASSWORD = "cvzz vazl vrhf amwd"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # ===== Almacenamiento estático y medios =====
 
@@ -136,11 +145,20 @@ STORAGES = {
     },
 }
 
+DEFAULT_FILE_STORAGE = "app.storages.PublicMediaStorage"
+
+AWS_S3_USE_SSL           = False                    
+AWS_S3_VERIFY            = False                   
+AWS_S3_ADDRESSING_STYLE  = "path"                   
+AWS_S3_URL_PROTOCOL      = "http:"                 
+
+
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_S3_ADDRESSING_STYLE = os.getenv("AWS_S3_ADDRESSING_STYLE", "path")
+AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
 # ===== Ajustes REST Framework =====
 

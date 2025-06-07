@@ -357,6 +357,8 @@
     "solicitud_rechazada": "Solicitud rechazada",
     "error_reset_link_invalido": "Enlace de restablecimiento inválido.",
     "password_restablecida_exito": "Contraseña restablecida con éxito",
+    "error_usuario_no_encontrado": "Usuario no encontrado",
+    "revisa_tu_correo": "Revisa tu correo",
     "error_restablecer_contraseña": "No se pudo restablecer la contraseña"
 
 

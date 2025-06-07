@@ -353,5 +353,7 @@
   "error_reset_link_invalido": "Invalid reset link.",
   "solicitud_rechazada": "Request rejected",
   "password_restablecida_exito": "Password successfully reset",
+  "error_usuario_no_encontrado": "User not found",
+  "revisa_tu_correo": "Check your email",
   "error_restablecer_contraseña": "Could not reset password"
 }
