@@ -4,6 +4,14 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8000/users';
 
+export interface Profile {
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  avatar?: string;
+}
+
 export const fetchCSRFToken = async (): Promise<void> => {
   try {
     const response = await axios.get('http://localhost:8000/csrf-token/', {
@@ -20,7 +28,7 @@ export const getCSRFToken = (): string => {
   return match ? match[1] : '';
 };
 
-export const getProfile = async (): Promise<unknown> => {
+export const getProfile = async (): Promise<Profile> => {
   try {
     const response = await axios.get(`${API_URL}/profile/`, {
       withCredentials: true,

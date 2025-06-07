@@ -1,0 +1,1 @@
+{"root":["./cypress/e2e/ping_web.cy.ts","./cypress/e2e/autentication_tests/login.cy.ts","./cypress/e2e/autentication_tests/register.cy.ts","./cypress/support/commands.ts","./cypress/support/e2e.ts"],"version":"5.8.3"}

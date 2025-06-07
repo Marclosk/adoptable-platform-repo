@@ -61,14 +61,12 @@ class DonationsViewsTest(APITestCase):
         data = {"cantidad": "20.00", "anonimo": True}
         resp = self.client.post(self.crear_url, data, format="json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        # Campos de respuesta
         self.assertIn("id", resp.data)
         self.assertEqual(resp.data["usuario"], self.user.username)
         self.assertEqual(resp.data["display_usuario"], "Anonimo")
         self.assertEqual(resp.data["cantidad"], "20.00")
         self.assertTrue(resp.data["anonimo"])
         self.assertIn("fecha", resp.data)
-        # Verificar en BD
         don = Donacion.objects.get(id=resp.data["id"])
         self.assertEqual(don.usuario, self.user)
         self.assertEqual(str(don.cantidad), "20.00")

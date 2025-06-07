@@ -70,10 +70,13 @@ const ContactDetail: React.FC = () => {
     if (!contact) return;
     setDeleteLoading(true);
     try {
-      await axios.delete(`/api/contact/admin/messages/${contact.id}/`, {
-        headers: { 'X-CSRFToken': csrfToken },
-        withCredentials: true,
-      });
+      await axios.delete(
+        `http://localhost:8000/api/contact/admin/messages/${contact.id}/`,
+        {
+          headers: { 'X-CSRFToken': csrfToken },
+          withCredentials: true,
+        }
+      );
       toast({
         title: t('mensaje_resuelto') || 'Mensaje resuelto y eliminado',
         status: 'success',

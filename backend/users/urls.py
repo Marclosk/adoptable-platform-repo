@@ -33,7 +33,7 @@ urlpatterns = [
     path("", user_search),
     path("password-reset-confirm/", password_reset_confirm),
     path("password-reset/", password_reset_request),
-    path("profile/", get_profile, name="get_profile"),
+    path("profile/", get_profile, name="get_own_profile"),
     path("profile/update/", update_profile, name="update_profile"),
     path("profile/adoption-form/", adoption_form_view, name="adoption-form"),
     path("adopters/", AdopterListView.as_view(), name="adopter-list"),

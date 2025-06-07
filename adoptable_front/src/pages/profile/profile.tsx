@@ -85,7 +85,7 @@ interface UserEnAdopcion {
   name: string;
 }
 
-interface ProfileType {
+export interface ProfileType {
   id: number;
   username: string;
   avatar?: string;
@@ -318,7 +318,7 @@ const Profile: React.FC = () => {
     setActionLoading(true);
     try {
       await axios.put(
-        `/users/admin/block/${profile.id}/`,
+        `http://localhost:8000/users/admin/block/${profile.id}/`,
         {},
         {
           headers: { 'X-CSRFToken': csrfToken },

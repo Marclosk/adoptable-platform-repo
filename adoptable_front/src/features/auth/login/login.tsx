@@ -122,7 +122,7 @@ const Login: React.FC = () => {
     setResetLoading(true);
     try {
       await axios.post(
-        '/users/password-reset/',
+        'http://localhost:8000/users/password-reset/',
         { email: resetEmail.trim().toLowerCase() },
         { withCredentials: true }
       );
