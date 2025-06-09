@@ -1,5 +1,6 @@
 # backend/app/tests/test_users_views.py
 from django.contrib.auth import get_user_model
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -20,17 +21,11 @@ class UserViewsTest(APITestCase):
         # Creamos un usuario "adoptante"
         self.username = "johndoe"
         self.password = "password123"
-        self.user = User.objects.create_user(
-            username=self.username, email="john@example.com", password=self.password
-        )
+        self.user = User.objects.create_user(username=self.username, email="john@example.com", password=self.password)
 
         # Creamos otro usuario para pruebas de búsqueda y perfil público
-        self.alice = User.objects.create_user(
-            username="alice", email="alice@example.com", password="pw"
-        )
-        self.bob = User.objects.create_user(
-            username="bob", email="bob@example.com", password="pw"
-        )
+        self.alice = User.objects.create_user(username="alice", email="alice@example.com", password="pw")
+        self.bob = User.objects.create_user(username="bob", email="bob@example.com", password="pw")
 
     def test_login_with_valid_credentials(self):
         resp = self.client.post(
@@ -126,15 +121,11 @@ class UserViewsTest(APITestCase):
 
     def test_protectora_login_and_profile(self):
         # Creamos una protectora inactiva
-        prot = User.objects.create_user(
-            username="prot1", email="prot1@example.com", password="pw"
-        )
+        prot = User.objects.create_user(username="prot1", email="prot1@example.com", password="pw")
         prot.is_staff = True
         prot.is_active = False
         prot.save()
         # Intento de login → 403
-        resp = self.client.post(
-            self.login_url, {"username": "prot1", "password": "pw"}, format="json"
-        )
+        resp = self.client.post(self.login_url, {"username": "prot1", "password": "pw"}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn("error", resp.data)

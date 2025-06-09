@@ -18,12 +18,8 @@ class AdopterProfile(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    favorites = models.ManyToManyField(
-        "animals.Animal", blank=True, related_name="favorited_by"
-    )
-    adopted = models.ManyToManyField(
-        "animals.Animal", blank=True, related_name="adopted_by"
-    )
+    favorites = models.ManyToManyField("animals.Animal", blank=True, related_name="favorited_by")
+    adopted = models.ManyToManyField("animals.Animal", blank=True, related_name="adopted_by")
     adoption_form = models.JSONField(default=dict, blank=True)
 
     def __str__(self):

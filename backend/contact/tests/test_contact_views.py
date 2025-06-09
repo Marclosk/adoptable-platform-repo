@@ -6,6 +6,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -22,9 +23,7 @@ class ContactViewTest(APITestCase):
         # la ruta es simplemente '/contact/'
         self.url = reverse("contact")
         # Creamos usuarios para que el endpoint no devuelva 404
-        User.objects.create_user(
-            username="juan", email="juan@example.com", password="pwd"
-        )
+        User.objects.create_user(username="juan", email="juan@example.com", password="pwd")
         User.objects.create_user(username="user_x", email="x@x.com", password="pwd")
         User.objects.create_user(username="user_y", email="y@y.com", password="pwd")
 
@@ -61,9 +60,7 @@ class ContactViewTest(APITestCase):
         """Si falla al guardar en BD → 500 + mensaje de error"""
         data = {"name": "X", "email": "x@x.com", "message": "M"}
         # parcheamos el create para que lance excepción
-        with patch(
-            "contact.views.ContactMessage.objects.create", side_effect=Exception("BD")
-        ):
+        with patch("contact.views.ContactMessage.objects.create", side_effect=Exception("BD")):
             resp = self.client.post(self.url, data, format="json")
 
         self.assertEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

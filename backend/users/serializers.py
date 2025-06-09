@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+
 from rest_framework import serializers
 
 from animals.models import Animal
@@ -38,9 +39,7 @@ class AdopterListSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     role = serializers.CharField(write_only=True, default="adoptante")
-    shelter_name = serializers.CharField(
-        write_only=True, required=False, allow_blank=True
-    )
+    shelter_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
     localidad = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
@@ -59,9 +58,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         pattern = r"^[A-Za-z0-9@.+-_]+$"
         if not re.match(pattern, value):
-            raise serializers.ValidationError(
-                "El nombre de usuario solo puede contener letras, números y @/./+/-/_."
-            )
+            raise serializers.ValidationError("El nombre de usuario solo puede contener letras, números y @/./+/-/_.")
         return value
 
     def create(self, validated_data):

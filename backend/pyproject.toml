@@ -8,8 +8,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 django = "^5.1.2"
-pytest = "^7.0"
-pytest-django = "^4.0"
 djangorestframework = "^3.15.2"
 django-cors-headers = "^4.6.0"
 asgiref = "^3.3.1"
@@ -24,22 +22,20 @@ django-storages = "^1.14.5"
 geopy = "^2.4.1"
 python-dotenv = "^1.1.0"
 
-[tool.poetry.dev-dependencies]
-flake8 = "^6.0.0"
-black = "^24.0.0"
-isort = "^5.12.0"
-# opcionalmente, si quieres un analizador estático más estricto:
-# pylint = "^2.18.0"
-
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.8.2"
+flake8         = "^6.0.0"
+black          = "^24.0.0"
+isort          = "^5.12.0"
+pytest         = "^7.0"
+pytest-django  = "^4.0"
+coverage       = "^7.8.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # ----------------------------
-# Configuración de Flake8
+# Flake8
 [tool.flake8]
 max-line-length = 120
 exclude = [
@@ -50,41 +46,25 @@ exclude = [
   "venv",
   "static",
   "media",
-  "node_modules"
+  "node_modules",
 ]
-extend-ignore = [
-  "E203",
-  "W503"
-]
-select = [
-  "E",
-  "F",
-  "W",
-  "C90"
-]
+extend-ignore = ["E203", "W503"]
+select = ["E", "F", "W", "C90"]
 
 # ----------------------------
-# Configuración de Isort
+# isort (perfil Black + tus apps como FIRSTPARTY)
 [tool.isort]
 profile = "black"
-line_length = 130
-known_first_party = ["mi_app_principal", "otra_app"]  # cámbialo por el nombre real de tus apps
-default_section = "THIRDPARTY"
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-combine_as_imports = true
-skip = [
-  "migrations",
-  ".venv",
-  "venv",
-  "__pycache__"
-]
+line_length = 120
+known_django = ["django"]
+known_first_party = ["users", "animals", "contact", "otra_app"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["migrations", ".venv", "venv", "__pycache__"]
 
 # ----------------------------
-# Configuración de Black
+# Black (¡importante!: aquí la clave correcta es `line-length`)
 [tool.black]
-max-line-length = 120
+line-length = 120
 target-version = ["py310"]
 include = '\.pyi?$'
 exclude = '''

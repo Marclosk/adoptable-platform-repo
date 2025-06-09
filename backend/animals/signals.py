@@ -2,6 +2,7 @@ import math
 
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+
 from geopy.geocoders import Nominatim
 
 from .models import Animal
@@ -37,9 +38,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     d_lon = math.radians(lon2 - lon1)
     a = (
         math.sin(d_lat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(d_lon / 2) ** 2
+        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon / 2) ** 2
     )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     distance = R * c

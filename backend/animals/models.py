@@ -32,13 +32,9 @@ class Animal(models.Model):
     biography = models.TextField(default="Biografía no disponible")
 
     species = models.CharField(max_length=50, default="Especie desconocida")
-    breed = models.CharField(
-        max_length=100, blank=True, null=True, default="Raza desconocida"
-    )
+    breed = models.CharField(max_length=100, blank=True, null=True, default="Raza desconocida")
 
-    weight = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal("0.0")
-    )
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, default=Decimal("0.0"))
     characteristics = models.JSONField(blank=True, null=True, default=dict)
 
     owner = models.ForeignKey(
@@ -64,9 +60,7 @@ class Animal(models.Model):
     microchipped = models.BooleanField(default=False)
     dewormed = models.BooleanField(default=False)
 
-    image = models.ImageField(
-        upload_to="animal_images/", default="animal_images/default_image.jpg"
-    )
+    image = models.ImageField(upload_to="animal_images/", default="animal_images/default_image.jpg")
     extra_images = models.JSONField(blank=True, null=True, default=dict)
 
     latitude = models.FloatField(null=True, blank=True)
@@ -85,15 +79,11 @@ class AdoptionRequest(models.Model):
         related_name="adoption_requests",
         on_delete=models.CASCADE,
     )
-    animal = models.ForeignKey(
-        Animal, related_name="adoption_requests", on_delete=models.CASCADE
-    )
+    animal = models.ForeignKey(Animal, related_name="adoption_requests", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # Nuevo campo para guardar el JSON del formulario
-    form_data = models.JSONField(
-        blank=True, default=dict, help_text="Datos completos del formulario de adopción"
-    )
+    form_data = models.JSONField(blank=True, default=dict, help_text="Datos completos del formulario de adopción")
 
     class Meta:
         unique_together = ("user", "animal")

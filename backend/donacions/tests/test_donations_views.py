@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -11,19 +12,13 @@ User = get_user_model()
 class DonationsViewsTest(APITestCase):
     def setUp(self):
         # Creamos un usuario de prueba
-        self.user = User.objects.create_user(
-            username="testuser", email="test@example.com", password="testpass"
-        )
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass")
         # URLs basadas en los names de tus urlpatterns
         self.lista_url = reverse("lista-donaciones")
         self.crear_url = reverse("crear-donacion")
         # Dos donaciones de ejemplo: primero no anónima, luego anónima
-        self.d1 = Donacion.objects.create(
-            usuario=self.user, cantidad="5.00", anonimo=False
-        )
-        self.d2 = Donacion.objects.create(
-            usuario=self.user, cantidad="10.00", anonimo=True
-        )
+        self.d1 = Donacion.objects.create(usuario=self.user, cantidad="5.00", anonimo=False)
+        self.d2 = Donacion.objects.create(usuario=self.user, cantidad="10.00", anonimo=True)
 
     def test_list_donations_public(self):
         """GET público a /donations/ debe devolver todas las donaciones ordenadas y con display_usuario."""

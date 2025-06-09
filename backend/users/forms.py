@@ -5,9 +5,7 @@ from django.contrib.auth.models import User
 
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
-    password2 = forms.CharField(
-        widget=forms.PasswordInput, label="Confirmar contraseña"
-    )
+    password2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
 
     class Meta:
         model = User

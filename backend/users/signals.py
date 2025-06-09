@@ -16,7 +16,5 @@ def create_adopter_profile(sender, instance, created, **kwargs):
     cuando se crea un nuevo usuario.
     """
     if created:
-        logger.info(
-            f"[signal] Creando AdopterProfile para usuario {instance.pk} / {instance.email}"
-        )
+        logger.info(f"[signal] Creando AdopterProfile para usuario {instance.pk} / {instance.email}")
         AdopterProfile.objects.create(user=instance)

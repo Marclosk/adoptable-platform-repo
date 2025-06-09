@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -59,8 +60,7 @@ def register_view(request):
         send_mail(
             subject="Solicitud de registro de protectora",
             message=(
-                f"La protectora {user.username} (email: {user.email}) "
-                f"solicita registrarse. Localidad: {localidad}"
+                f"La protectora {user.username} (email: {user.email}) " f"solicita registrarse. Localidad: {localidad}"
             ),
             from_email="no-reply@miapp.com",
             recipient_list=["marclosquino2@gmail.com"],
@@ -74,9 +74,7 @@ def register_view(request):
     user.is_staff = False
     user.is_active = True
     user.save()
-    return Response(
-        {"message": "Usuario creado correctamente!"}, status=status.HTTP_201_CREATED
-    )
+    return Response({"message": "Usuario creado correctamente!"}, status=status.HTTP_201_CREATED)
 
 
 @api_view(["POST"])
@@ -101,9 +99,7 @@ def login_view(request):
     # Autenticamos
     user = authenticate(request, username=username, password=password)
     if user is None:
-        return Response(
-            {"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED
-        )
+        return Response({"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
     # Login y respuesta
     login(request, user)
@@ -187,9 +183,7 @@ def get_profile(request):
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
-            return Response(
-                {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
         profile_data = AdopterProfileSerializer(profile).data
         fav_qs = profile.favorites.all()
@@ -235,9 +229,7 @@ def update_profile(request):
     try:
         profile = user.profile
     except AdopterProfile.DoesNotExist:
-        return Response(
-            {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
     serializer = AdopterProfileSerializer(profile, data=request.data, partial=True)
     if not serializer.is_valid():
@@ -287,9 +279,7 @@ def cancel_adoption_request_view(request, req_id):
     deleted, _ = AdoptionRequest.objects.filter(pk=req_id, user=request.user).delete()
     if deleted:
         return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response(
-        {"detail": "No encontrado o sin permisos"}, status=status.HTTP_404_NOT_FOUND
-    )
+    return Response({"detail": "No encontrado o sin permisos"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["GET", "POST"])
@@ -316,9 +306,7 @@ def user_profile_view(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     # --- NUEVO: si está bloqueado, devolvemos 404 ---
     if not user.is_active:
-        return Response(
-            {"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND
-        )
+        return Response({"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
@@ -328,9 +316,7 @@ def user_profile_view(request, user_id):
         try:
             profile = user.profile
         except AdopterProfile.DoesNotExist:
-            return Response(
-                {"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
         profile_data = AdopterProfileSerializer(profile).data
         fav_qs = profile.favorites.all()
         profile_data["favorites"] = AnimalSerializer(fav_qs, many=True).data
@@ -375,9 +361,7 @@ def user_search(request):
 
     # --- MODIFICADO: añadimos is_active=True para que no aparezcan bloqueados ---
     qs = User.objects.filter(
-        Q(username__icontains=q)
-        | Q(first_name__icontains=q)
-        | Q(last_name__icontains=q),
+        Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q),
         is_active=True,
     )
     serializer = AdopterListSerializer(qs, many=True)
@@ -393,13 +377,9 @@ def list_pending_protectoras(request):
     Solo accesible por administrador (is_superuser=True).
     """
     if not request.user.is_superuser:
-        return Response(
-            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
 
-    pending_qs = User.objects.filter(
-        is_staff=True, is_active=False, protectora_approval__approved=False
-    )
+    pending_qs = User.objects.filter(is_staff=True, is_active=False, protectora_approval__approved=False)
     serializer = UserSerializer(pending_qs, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -413,9 +393,7 @@ def validate_protectora(request, user_id):
     Solo accesible por administrador (is_superuser=True).
     """
     if not request.user.is_superuser:
-        return Response(
-            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
     protectora = get_object_or_404(User, pk=user_id, is_staff=True, is_active=False)
     # Activamos la cuenta
     protectora.is_active = True
@@ -425,9 +403,7 @@ def validate_protectora(request, user_id):
     if pa:
         pa.approved = True
         pa.save()
-    return Response(
-        {"message": "Protectora validada correctamente."}, status=status.HTTP_200_OK
-    )
+    return Response({"message": "Protectora validada correctamente."}, status=status.HTTP_200_OK)
 
 
 @api_view(["PUT"])
@@ -440,9 +416,7 @@ def block_user(request, user_id):
     - Si es protectora previamente aprobada → is_active=False (dejando approved=True)
     """
     if not request.user.is_superuser:
-        return Response(
-            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
 
     if request.user.id == user_id:
         return Response(
@@ -452,9 +426,7 @@ def block_user(request, user_id):
 
     target = get_object_or_404(User, pk=user_id)
     if not target.is_active:
-        return Response(
-            {"detail": "Usuario ya bloqueado."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Usuario ya bloqueado."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Desactivamos la cuenta.
     target.is_active = False
@@ -467,9 +439,7 @@ def block_user(request, user_id):
             pa.approved = True
             pa.save()
 
-    return Response(
-        {"message": "Usuario bloqueado correctamente."}, status=status.HTTP_200_OK
-    )
+    return Response({"message": "Usuario bloqueado correctamente."}, status=status.HTTP_200_OK)
 
 
 @api_view(["PUT"])
@@ -481,21 +451,15 @@ def unblock_user(request, user_id):
     Se pone is_active=True.
     """
     if not request.user.is_superuser:
-        return Response(
-            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
 
     target = get_object_or_404(User, pk=user_id)
     if target.is_active:
-        return Response(
-            {"detail": "Usuario ya activo."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Usuario ya activo."}, status=status.HTTP_400_BAD_REQUEST)
 
     target.is_active = True
     target.save()
-    return Response(
-        {"message": "Usuario reactivado correctamente."}, status=status.HTTP_200_OK
-    )
+    return Response({"message": "Usuario reactivado correctamente."}, status=status.HTTP_200_OK)
 
 
 @api_view(["DELETE"])
@@ -506,9 +470,7 @@ def delete_user(request, user_id):
     Borra al usuario de la base de datos (irrevocable). Solo superuser.
     """
     if not request.user.is_superuser:
-        return Response(
-            {"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
 
     # Evitar que el admin se borre a sí mismo por accidente
     if request.user.id == user_id:
@@ -542,9 +504,7 @@ def list_blocked_users(request):
         return Response({"detail": "No tienes permiso."}, status=403)
 
     adoptantes_qs = User.objects.filter(is_staff=False, is_active=False)
-    protectoras_qs = User.objects.filter(
-        is_staff=True, is_active=False, protectora_approval__approved=True
-    )
+    protectoras_qs = User.objects.filter(is_staff=True, is_active=False, protectora_approval__approved=True)
     blocked_qs = adoptantes_qs.union(protectoras_qs)
     serializer = UserSerializer(blocked_qs, many=True)
     return Response(serializer.data, status=200)
@@ -559,18 +519,14 @@ def password_reset_request(request):
     """
     email = request.data.get("email", "").strip().lower()
     if not email:
-        return Response(
-            {"error": "Debe proporcionar un email."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"error": "Debe proporcionar un email."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
         # No devolvemos error explícito para no filtrar si el email existe o no.
         user = None
-        return Response(
-            {"error": "error_usuario_no_encontrado"}, status=status.HTTP_418_IM_A_TEAPOT
-        )
+        return Response({"error": "error_usuario_no_encontrado"}, status=status.HTTP_418_IM_A_TEAPOT)
     if user and user.is_active:
         # Generamos token y uid
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
@@ -578,9 +534,7 @@ def password_reset_request(request):
 
         # Construimos link de recuperación.
         # Ajusta FRONTEND_RESET_URL a la URL real de tu frontend donde el usuario consuma token+uid.
-        frontend_reset_url = getattr(
-            settings, "FRONTEND_RESET_URL", "http://localhost:3000/reset-password"
-        )
+        frontend_reset_url = getattr(settings, "FRONTEND_RESET_URL", "http://localhost:3000/reset-password")
         reset_link = f"{frontend_reset_url}?uid={uidb64}&token={token}"
 
         # Enviamos correo
@@ -604,9 +558,7 @@ def password_reset_request(request):
 
     # Siempre devolvemos este mensaje para evitar filtrar si el email estaba o no en BD.
     return Response(
-        {
-            "message": "Si ese correo existe en nuestro sistema, se ha enviado un enlace de recuperación."
-        },
+        {"message": "Si ese correo existe en nuestro sistema, se ha enviado un enlace de recuperación."},
         status=status.HTTP_200_OK,
     )
 
@@ -638,13 +590,9 @@ def password_reset_confirm(request):
 
     # Validamos el token:
     if not PasswordResetTokenGenerator().check_token(user, token):
-        return Response(
-            {"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Actualizamos la contraseña:
     user.set_password(new_password)
     user.save()
-    return Response(
-        {"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK
-    )
+    return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)

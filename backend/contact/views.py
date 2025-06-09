@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -24,9 +25,7 @@ def contact_view(request):
     email = request.data.get("email", "").strip()
     message = request.data.get("message", "").strip()
 
-    logger.debug(
-        f"Contacto recibido: name={name}, " f"email={email}, message={message}"
-    )
+    logger.debug(f"Contacto recibido: name={name}, " f"email={email}, message={message}")
 
     if not name or not email or not message:
         return Response(
@@ -41,9 +40,7 @@ def contact_view(request):
         )
 
     hoy = timezone.localdate()
-    enviados_hoy = ContactMessage.objects.filter(
-        email=email, created_at__date=hoy
-    ).count()
+    enviados_hoy = ContactMessage.objects.filter(email=email, created_at__date=hoy).count()
     if enviados_hoy >= 3:
         return Response(
             {"error": "Has alcanzado el límite de 3 mensajes diarios."},
@@ -91,12 +88,8 @@ def list_contact_messages(request):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    blocked_emails = User.objects.filter(is_active=False).values_list(
-        "email", flat=True
-    )
-    qs = ContactMessage.objects.exclude(email__in=blocked_emails).order_by(
-        "-created_at"
-    )
+    blocked_emails = User.objects.filter(is_active=False).values_list("email", flat=True)
+    qs = ContactMessage.objects.exclude(email__in=blocked_emails).order_by("-created_at")
     serializer = ContactMessageSerializer(qs, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 

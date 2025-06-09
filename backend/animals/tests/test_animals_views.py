@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -19,27 +20,17 @@ class AnimalViewsTest(APITestCase):
             name="Dog1", latitude=0.0, longitude=0.0, owner=self.protectora, city=""
         )
 
-        self.animal_adopted = Animal.objects.create(
-            name="Dog2", owner=self.protectora, adopter=self.adopter, city=""
-        )
+        self.animal_adopted = Animal.objects.create(name="Dog2", owner=self.protectora, adopter=self.adopter, city="")
 
         self.existing_request = AdoptionRequest.objects.create(
             user=self.adopter, animal=self.animal_available, form_data={"foo": "bar"}
         )
 
         self.list_url = reverse("animal-list-create")
-        self.detail_url = reverse(
-            "animal-detail", kwargs={"pk": self.animal_available.pk}
-        )
-        self.request_adoption_url = reverse(
-            "request-adoption", kwargs={"pk": self.animal_available.pk}
-        )
-        self.adoption_request_url = reverse(
-            "adoption-request", kwargs={"animal_id": self.animal_available.pk}
-        )
-        self.requests_list_url = reverse(
-            "animal-requests", kwargs={"animal_id": self.animal_available.pk}
-        )
+        self.detail_url = reverse("animal-detail", kwargs={"pk": self.animal_available.pk})
+        self.request_adoption_url = reverse("request-adoption", kwargs={"pk": self.animal_available.pk})
+        self.adoption_request_url = reverse("adoption-request", kwargs={"animal_id": self.animal_available.pk})
+        self.requests_list_url = reverse("animal-requests", kwargs={"animal_id": self.animal_available.pk})
         self.reject_request_url = reverse(
             "animal-request-reject",
             kwargs={
@@ -72,23 +63,17 @@ class AnimalViewsTest(APITestCase):
         self.client.login(username="prot", password="pw")
 
         # Creamos otro animal con coordenadas explícitas y city=""
-        animal_far = Animal.objects.create(
-            name="FarDog", latitude=10.0, longitude=10.0, owner=self.protectora, city=""
-        )
+        animal_far = Animal.objects.create(name="FarDog", latitude=10.0, longitude=10.0, owner=self.protectora, city="")
 
         # Distancia 2000 km => ambos (0,0) y (10,10) deberían aparecer
-        resp = self.client.get(
-            self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "2000"}
-        )
+        resp = self.client.get(self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "2000"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = [a["id"] for a in resp.data]
         self.assertIn(self.animal_available.id, ids)
         self.assertIn(animal_far.id, ids)
 
         # Distancia 1 km => sólo (0,0) aparece
-        resp2 = self.client.get(
-            self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "1"}
-        )
+        resp2 = self.client.get(self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "1"})
         self.assertEqual(resp2.status_code, status.HTTP_200_OK)
         ids2 = [a["id"] for a in resp2.data]
         self.assertIn(self.animal_available.id, ids2)
@@ -108,19 +93,13 @@ class AnimalViewsTest(APITestCase):
 
     def test_partial_update_assign_adopter_and_delete_request(self):
         self.client.login(username="prot", password="pw")
-        resp = self.client.patch(
-            self.detail_url, {"adopter": self.adopter.id}, format="json"
-        )
+        resp = self.client.patch(self.detail_url, {"adopter": self.adopter.id}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         a = Animal.objects.get(pk=self.animal_available.id)
         self.assertEqual(a.adopter, self.adopter)
 
         # La solicitud previa debería haber sido borrada
-        self.assertFalse(
-            AdoptionRequest.objects.filter(
-                animal=self.animal_available, user=self.adopter
-            ).exists()
-        )
+        self.assertFalse(AdoptionRequest.objects.filter(animal=self.animal_available, user=self.adopter).exists())
 
     def test_partial_update_remove_adopter(self):
         self.client.login(username="prot", password="pw")
@@ -138,9 +117,7 @@ class AnimalViewsTest(APITestCase):
         self.assertFalse(Animal.objects.filter(pk=self.animal_available.id).exists())
 
         # Volvemos a crear el mismo animal y probamos con otro usuario
-        self.animal_available = Animal.objects.create(
-            name="Dog1", owner=self.protectora, city=""
-        )
+        self.animal_available = Animal.objects.create(name="Dog1", owner=self.protectora, city="")
         self.client.login(username="other", password="pw2")
         url3 = reverse("animal-detail", kwargs={"pk": self.animal_available.id})
         resp2 = self.client.delete(url3)
@@ -148,9 +125,7 @@ class AnimalViewsTest(APITestCase):
 
     def test_request_adoption_invalid_form(self):
         self.client.login(username="adopt", password="pw3")
-        resp = self.client.post(
-            self.request_adoption_url, {"adoption_form": "no-dict"}, format="json"
-        )
+        resp = self.client.post(self.request_adoption_url, {"adoption_form": "no-dict"}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_request_adoption_create_and_update(self):
@@ -182,9 +157,7 @@ class AnimalViewsTest(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
         # Creamos una nueva solicitud para volver a probar
-        AdoptionRequest.objects.create(
-            user=self.adopter, animal=self.animal_available, form_data={}
-        )
+        AdoptionRequest.objects.create(user=self.adopter, animal=self.animal_available, form_data={})
 
         # Un usuario distinto (ni owner ni solicitante ni admin) no puede borrar: 403 FORBIDDEN
         self.client.login(username="other", password="pw2")
