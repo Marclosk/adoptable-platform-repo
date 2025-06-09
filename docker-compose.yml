@@ -8,7 +8,9 @@ services:
     environment:
       POSTGRES_DB: adoptable_db
       POSTGRES_USER: marc
-      POSTGRES_PASSWORD: admin
+      POSTGRES_PORT: "5432"
+    secrets:
+      - postgres_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -51,6 +53,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: adoptable_backend
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
     ports:
@@ -60,11 +63,15 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
       - DJANGO_SETTINGS_ENV=Production
-      - DATABASE_URL=postgres://marc:admin@db:5432/adoptable_db
       - USE_MINIO=TRUE
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
       - AWS_STORAGE_BUCKET_NAME=public
+      - AWS_S3_ADDRESSING_STYLE=path
+      - AWS_S3_CUSTOM_DOMAIN=localhost:9000/public
+    secrets:
+      - django_secret_key
+      - postgres_password
+      - email_host_password
+      - aws_secret_key
     depends_on:
       - db
       - minio
@@ -76,6 +83,7 @@ services:
       context: ./adoptable_front
       dockerfile: Dockerfile
     container_name: adoptable_frontend
+    command: npm run dev # para que arranque Vite en container
     volumes:
       - ./adoptable_front:/app
       - /app/node_modules
@@ -94,3 +102,13 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+
+secrets:
+  django_secret_key:
+    file: ./backend/secrets/django_secret_key.txt
+  postgres_password:
+    file: ./backend/secrets/postgres_password.txt
+  email_host_password:
+    file: ./backend/secrets/email_host_password.txt
+  aws_secret_key:
+    file: ./backend/secrets/aws_secret_key.txt
