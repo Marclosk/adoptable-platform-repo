@@ -1,30 +1,17 @@
-# contact/views.py
-
 import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import ContactMessage
 from .serializers import ContactMessageSerializer
-
-logger = logging.getLogger(__name__)
-User = get_user_model()
-
-import logging
-
-from django.contrib.auth import get_user_model
-from django.core.mail import EmailMessage
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -37,23 +24,23 @@ def contact_view(request):
     email = request.data.get("email", "").strip()
     message = request.data.get("message", "").strip()
 
-    logger.debug(f"Contacto recibido: name={name}, email={email}, message={message}")
+    logger.debug(
+        f"Contacto recibido: name={name}, " f"email={email}, message={message}"
+    )
 
     if not name or not email or not message:
-        return Response({"error": "Faltan campos requeridos."}, status=400)
-
-    # ——————————————
-    # 1) Comprobar que el email corresponde a un usuario existente
-    # ——————————————
-    if not User.objects.filter(email=email).exists():
         return Response(
-            {"error": "El usuario no existe."}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Faltan campos requeridos."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ——————————————
-    # 2) Límite de 3 mensajes/día
-    # ——————————————
-    hoy = timezone.localdate()  # usa Europe/Madrid
+    if not User.objects.filter(email=email).exists():
+        return Response(
+            {"error": "El usuario no existe."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    hoy = timezone.localdate()
     enviados_hoy = ContactMessage.objects.filter(
         email=email, created_at__date=hoy
     ).count()
@@ -63,18 +50,15 @@ def contact_view(request):
             status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
-    # ——————————————
-    # 3) Guardar en BD
-    # ——————————————
     try:
         ContactMessage.objects.create(name=name, email=email, message=message)
     except Exception:
         logger.exception("Error al guardar el mensaje en la base de datos")
-        return Response({"error": "Error al guardar el mensaje."}, status=500)
+        return Response(
+            {"error": "Error al guardar el mensaje."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
-    # ——————————————
-    # 4) Envío de correo (capturando excepción)
-    # ——————————————
     try:
         email_message = EmailMessage(
             subject="Nuevo mensaje de contacto",
@@ -86,10 +70,11 @@ def contact_view(request):
         email_message.send(fail_silently=False)
     except Exception:
         logger.exception("Error al enviar el correo de contacto")
-        # aunque falle el SMTP, devolvemos éxito
-        # podrías opcionalmente añadir una clave "warning" en la respuesta
 
-    return Response({"message": "Mensaje enviado correctamente."}, status=200)
+    return Response(
+        {"message": "Mensaje enviado correctamente."},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
@@ -101,9 +86,11 @@ def list_contact_messages(request):
     Solo accesible para superusuarios (is_superuser=True).
     """
     if not request.user.is_superuser:
-        return Response({"detail": "No tienes permiso."}, status=403)
+        return Response(
+            {"detail": "No tienes permiso."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
-    # Excluir mensajes cuyo email corresponda a un User bloqueado (is_active=False)
     blocked_emails = User.objects.filter(is_active=False).values_list(
         "email", flat=True
     )
@@ -111,7 +98,7 @@ def list_contact_messages(request):
         "-created_at"
     )
     serializer = ContactMessageSerializer(qs, many=True)
-    return Response(serializer.data, status=200)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET", "DELETE"])
@@ -123,16 +110,21 @@ def manage_contact_message(request, message_id):
     Solo si el mensaje no pertenece a un usuario bloqueado.
     """
     if not request.user.is_superuser:
-        return Response({"detail": "No tienes permiso."}, status=403)
+        return Response(
+            {"detail": "No tienes permiso."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     msg = get_object_or_404(ContactMessage, pk=message_id)
-    # Si el email del mensaje es de usuario bloqueado, actuamos como si no existiera
     if User.objects.filter(email=msg.email, is_active=False).exists():
-        return Response({"detail": "Mensaje no encontrado."}, status=404)
+        return Response(
+            {"detail": "Mensaje no encontrado."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
     if request.method == "DELETE":
         msg.delete()
-        return Response(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     serializer = ContactMessageSerializer(msg)
-    return Response(serializer.data, status=200)
+    return Response(serializer.data, status=status.HTTP_200_OK)

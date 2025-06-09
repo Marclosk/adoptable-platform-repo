@@ -8,7 +8,7 @@ from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
-from django.core.mail import BadHeaderError, send_mail
+from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import force_bytes
