@@ -145,6 +145,7 @@
   "confirmar_desadopcion": "Confirmar desadopció",
   "confirmar_desadopcion_text": "Estàs segur que «{{name}}» ja no està adoptat per {{adopter}}?",
   "si_desadoptar": "Sí, desadoptar",
+  "desadoptar": "Cancel·lar l'adopció",
   "cancelar_solicitud": "Cancel·lar sol·licitud",
   "confirmar_cancelar_solicitud_text": "Eliminar la sol·licitud d'adopció de «{{name}}»?",
   "si_cancelar": "Sí, cancel·lar",

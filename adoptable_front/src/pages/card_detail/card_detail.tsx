@@ -82,7 +82,6 @@ interface Adopter {
   username: string;
 }
 
-
 const AnimalDetail: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -125,16 +124,16 @@ const AnimalDetail: React.FC = () => {
   }, [id, navigate, toast, t]);
 
   const loadFavorites = useCallback(async () => {
-    if (role !== 'adoptante' || !animal) return
+    if (role !== 'adoptante' || !animal) return;
     try {
-      const prof = (await getProfile()) as { favorites?: { id: number }[] }
+      const prof = (await getProfile()) as { favorites?: { id: number }[] };
       if (Array.isArray(prof.favorites)) {
-        setIsFavorite(prof.favorites.some(f => f.id === animal.id))
+        setIsFavorite(prof.favorites.some(f => f.id === animal.id));
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }, [animal, role])
+  }, [animal, role]);
 
   const loadRequestStatus = useCallback(async () => {
     if (role !== 'adoptante' || !animal) return;
@@ -494,7 +493,7 @@ const AnimalDetail: React.FC = () => {
                     onClick={onUnadoptOpen}
                     width="full"
                   >
-                    {t('si_desadoptar')}
+                    {t('desadoptar')}
                   </Button>
                 ) : null}
               </>

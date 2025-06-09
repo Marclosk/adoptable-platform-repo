@@ -24,6 +24,7 @@
   "tamano_pequeno": "Petit",
   "tamano_mediano": "Moyen",
   "tamano_grande": "Grand",
+  "desadoptar": "Annuler l'adoption",
   "actividad_baja": "Faible",
   "actividad_media": "Moyenne",
   "actividad_alta": "Élevée",
@@ -358,5 +359,4 @@
   "error_usuario_no_encontrado": "Utilisateur non trouvé",
   "revisa_tu_correo": "Vérifie ton e-mail",
   "error_restablecer_contraseña": "Impossible de réinitialiser le mot de passe"
-
 }
