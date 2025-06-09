@@ -1,0 +1,2 @@
+[![Backend CI](https://github.com/Marclosk/adoptable-platform-repo/actions/workflows/ci.yml/badge.svg?branch=main&event=push&job=backend)](https://github.com/Marclosk/adoptable-platform-repo/actions?query=workflow%3Aci.yml+branch%3Amain+job%3Abackend)
+[![Frontend CI](https://github.com/Marclosk/adoptable-platform-repo/actions/workflows/ci.yml/badge.svg?branch=main&event=push&job=frontend)](https://github.com/Marclosk/adoptable-platform-repo/actions?query=workflow%3Aci.yml+branch%3Amain+job%3Afrontend)
