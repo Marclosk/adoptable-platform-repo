@@ -46,7 +46,7 @@ const ContactDetail: React.FC = () => {
       setLoading(true);
       try {
         const resp = await axios.get<ContactMessage>(
-          `/api/contact/admin/messages/${id}/`,
+          `http://localhost:8000/api/contact/admin/messages/${id}/`,
           {
             headers: { 'X-CSRFToken': csrfToken },
             withCredentials: true,

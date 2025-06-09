@@ -16,6 +16,7 @@ from rest_framework.decorators import api_view, parser_classes, permission_class
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+import logging
 
 from animals.models import AdoptionRequest, Animal
 from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
@@ -30,6 +31,7 @@ from .serializers import (
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -47,6 +49,7 @@ def register_view(request):
 
     serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
+        logger.debug("Errores de validación: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     user = serializer.save()

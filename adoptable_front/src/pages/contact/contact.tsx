@@ -90,7 +90,15 @@ const ContactPage: React.FC = () => {
         const data = error.response.data as { error?: string };
         toast({
           title: t('error'),
-          description: data.error || t('error_envio_mensaje'),
+          description: data.error ?? t('error_envio_mensaje'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else if (axios.isAxiosError(error) && error.response?.status === 404) {
+        toast({
+          title: t('error'),
+          description: t('error_email_invalid'),
           status: 'error',
           duration: 3000,
           isClosable: true,
