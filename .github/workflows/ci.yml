@@ -8,7 +8,7 @@ on:
 
 jobs:
   # -------------------------------------------------------
-  # JOB: Backend (Django + Poetry + Linters + Tests)
+  # JOB: Backend (Django + Poetry + Linters + Tests + Coverage)
   # -------------------------------------------------------
   backend:
     name: Backend CI
@@ -89,9 +89,18 @@ jobs:
         working-directory: ./backend
         run: python manage.py migrate
 
-      - name: Run Django tests
+      - name: Run Django tests with coverage
         working-directory: ./backend
-        run: python manage.py test
+        run: |
+          coverage run --source='.' manage.py test
+          coverage xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./backend/coverage.xml
+          fail_ci_if_error: true
 
   # -------------------------------------------------------
   # JOB: Frontend (Vite + Node + Linters + Tests + Build)
