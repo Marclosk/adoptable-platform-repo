@@ -15,7 +15,7 @@ class ListaDonacionesView(generics.ListAPIView):
     """
 
     serializer_class = DonacionSerializer
-    permission_classes = [] 
+    permission_classes = []
 
     def get_queryset(self):
         return Donacion.objects.filter(usuario__is_active=True).order_by("-fecha")

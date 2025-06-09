@@ -11,10 +11,10 @@ class UserViewsTest(APITestCase):
         self.login_url = "/users/login/"
         self.logout_url = "/users/logout/"
         self.check_url = "/users/check_session/"
-        self.search_url = "/users/"  
-        self.profile_url = "/users/profile/"  
-        self.profile_update_url = "/users/profile/update/"  
-        self.public_profile_url = "/users/{id}/profile/"  
+        self.search_url = "/users/"
+        self.profile_url = "/users/profile/"
+        self.profile_update_url = "/users/profile/update/"
+        self.public_profile_url = "/users/{id}/profile/"
 
         self.username = "johndoe"
         self.password = "password123"
@@ -98,7 +98,7 @@ class UserViewsTest(APITestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["username"], "alice")
-        self.assertEqual(resp.data["role"], "adoptante") 
+        self.assertEqual(resp.data["role"], "adoptante")
 
     def test_protectora_login_and_profile(self):
         prot = User.objects.create_user(username="prot1", email="prot1@example.com", password="pw")
