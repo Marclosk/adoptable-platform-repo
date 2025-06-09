@@ -1,0 +1,49 @@
+URL:https://portal.azure.com/?Microsoft_Azure_Education_correlationId=9e804962-ff0e-47a5-a21a-be5b437466b0&Microsoft_Azure_Education_newA4E=true&Microsoft_Azure_Education_asoSubGuid=583555ea-f6dc-428a-8231-c88cc92f7a6a&feature.tokencaching=true&feature.internalgraphapiversion=true#view/Microsoft_Azure_GTM/Billing.MenuView/~/costAnalysis/scopeId/%2Fproviders%2FMicrosoft.Billing%2FbillingAccounts%2Feb5f5d8e-86b7-418a-a96b-41b7162dcbfb%3Af700f2b1-e02f-450b-8540-cd4d51d90a2b_2019-05-31/scope/BillingAccount 
+
+1. Conéctate por SSH
+ssh -i ~/.ssh/azure_deploy_key azureuser@20.229.187.110
+
+2. Ve al directorio del proyecto
+cd ~/adoptable-platform-repo
+
+3. Sincroniza tu código con el repositorio
+git pull origin main
+
+4. Asegúrate de usar el .env de producción
+- Edita adoptable_front/.env dejando DESCOMENTADAS las líneas de producción:
+  # prod:
+  VITE_PROXY_URL=http://20.229.187.110:8000
+  AWS_S3_ENDPOINT_URL=http://20.229.187.110:9000
+
+  # dev:
+  #VITE_PROXY_URL=http://localhost:8000
+  #AWS_S3_ENDPOINT_URL=http://minio:9000
+
+- Edita backend/.env para que incluya:
+  DJANGO_DEBUG=False
+  DJANGO_ALLOWED_HOSTS=20.229.187.110
+  CSRF_TRUSTED_ORIGINS=http://20.229.187.110:3000
+  AWS_S3_ENDPOINT_URL=http://20.229.187.110:9000
+  AWS_S3_CUSTOM_DOMAIN=20.229.187.110:9000/public
+
+5. Detén y elimina los contenedores antiguos
+docker-compose down
+
+6. Construye y levanta todo en modo producción
+docker-compose up -d --build
+
+7. Comprueba que los servicios están activos
+docker ps
+
+8. Ve los logs en caso de fallo
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+9. Abre tu navegador en producción
+- Frontend React: http://20.229.187.110:3000
+- API Django:    http://20.229.187.110:8000
+- MinIO Console: http://20.229.187.110:9001
+
+10. (Opcional) Limpiar y reconstruir un servicio concreto
+docker-compose rm -fs frontend
+docker-compose up -d --build frontend
