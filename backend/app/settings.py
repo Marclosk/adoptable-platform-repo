@@ -10,15 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Carga variables de entorno desde .env
 load_dotenv(BASE_DIR / ".env")
 
-
-print("––––––––––––– ENTORNO CARGADO ––––––––––––")
-print("DEBUG       =", os.getenv("DJANGO_DEBUG"))
-print("EMAIL_HOST  =", os.getenv("EMAIL_HOST"))
-print("EMAIL_USER  =", os.getenv("EMAIL_HOST_USER"))
-print("DEFAULT_FROM_EMAIL =", os.getenv("DEFAULT_FROM_EMAIL"))
-print("CSRF_TRUSTED_ORIGINS =", os.getenv("CSRF_TRUSTED_ORIGINS"))
-print("–––––––––––––––––––––––––––––––––––––––––", file=sys.stdout)
-
 # ===== Django básico =====
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
