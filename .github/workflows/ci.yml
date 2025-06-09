@@ -108,36 +108,31 @@ jobs:
         working-directory: ./backend
         run: python manage.py test
 
-  # -------------------------------------------------------
-  # JOB: Frontend (Vite + Node + Linters + Tests + Build)
-  # -------------------------------------------------------
+    # -------------------------------------------------------
+    # JOB: Frontend (Vite + Node + Linters + Tests + Build)
+    # -------------------------------------------------------
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Traer el código
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2) Configurar Node.js (versión 18)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
 
-      # 3) Instalar dependencias del frontend
       - name: Install frontend dependencies
         working-directory: ./adoptable_front
-        run: npm ci
+        run: npm install
 
-      # 4) Ejecución de ESLint en frontend
       - name: Run ESLint (frontend)
         working-directory: ./adoptable_front
         run: npm run lint
 
-      # 5) Construcción del bundle de producción
       - name: Build production bundle (frontend)
         working-directory: ./adoptable_front
         run: npm run build
