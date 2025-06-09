@@ -1,5 +1,3 @@
-# backend/app/views.py
-
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
@@ -29,7 +27,6 @@ class AnimalListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Solo mostrar animales cuya protectora (owner) esté activa
         queryset = Animal.objects.filter(adopter__isnull=True, owner__is_active=True)
 
         search = self.request.query_params.get("search", "").strip()
@@ -71,7 +68,6 @@ class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
     Cuando se asigna un adoptante, elimina automáticamente su solicitud previa.
     """
 
-    # Solo los animales cuya protectora (owner) esté activa pueden recuperarse
     queryset = Animal.objects.filter(owner__is_active=True)
     serializer_class = AnimalSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
@@ -199,7 +195,6 @@ def protectora_metrics(request):
     """
     user = request.user
 
-    # Contar solo animales cuya protectora esté activa
     total_animals = Animal.objects.filter(owner=user, owner__is_active=True).count()
     pending_requests = AdoptionRequest.objects.filter(animal__owner=user).count()
     completed_adoptions = Animal.objects.filter(owner=user, owner__is_active=True, adopter__isnull=False).count()

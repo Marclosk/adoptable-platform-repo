@@ -1,5 +1,3 @@
-// src/pages/animal/ContactPage.tsx
-
 import React, { useState } from 'react';
 import {
   Box,

@@ -1,5 +1,3 @@
-// src/pages/card_detail/card_detail.tsx
-
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {

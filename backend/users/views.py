@@ -1,5 +1,3 @@
-# backend/app/views.py
-
 import logging
 
 from django.conf import settings
@@ -34,7 +32,6 @@ def register_view(request):
     role = request.data.get("role", "adoptante")
     localidad = request.data.get("localidad", "")
 
-    # Antes de nada, comprobamos que el email no esté ya en uso
     email = request.data.get("email", "").strip()
     if User.objects.filter(email=email).exists():
         return Response(
@@ -54,7 +51,6 @@ def register_view(request):
         user.is_active = False
         user.save()
 
-        # Si antes estáis usando ProtectoraApproval, mantenedlo (si no, basta con el is_active=False)
         ProtectoraApproval.objects.create(user=user, approved=False)
 
         send_mail(
@@ -83,25 +79,21 @@ def login_view(request):
     username = request.data.get("username")
     password = request.data.get("password")
 
-    # Primero buscamos al usuario para ver si existe y su estado
     try:
         user_obj = User.objects.get(username=username)
     except User.DoesNotExist:
         user_obj = None
 
-    # Si existe pero aún no está activo, devolvemos 403
     if user_obj and not user_obj.is_active:
         return Response(
             {"error": "Tu cuenta está pendiente de aprobación."},
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    # Autenticamos
     user = authenticate(request, username=username, password=password)
     if user is None:
         return Response({"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Login y respuesta
     login(request, user)
     user_data = UserSerializer(user).data
     role = "protectora" if user.is_staff else "adoptante"
@@ -165,7 +157,6 @@ def adoption_request_view(request, animal_id):
         AdoptionRequest.objects.get_or_create(user=user, animal=animal)
         return Response(status=status.HTTP_201_CREATED)
 
-    # DELETE
     AdoptionRequest.objects.filter(user=user, animal=animal).delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -178,7 +169,6 @@ def get_profile(request):
     role = "protectora" if user.is_staff else "adoptante"
     user_data["role"] = role
 
-    # perfil adoptante
     if not user.is_staff:
         try:
             profile = user.profile
@@ -195,8 +185,6 @@ def get_profile(request):
 
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
-    # perfil protectora
-    # serializamos también los campos de AdopterProfile si existen
     try:
         profile = user.profile
         profile_data = AdopterProfileSerializer(profile).data
@@ -240,7 +228,6 @@ def update_profile(request):
     role = "protectora" if user.is_staff else "adoptante"
     user_data["role"] = role
 
-    # campos recién guardados
     profile_data = serializer.data
 
     if role == "adoptante":
@@ -253,7 +240,6 @@ def update_profile(request):
 
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
-    # protectora
     en_adopcion_qs = Animal.objects.filter(owner=user, adopter__isnull=True)
     adopted_owner_qs = Animal.objects.filter(owner=user, adopter__isnull=False)
     return Response(
@@ -304,7 +290,6 @@ def user_profile_view(request, user_id):
     Si el usuario está bloqueado (is_active=False), devolvemos 404.
     """
     user = get_object_or_404(User, pk=user_id)
-    # --- NUEVO: si está bloqueado, devolvemos 404 ---
     if not user.is_active:
         return Response({"detail": "Usuario no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -326,7 +311,6 @@ def user_profile_view(request, user_id):
         profile_data["requests"] = AdoptionRequestSerializer(req_qs, many=True).data
         return Response({**user_data, **profile_data}, status=status.HTTP_200_OK)
 
-    # perfil protectora (solo lectura)
     try:
         profile = user.profile
         profile_data = AdopterProfileSerializer(profile).data
@@ -346,7 +330,6 @@ def user_profile_view(request, user_id):
     )
 
 
-# --- BÚSQUEDA DE USUARIOS ---
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_search(request):
@@ -359,7 +342,6 @@ def user_search(request):
     if not q:
         return Response([], status=status.HTTP_200_OK)
 
-    # --- MODIFICADO: añadimos is_active=True para que no aparezcan bloqueados ---
     qs = User.objects.filter(
         Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q),
         is_active=True,
@@ -395,10 +377,8 @@ def validate_protectora(request, user_id):
     if not request.user.is_superuser:
         return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
     protectora = get_object_or_404(User, pk=user_id, is_staff=True, is_active=False)
-    # Activamos la cuenta
     protectora.is_active = True
     protectora.save()
-    # Marcamos el flag “approved” en el ProtectoraApproval asociado
     pa = getattr(protectora, "protectora_approval", None)
     if pa:
         pa.approved = True
@@ -428,11 +408,9 @@ def block_user(request, user_id):
     if not target.is_active:
         return Response({"detail": "Usuario ya bloqueado."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Desactivamos la cuenta.
     target.is_active = False
     target.save()
 
-    # Si era protectora, dejamos approved=True para saber que ya había sido aprobada
     if target.is_staff:
         pa = getattr(target, "protectora_approval", None)
         if pa:
@@ -472,7 +450,6 @@ def delete_user(request, user_id):
     if not request.user.is_superuser:
         return Response({"detail": "No tienes permiso."}, status=status.HTTP_403_FORBIDDEN)
 
-    # Evitar que el admin se borre a sí mismo por accidente
     if request.user.id == user_id:
         return Response(
             {"detail": "No puedes eliminarte a ti mismo."},
@@ -485,9 +462,6 @@ def delete_user(request, user_id):
         {"message": "Usuario eliminado correctamente."},
         status=status.HTTP_204_NO_CONTENT,
     )
-
-
-# backend/app/users/views.py
 
 
 @api_view(["GET"])
@@ -524,20 +498,15 @@ def password_reset_request(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
-        # No devolvemos error explícito para no filtrar si el email existe o no.
         user = None
         return Response({"error": "error_usuario_no_encontrado"}, status=status.HTTP_418_IM_A_TEAPOT)
     if user and user.is_active:
-        # Generamos token y uid
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        # Construimos link de recuperación.
-        # Ajusta FRONTEND_RESET_URL a la URL real de tu frontend donde el usuario consuma token+uid.
         frontend_reset_url = getattr(settings, "FRONTEND_RESET_URL", "http://localhost:3000/reset-password")
         reset_link = f"{frontend_reset_url}?uid={uidb64}&token={token}"
 
-        # Enviamos correo
         subject = "Recuperación de contraseña"
         message = (
             f"Hola {user.username},\n\n"
@@ -556,7 +525,6 @@ def password_reset_request(request):
             fail_silently=False,
         )
 
-    # Siempre devolvemos este mensaje para evitar filtrar si el email estaba o no en BD.
     return Response(
         {"message": "Si ese correo existe en nuestro sistema, se ha enviado un enlace de recuperación."},
         status=status.HTTP_200_OK,
@@ -582,17 +550,14 @@ def password_reset_confirm(request):
         )
 
     try:
-        # Descifra uid a user_pk
         user_pk = urlsafe_base64_decode(uid).decode()
         user = User.objects.get(pk=user_pk)
     except Exception:
         return Response({"detail": "UID inválido."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Validamos el token:
     if not PasswordResetTokenGenerator().check_token(user, token):
         return Response({"detail": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Actualizamos la contraseña:
     user.set_password(new_password)
     user.save()
     return Response({"message": "Contraseña actualizada correctamente."}, status=status.HTTP_200_OK)

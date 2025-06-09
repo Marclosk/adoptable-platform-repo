@@ -1,5 +1,3 @@
-# src/apps/donations/views.py
-
 from django.contrib.auth import get_user_model
 
 from rest_framework import generics, permissions
@@ -17,10 +15,9 @@ class ListaDonacionesView(generics.ListAPIView):
     """
 
     serializer_class = DonacionSerializer
-    permission_classes = []  # público
+    permission_classes = [] 
 
     def get_queryset(self):
-        # Excluir donaciones de usuarios bloqueados (is_active=False)
         return Donacion.objects.filter(usuario__is_active=True).order_by("-fecha")
 
 
@@ -33,7 +30,6 @@ class CrearDonacionView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # toma cantidad y anonimo de la request, añade usuario autenticado únicamente si está activo
         if not self.request.user.is_active:
             raise permissions.PermissionDenied("Usuario bloqueado.")
         serializer.save(usuario=self.request.user)

@@ -1,5 +1,3 @@
-// src/pages/profile/Profile.tsx
-
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/store';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -60,7 +58,6 @@ import {
   AdoptionFormData,
 } from '../../components/adoption_form/adoption_form';
 
-// Definición de tipo para el perfil de usuario
 interface UserFavorite {
   id: number;
   name: string;
@@ -108,20 +105,16 @@ const Profile: React.FC = () => {
   const { user: authUser, role } = useAppSelector(s => s.auth);
   const csrfToken = getCSRFToken();
 
-  // Para tamaños responsivos
   const avatarSize = useBreakpointValue({ base: 'xl', md: '2xl' });
   const boxPadding = useBreakpointValue({ base: 4, md: 8 });
   const containerPx = useBreakpointValue({ base: 4, sm: 6, md: 8, lg: 12 });
 
-  // Si estamos viendo otro perfil, solo lectura
   const isOwnProfile = !userId || Number(userId) === authUser?.id;
 
-  // Estado común
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Solo para edición (propio)
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<{
     avatar: File | null;
@@ -136,7 +129,6 @@ const Profile: React.FC = () => {
   });
   const [preview, setPreview] = useState<string>('');
 
-  // Solo para propio: adopción/desadopción solicitudes
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [petToUnadopt, setPetToUnadopt] = useState<{
     id: number;
@@ -160,7 +152,6 @@ const Profile: React.FC = () => {
         isOwnProfile ? await getProfile() : await getUserProfile(Number(userId))
       ) as ProfileType;
       setProfile(data);
-      // preparar preview y formData solo si es propio
       if (isOwnProfile) {
         setPreview(data.avatar || '');
         setFormData({
@@ -312,7 +303,6 @@ const Profile: React.FC = () => {
     navigate('/login');
   };
 
-  // === Funcionalidad de bloqueo/desbloqueo para admin ===
   const handleBlock = async () => {
     if (!profile) return;
     setActionLoading(true);
@@ -343,7 +333,6 @@ const Profile: React.FC = () => {
   if (loading) return <Loader message={t('cargando_perfil')} />;
   if (!profile) return null;
 
-  // === PERFIL AJENO (solo lectura) ===
   if (!isOwnProfile) {
     return (
       <Layout handleLogout={handleLogout}>
@@ -378,8 +367,6 @@ const Profile: React.FC = () => {
                   {profile.bio || t('sin_biografia')}
                 </Text>
               </VStack>
-
-              {/* Botones de admin: Bloquear / Reactivar */}
               {role === 'admin' && authUser?.id !== profile.id && (
                 <Flex mt={6} justify="center" gap={4}>
                   <Button
@@ -393,7 +380,6 @@ const Profile: React.FC = () => {
               )}
             </Box>
 
-            {/* Favoritos */}
             <Box
               bg="white"
               boxShadow="md"
@@ -425,7 +411,6 @@ const Profile: React.FC = () => {
               </Wrap>
             </Box>
 
-            {/* Adoptados */}
             {profile.adopted && (
               <Box
                 bg="white"
@@ -459,7 +444,6 @@ const Profile: React.FC = () => {
               </Box>
             )}
 
-            {/* Solicitudes */}
             {profile.requests && (
               <Box
                 bg="white"
@@ -500,7 +484,6 @@ const Profile: React.FC = () => {
     );
   }
 
-  // === PERFIL PROPIO ===
   return (
     <Layout handleLogout={handleLogout}>
       <Box minH="100vh" bg="gray.50" py={10} px={containerPx}>

@@ -1,5 +1,3 @@
-// src/components/layout/Layout.tsx
-
 import React, { useEffect } from 'react';
 import { Flex, Box } from '@chakra-ui/react';
 import { useAppDispatch } from '../redux/hooks';

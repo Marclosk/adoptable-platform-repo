@@ -1,4 +1,3 @@
-// src/i18n.ts
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -23,7 +22,6 @@ i18n
     fallbackLng: 'en',
 
     detection: {
-      // Ahora primero comprueba navigator, luego localStorage, luego URL…
       order: [
         'navigator',
         'localStorage',

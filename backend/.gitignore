@@ -24,3 +24,4 @@ static/
 # Archivos de backups o temporales
 *.bak
 *.swp
+.env

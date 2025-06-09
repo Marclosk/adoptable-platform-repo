@@ -15,7 +15,6 @@ class AnimalViewsTest(APITestCase):
         self.other_user = User.objects.create_user(username="other", password="pw2")
         self.adopter = User.objects.create_user(username="adopt", password="pw3")
 
-        # Creamos con city="" para que no se sobreescriban lat/lng en pre_save
         self.animal_available = Animal.objects.create(
             name="Dog1", latitude=0.0, longitude=0.0, owner=self.protectora, city=""
         )
@@ -40,7 +39,6 @@ class AnimalViewsTest(APITestCase):
         )
 
     def test_list_requires_authentication(self):
-        # Ahora esperamos 403 FORBIDDEN en lugar de 401
         resp = self.client.get(self.list_url)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -56,23 +54,19 @@ class AnimalViewsTest(APITestCase):
         self.client.login(username="prot", password="pw")
         resp = self.client.get(self.list_url, {"search": "Dog2"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # Sólo se devuelven animales sin adoptante; Dog2 ya tiene adoptante, así que lista vacía
         self.assertEqual(resp.data, [])
 
     def test_distance_filter(self):
         self.client.login(username="prot", password="pw")
 
-        # Creamos otro animal con coordenadas explícitas y city=""
         animal_far = Animal.objects.create(name="FarDog", latitude=10.0, longitude=10.0, owner=self.protectora, city="")
 
-        # Distancia 2000 km => ambos (0,0) y (10,10) deberían aparecer
         resp = self.client.get(self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "2000"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = [a["id"] for a in resp.data]
         self.assertIn(self.animal_available.id, ids)
         self.assertIn(animal_far.id, ids)
 
-        # Distancia 1 km => sólo (0,0) aparece
         resp2 = self.client.get(self.list_url, {"user_lat": "0", "user_lng": "0", "distance": "1"})
         self.assertEqual(resp2.status_code, status.HTTP_200_OK)
         ids2 = [a["id"] for a in resp2.data]
@@ -98,7 +92,6 @@ class AnimalViewsTest(APITestCase):
         a = Animal.objects.get(pk=self.animal_available.id)
         self.assertEqual(a.adopter, self.adopter)
 
-        # La solicitud previa debería haber sido borrada
         self.assertFalse(AdoptionRequest.objects.filter(animal=self.animal_available, user=self.adopter).exists())
 
     def test_partial_update_remove_adopter(self):
@@ -110,13 +103,11 @@ class AnimalViewsTest(APITestCase):
         self.assertIsNone(a2.adopter)
 
     def test_delete_by_owner_and_forbidden_for_others(self):
-        # La protectora elimina su propio animal
         self.client.login(username="prot", password="pw")
         resp = self.client.delete(self.detail_url)
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Animal.objects.filter(pk=self.animal_available.id).exists())
 
-        # Volvemos a crear el mismo animal y probamos con otro usuario
         self.animal_available = Animal.objects.create(name="Dog1", owner=self.protectora, city="")
         self.client.login(username="other", password="pw2")
         url3 = reverse("animal-detail", kwargs={"pk": self.animal_available.id})
@@ -141,7 +132,6 @@ class AnimalViewsTest(APITestCase):
     def test_cancel_adoption_request(self):
         self.client.login(username="adopt", password="pw3")
         resp = self.client.delete(self.adoption_request_url)
-        # Ahora esperamos 405 METHOD_NOT_ALLOWED (el endpoint no permite DELETE en la configuración actual)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_list_animal_requests(self):
@@ -151,15 +141,12 @@ class AnimalViewsTest(APITestCase):
         self.assertEqual(len(resp.data), 1)
 
     def test_reject_adoption_request_by_owner_and_forbidden_for_others(self):
-        # La protectora (owner) puede borrar la solicitud: 204 NO CONTENT
         self.client.login(username="prot", password="pw")
         resp = self.client.delete(self.reject_request_url)
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
-        # Creamos una nueva solicitud para volver a probar
         AdoptionRequest.objects.create(user=self.adopter, animal=self.animal_available, form_data={})
 
-        # Un usuario distinto (ni owner ni solicitante ni admin) no puede borrar: 403 FORBIDDEN
         self.client.login(username="other", password="pw2")
         resp2 = self.client.delete(self.reject_request_url)
         self.assertEqual(resp2.status_code, status.HTTP_403_FORBIDDEN)

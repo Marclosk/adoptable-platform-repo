@@ -82,7 +82,6 @@ class AdoptionRequest(models.Model):
     animal = models.ForeignKey(Animal, related_name="adoption_requests", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Nuevo campo para guardar el JSON del formulario
     form_data = models.JSONField(blank=True, default=dict, help_text="Datos completos del formulario de adopción")
 
     class Meta:

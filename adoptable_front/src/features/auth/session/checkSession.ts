@@ -1,5 +1,3 @@
-// src/pages/auth/session/checkSession.ts
-
 import axios from 'axios';
 import Cookies from 'js-cookie';
 

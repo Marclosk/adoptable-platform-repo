@@ -1,5 +1,3 @@
-// src/pages/protectora/AnimalRequests.tsx
-
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -63,16 +61,13 @@ const AnimalRequests: React.FC = () => {
 
   const role = useSelector((s: RootState) => s.auth.role);
 
-  // Se sustituye `any` por `Animal | null`
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Para selección y marcado de adoptante
   const [selectedAdopter, setSelectedAdopter] = useState<number | ''>('');
   const [adoptLoading, setAdoptLoading] = useState<boolean>(false);
 
-  // Diálogo de rechazo
   const {
     isOpen: isRejectOpen,
     onOpen: onRejectOpen,
@@ -87,7 +82,6 @@ const AnimalRequests: React.FC = () => {
     }
   }, [role, navigate]);
 
-  // Carga animal y solicitudes
   useEffect(() => {
     (async () => {
       try {
@@ -104,7 +98,6 @@ const AnimalRequests: React.FC = () => {
     })();
   }, [id, toast, t]);
 
-  // Si el animal ya está adoptado, redirigimos al card_detail
   useEffect(() => {
     if (!loading && animal?.adopter) {
       navigate(`/card_detail/${animal.id}`);
@@ -183,7 +176,6 @@ const AnimalRequests: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box maxW="960px" mx="auto" py={8}>
-        {/* Imagen y encabezado */}
         <AspectRatio ratio={16 / 9} mb={6} borderRadius="md" overflow="hidden">
           <ChakraImage
             src={imgUrl}
@@ -204,7 +196,6 @@ const AnimalRequests: React.FC = () => {
         </Flex>
         <Divider />
 
-        {/* Selector de adoptante */}
         <Box my={6} bg="white" p={4} borderRadius="md" boxShadow="sm">
           <FormControl>
             <FormLabel>{t('selecciona_solicitante')}</FormLabel>
@@ -231,7 +222,6 @@ const AnimalRequests: React.FC = () => {
           </Button>
         </Box>
 
-        {/* Lista de solicitudes */}
         <Heading size="lg" mb={4}>
           {t('solicitudes_recibidas')} ({requests.length})
         </Heading>
@@ -309,7 +299,6 @@ const AnimalRequests: React.FC = () => {
           </SimpleGrid>
         )}
 
-        {/* Diálogo de rechazo */}
         <AlertDialog
           isOpen={isRejectOpen}
           leastDestructiveRef={cancelRef}

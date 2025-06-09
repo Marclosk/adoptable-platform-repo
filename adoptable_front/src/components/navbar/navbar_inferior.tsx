@@ -1,5 +1,3 @@
-// src/components/NavbarInferior.tsx
-
 import React from 'react';
 import { Flex, Button, Image, Text } from '@chakra-ui/react';
 import { useNavigate, useLocation } from 'react-router-dom';

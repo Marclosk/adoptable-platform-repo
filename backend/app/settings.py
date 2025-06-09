@@ -1,5 +1,3 @@
-# backend/app/settings.py
-
 import os
 from pathlib import Path
 
@@ -7,7 +5,6 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Carga variables de entorno desde .env
 load_dotenv(BASE_DIR / ".env")
 
 # ===== Django básico =====
@@ -71,7 +68,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "app.wsgi.application"
 
-# ===== Base de datos =====
 
 DATABASES = {
     "default": {
@@ -83,8 +79,6 @@ DATABASES = {
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
-
-# ===== Validadores de contraseña =====
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -101,7 +95,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# ===== Internacionalización =====
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -111,7 +104,6 @@ USE_TZ = True
 
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 
-# ===== Correo electrónico =====
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
@@ -121,7 +113,6 @@ EMAIL_HOST_USER = "marcfakemail22@gmail.com"
 EMAIL_HOST_PASSWORD = "cvzz vazl vrhf amwd"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# ===== Almacenamiento estático y medios =====
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_URL = "/static/"
@@ -151,7 +142,6 @@ AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_S3_ADDRESSING_STYLE = os.getenv("AWS_S3_ADDRESSING_STYLE", "path")
 AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
-# ===== Ajustes REST Framework =====
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

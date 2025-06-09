@@ -14,7 +14,7 @@ if %ERRORLEVEL% neq 0 (
 
 echo.
 echo ================================
-echo ✅ Servicios levantados:
+echo  Servicios levantados:
 echo    • Frontend:   http://localhost:5173
 echo    • Backend:    http://localhost:8001
 echo    • MinIO API:  http://localhost:9002   

@@ -1,5 +1,3 @@
-// src/features/auth/resetPassword/ResetPassword.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -28,7 +26,6 @@ const ResetPassword: React.FC = () => {
   const location = useLocation();
   const toast = useToast();
 
-  // Extraer uid y token de la query string
   const [params, setParams] = useState<QueryParams>({ uid: '', token: '' });
 
   useEffect(() => {
@@ -38,14 +35,12 @@ const ResetPassword: React.FC = () => {
     setParams({ uid, token });
   }, [location.search]);
 
-  // Estado local del formulario
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPasswordError, setNewPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Validación simple: mínimo 8 caracteres, al menos una mayúscula y un dígito
   const validatePassword = (pwd: string) => {
     const regex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
     return regex.test(pwd);
@@ -78,7 +73,6 @@ const ResetPassword: React.FC = () => {
 
     setSubmitting(true);
     try {
-      // Llamada al endpoint de confirmación de Django
       await axios.put(
         '/users/password-reset-confirm/',
         {

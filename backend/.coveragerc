@@ -1,10 +1,8 @@
 [run]
-# Directorios o módulos de los que queremos medir cobertura.
-# Pon aquí los nombres de tus apps, separados por comas.
+
 source = .
 
-# Archivos o carpetas que queremos excluir de la medición.
-# Normalmente migraciones, tests, settings, y entornos virtuales.
+
 omit =
     */migrations/*
     */tests/*
@@ -14,26 +12,21 @@ omit =
     env/*
     */manage.py
 
-# Opcional: guarda un registro de ejecución para usarlo en informes posteriores.
+
 data_file = .coverage
 
 [report]
-# Muestra las líneas no cubiertas en la salida por consola.
+
 show_missing = True
 
-# Oculta los archivos que estén al 100% cubiertos.
+
 skip_covered = True
 
-# El umbral mínimo de cobertura global (en porcentaje) para que el comando falle si no se alcanza.
-# fail_under = 80
-
-# Formato de salida predeterminado (term, html, xml, etc.).
-# Por defecto, el reporte en consola usa 'term'. Para HTML usaremos otra sección.
 
 [html]
-# Carpeta donde se generará el informe HTML
+
 directory = htmlcov
 
 [xml]
-# Nombre del fichero XML que genera coverage.py (útil para CI y Codecov/Coveralls)
+
 output = coverage.xml

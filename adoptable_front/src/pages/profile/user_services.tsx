@@ -1,5 +1,3 @@
-// src/pages/profile/user_services.ts
-
 import axios from 'axios';
 
 const API_URL = '/users';
@@ -76,8 +74,6 @@ export const updateProfile = async (
   }
 };
 
-/** ——— Formulario general de adopción ——— **/
-
 export interface AdoptionFormAPI {
   full_name: string;
   address: string;
@@ -90,9 +86,6 @@ export interface AdoptionFormAPI {
   references: string;
 }
 
-/**
- * Recupera el formulario de adopción completo (todos los campos)
- */
 export const getAdoptionForm = async (): Promise<AdoptionFormAPI> => {
   try {
     const response = await axios.get<{
@@ -117,10 +110,6 @@ export const getAdoptionForm = async (): Promise<AdoptionFormAPI> => {
   }
 };
 
-/**
- * Envía o crea el formulario de adopción del usuario,
- * incluyendo todos los campos en JSON.
- */
 export const submitAdoptionForm = async (
   formData: AdoptionFormAPI
 ): Promise<AdoptionFormAPI> => {

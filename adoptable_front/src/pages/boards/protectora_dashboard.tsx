@@ -1,5 +1,3 @@
-// src/pages/protectora/ProtectoraDashboard.tsx
-
 import React, { useEffect, useState } from 'react';
 import {
   Box,

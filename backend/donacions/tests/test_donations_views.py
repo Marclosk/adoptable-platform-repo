@@ -11,12 +11,9 @@ User = get_user_model()
 
 class DonationsViewsTest(APITestCase):
     def setUp(self):
-        # Creamos un usuario de prueba
         self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass")
-        # URLs basadas en los names de tus urlpatterns
         self.lista_url = reverse("lista-donaciones")
         self.crear_url = reverse("crear-donacion")
-        # Dos donaciones de ejemplo: primero no anónima, luego anónima
         self.d1 = Donacion.objects.create(usuario=self.user, cantidad="5.00", anonimo=False)
         self.d2 = Donacion.objects.create(usuario=self.user, cantidad="10.00", anonimo=True)
 
@@ -24,12 +21,10 @@ class DonationsViewsTest(APITestCase):
         """GET público a /donations/ debe devolver todas las donaciones ordenadas y con display_usuario."""
         resp = self.client.get(self.lista_url)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        # Hay exactamente 2 donaciones y van ordenadas por fecha descendente
         self.assertEqual(len(resp.data), 2)
         primero, segundo = resp.data[0], resp.data[1]
         self.assertEqual(primero["id"], self.d2.id)
         self.assertEqual(segundo["id"], self.d1.id)
-        # Estructura de campos
         for obj in (primero, segundo):
             for campo in (
                 "id",
@@ -40,7 +35,6 @@ class DonationsViewsTest(APITestCase):
                 "anonimo",
             ):
                 self.assertIn(campo, obj)
-        # display_usuario según el flag anonimo
         self.assertEqual(primero["display_usuario"], "Anonimo")
         self.assertEqual(segundo["display_usuario"], self.user.username)
 

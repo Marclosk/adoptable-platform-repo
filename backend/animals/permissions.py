@@ -7,14 +7,11 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Métodos seguros (GET, HEAD, OPTIONS) siempre permitidos si ya pasa IsAuthenticated.
         if request.method in permissions.SAFE_METHODS:
             return True
 
         user = request.user
-        # Si es administrador (is_staff o is_superuser), permite cualquier acción.
         if user and (user.is_staff or user.is_superuser):
             return True
 
-        # En otro caso, solo el owner (protectora) puede operar sobre el objeto.
         return getattr(obj, "owner", None) == user

@@ -1,5 +1,3 @@
-// src/pages/donations/Donations.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -94,7 +92,6 @@ const Donations: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box bg="gray.50" minH="100vh" py={8} px={{ base: 4, md: 8 }}>
-        {/* Donation form */}
         <Box
           maxW="600px"
           mx="auto"
@@ -141,7 +138,6 @@ const Donations: React.FC = () => {
           </VStack>
         </Box>
 
-        {/* Donation lists */}
         <Box maxW="1200px" mx="auto" px={6} pb={8}>
           <Flex
             direction={{ base: 'column', md: 'row' }}
@@ -149,7 +145,6 @@ const Donations: React.FC = () => {
             justify="center"
             align="start"
           >
-            {/* Public donation feed */}
             <Box
               flex="1"
               bg="white"
@@ -190,7 +185,6 @@ const Donations: React.FC = () => {
               )}
             </Box>
 
-            {/* Your personal donations */}
             {user && (
               <Box
                 flex="1"

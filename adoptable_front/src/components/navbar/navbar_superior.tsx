@@ -86,10 +86,8 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
       </Heading>
 
       <HStack spacing="4">
-        {/* Search fija al lado del título */}
         <SearchBar />
 
-        {/* Selector de idioma */}
         <Menu>
           <MenuButton
             as={IconButton}
@@ -119,7 +117,6 @@ const NavbarSuperior: React.FC<NavbarSuperiorProps> = ({ handleLogout }) => {
           </MenuList>
         </Menu>
 
-        {/* Menú de usuario */}
         <Menu>
           <MenuButton as={Button} variant="ghost" p={0} minW={0}>
             <Avatar

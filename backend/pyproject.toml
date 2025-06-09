@@ -34,8 +34,7 @@ coverage       = "^7.8.2"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-# ----------------------------
-# Flake8
+
 [tool.flake8]
 max-line-length = 120
 exclude = [
@@ -51,8 +50,7 @@ exclude = [
 extend-ignore = ["E203", "W503"]
 select = ["E", "F", "W", "C90"]
 
-# ----------------------------
-# isort (perfil Black + tus apps como FIRSTPARTY)
+
 [tool.isort]
 profile = "black"
 line_length = 120
@@ -61,8 +59,7 @@ known_first_party = ["users", "animals", "contact", "otra_app"]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 skip = ["migrations", ".venv", "venv", "__pycache__"]
 
-# ----------------------------
-# Black (¡importante!: aquí la clave correcta es `line-length`)
+
 [tool.black]
 line-length = 120
 target-version = ["py310"]

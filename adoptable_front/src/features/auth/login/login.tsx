@@ -129,7 +129,6 @@ const Login: React.FC = () => {
         { withCredentials: true }
       );
 
-      // Si el backend responde 200 y message == "revisa_tu_correo"
       if (
         response.status === 200 &&
         response.data.message === 'revisa_tu_correo'
@@ -138,7 +137,6 @@ const Login: React.FC = () => {
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
-        // Capturamos el 418 + error_usuario_no_encontrado
         if (err.response.status === 418) {
           setResetEmailError(t('error_usuario_no_encontrado'));
         } else {

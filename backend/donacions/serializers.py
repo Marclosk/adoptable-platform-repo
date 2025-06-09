@@ -1,19 +1,14 @@
-# src/apps/donations/serializers.py
-
 from rest_framework import serializers
 
 from .models import Donacion
 
 
 class DonacionSerializer(serializers.ModelSerializer):
-    # tu nombre real, siempre disponible
     usuario = serializers.CharField(source="usuario.username", read_only=True)
-    # este es el campo que usaremos en la lista pública
     display_usuario = serializers.SerializerMethodField()
 
     class Meta:
         model = Donacion
-        # exponemos anonimo para que el POST lo acepte y display_usuario para el GET
         fields = [
             "id",
             "usuario",

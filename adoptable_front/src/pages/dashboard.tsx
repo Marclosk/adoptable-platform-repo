@@ -1,5 +1,3 @@
-// src/pages/dashboard/Dashboard.tsx
-
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
@@ -72,30 +70,24 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const userRole = useAppSelector((s: RootState) => s.auth.role);
 
-  // Sesión
   const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
 
-  // Localización
   const [distance, setDistance] = useState<number>(30);
 
-  // Recuperamos lat/lng desde Redux si ya existen
   const { lat: storedLat, lng: storedLng } = useAppSelector(
     (state: RootState) => state.location
   );
 
-  // Inicializamos estado con valores de Redux (o null si no hay)
   const [userLat, setUserLat] = useState<number | null>(storedLat);
   const [userLng, setUserLng] = useState<number | null>(storedLng);
   const [locationAvailable, setLocationAvailable] = useState<boolean>(
     storedLat !== null && storedLng !== null
   );
 
-  // Datos de perros
   const [allDogs, setAllDogs] = useState<Dog[]>([]);
   const [filteredDogs, setFilteredDogs] = useState<Dog[]>([]);
   const [loadingDogs, setLoadingDogs] = useState<boolean>(true);
 
-  // Skeleton/loading visual
   const [showSkeleton, setShowSkeleton] = useState(true);
   const loaderStart = useRef(Date.now());
   useEffect(() => {
@@ -114,7 +106,6 @@ const Dashboard: React.FC = () => {
     }
   }, [loadingDogs]);
 
-  // Espera a que carguen imágenes
   const [imagesLoaded, setImagesLoaded] = useState(false);
   useEffect(() => {
     if (!loadingDogs) {
@@ -137,7 +128,6 @@ const Dashboard: React.FC = () => {
     }
   }, [filteredDogs, loadingDogs]);
 
-  // Filtros de etiquetas
   const [speciesFilters, setSpeciesFilters] = useState<Set<string>>(new Set());
   const [sizeFilters, setSizeFilters] = useState<Set<string>>(new Set());
   const [activityFilters, setActivityFilters] = useState<Set<string>>(
@@ -213,7 +203,6 @@ const Dashboard: React.FC = () => {
     })();
   }, [distance, userLat, userLng, locationAvailable]);
 
-  // Aplicar filtros de etiqueta
   useEffect(() => {
     let list = allDogs;
     if (speciesFilters.size)
@@ -224,7 +213,6 @@ const Dashboard: React.FC = () => {
     setFilteredDogs(list);
   }, [allDogs, speciesFilters, sizeFilters, activityFilters]);
 
-  // Función para alternar sets
   const toggleSet = (
     set: Set<string>,
     fn: React.Dispatch<Set<string>>,
@@ -239,7 +227,6 @@ const Dashboard: React.FC = () => {
     fn(nxt);
   };
 
-  // Limpiar filtros
   const clearAll = () => {
     setSpeciesFilters(new Set());
     setSizeFilters(new Set());
@@ -247,24 +234,20 @@ const Dashboard: React.FC = () => {
     setFilterQuery('');
   };
 
-  // ——— Hooks de estilo: siempre antes de cualquier return ———
   const cardBg = useColorModeValue('white', 'gray.700');
   const shadow = useColorModeValue('md', 'dark-lg');
   const showCards = !showSkeleton && imagesLoaded && !loadingDogs;
 
-  // Early return mientras verificamos sesión
   if (isSessionValid === null) {
     return <Loader message={t('verificando_sesion')} />;
   }
 
-  // Logout
   const handleLogout = async () => {
     await logout();
     dispatch(logoutSuccess());
     navigate('/login');
   };
 
-  // Opciones únicas para filtros
   const uniqueSpecies = Array.from(new Set(allDogs.map(d => d.species)));
   const uniqueSizes = Array.from(new Set(allDogs.map(d => d.size)));
   const uniqueActivities = Array.from(new Set(allDogs.map(d => d.activity)));
