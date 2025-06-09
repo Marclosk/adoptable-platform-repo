@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/users';
+const API_URL = '/users';
 
 export interface Profile {
   username: string;
@@ -14,7 +14,7 @@ export interface Profile {
 
 export const fetchCSRFToken = async (): Promise<void> => {
   try {
-    const response = await axios.get('http://localhost:8000/csrf-token/', {
+    const response = await axios.get('/csrf-token/', {
       withCredentials: true,
     });
     document.cookie = `csrftoken=${response.data.csrfToken}; path=/`;

@@ -318,7 +318,7 @@ const Profile: React.FC = () => {
     setActionLoading(true);
     try {
       await axios.put(
-        `http://localhost:8000/users/admin/block/${profile.id}/`,
+        `/users/admin/block/${profile.id}/`,
         {},
         {
           headers: { 'X-CSRFToken': csrfToken },

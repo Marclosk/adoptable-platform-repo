@@ -56,10 +56,10 @@ const SearchBar: React.FC = () => {
     setLoading(true);
     try {
       const aRes = await axios.get<{ id: number; name: string }[]>(
-        `http://localhost:8000/api/animals/?search=${encodeURIComponent(val)}`
+        `/api/animals/?search=${encodeURIComponent(val)}`
       );
       const uRes = await axios.get<{ id: number; username: string }[]>(
-        `http://localhost:8000/users/?search=${encodeURIComponent(val)}`
+        `/users/?search=${encodeURIComponent(val)}`
       );
 
       const animals: Suggestion[] = aRes.data.slice(0, MAX_PER_TAB).map(a => ({

@@ -80,7 +80,7 @@ const ResetPassword: React.FC = () => {
     try {
       // Llamada al endpoint de confirmación de Django
       await axios.put(
-        'http://localhost:8000/users/password-reset-confirm/',
+        '/users/password-reset-confirm/',
         {
           uid: params.uid,
           token: params.token,

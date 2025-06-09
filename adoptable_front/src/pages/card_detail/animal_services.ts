@@ -3,7 +3,7 @@ import type { Dog } from '../../pages/dashboard';
 import { getCSRFToken, getProfile } from '../profile/user_services';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/',
+  baseURL: '/',
   withCredentials: true,
 });
 

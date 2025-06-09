@@ -55,7 +55,7 @@ const AdminDashboard: React.FC = () => {
   const fetchPending = async () => {
     try {
       const response = await axios.get<ProtectoraPending[]>(
-        'http://localhost:8000/users/admin/pending-protectoras/',
+        '/users/admin/pending-protectoras/',
         {
           headers: {
             'X-CSRFToken': csrfToken,
@@ -76,7 +76,7 @@ const AdminDashboard: React.FC = () => {
   const handleValidate = async (id: number) => {
     try {
       await axios.post(
-        `http://localhost:8000/users/admin/validate-protectora/${id}/`,
+        `/users/admin/validate-protectora/${id}/`,
         {},
         {
           headers: {
@@ -101,7 +101,7 @@ const AdminDashboard: React.FC = () => {
   const fetchContacts = async () => {
     try {
       const response = await axios.get<ContactMessage[]>(
-        'http://localhost:8000/api/contact/admin/messages/',
+        '/api/contact/admin/messages/',
         {
           headers: {
             'X-CSRFToken': csrfToken,
@@ -123,7 +123,7 @@ const AdminDashboard: React.FC = () => {
   const fetchBlockedUsers = async () => {
     try {
       const response = await axios.get<BlockedUser[]>(
-        'http://localhost:8000/users/admin/blocked-users/',
+        '/users/admin/blocked-users/',
         {
           headers: {
             'X-CSRFToken': csrfToken,
@@ -145,7 +145,7 @@ const AdminDashboard: React.FC = () => {
   const handleUnblock = async (id: number) => {
     try {
       await axios.put(
-        `http://localhost:8000/users/admin/unblock/${id}/`,
+        `/users/admin/unblock/${id}/`,
         {},
         {
           headers: {

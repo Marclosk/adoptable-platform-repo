@@ -46,7 +46,7 @@ const ContactDetail: React.FC = () => {
       setLoading(true);
       try {
         const resp = await axios.get<ContactMessage>(
-          `http://localhost:8000/api/contact/admin/messages/${id}/`,
+          `/api/contact/admin/messages/${id}/`,
           {
             headers: { 'X-CSRFToken': csrfToken },
             withCredentials: true,
@@ -70,13 +70,10 @@ const ContactDetail: React.FC = () => {
     if (!contact) return;
     setDeleteLoading(true);
     try {
-      await axios.delete(
-        `http://localhost:8000/api/contact/admin/messages/${contact.id}/`,
-        {
-          headers: { 'X-CSRFToken': csrfToken },
-          withCredentials: true,
-        }
-      );
+      await axios.delete(`/api/contact/admin/messages/${contact.id}/`, {
+        headers: { 'X-CSRFToken': csrfToken },
+        withCredentials: true,
+      });
       toast({
         title: t('mensaje_resuelto') || 'Mensaje resuelto y eliminado',
         status: 'success',

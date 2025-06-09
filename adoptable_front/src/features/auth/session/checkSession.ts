@@ -3,7 +3,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL_session = 'http://localhost:8000/users/check_session/';
+const API_URL_session = '/users/check_session/';
 
 export const checkSession = async () => {
   try {

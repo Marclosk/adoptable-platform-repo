@@ -3,9 +3,9 @@ import { getCSRFToken } from './session/token';
 
 axios.defaults.withCredentials = true;
 
-const API_URL_login = 'http://localhost:8000/users/login/';
-const API_URL_register = 'http://localhost:8000/users/register/';
-const API_URL_logout = 'http://localhost:8000/users/logout/';
+const API_URL_login = '/users/login/';
+const API_URL_register = '/users/register/';
+const API_URL_logout = '/users/logout/';
 
 export interface LoginResponse {
   message: string;
