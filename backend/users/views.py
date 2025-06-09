@@ -4,10 +4,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
-from django.contrib.auth.tokens import (
-    PasswordResetTokenGenerator,
-    default_token_generator,
-)
+from django.contrib.auth.tokens import PasswordResetTokenGenerator, default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -23,12 +20,7 @@ from animals.models import AdoptionRequest, Animal
 from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
 
 from .models import AdopterProfile, ProtectoraApproval
-from .serializers import (
-    AdopterListSerializer,
-    AdopterProfileSerializer,
-    RegisterSerializer,
-    UserSerializer,
-)
+from .serializers import AdopterListSerializer, AdopterProfileSerializer, RegisterSerializer, UserSerializer
 
 User = get_user_model()
 

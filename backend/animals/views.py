@@ -11,11 +11,7 @@ from rest_framework.response import Response
 
 from .models import AdoptionRequest, Animal
 from .permissions import IsOwnerOrAdmin
-from .serializers import (
-    AdoptionRequestSerializer,
-    AnimalSerializer,
-    ProtectoraAnimalSerializer,
-)
+from .serializers import AdoptionRequestSerializer, AnimalSerializer, ProtectoraAnimalSerializer
 from .signals import haversine_distance
 
 User = get_user_model()
