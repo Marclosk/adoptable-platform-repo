@@ -1,6 +1,7 @@
 # backend/app/settings.py
 
-import os, sys
+import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -138,10 +139,10 @@ STORAGES = {
 
 DEFAULT_FILE_STORAGE = "app.storages.PublicMediaStorage"
 
-AWS_S3_USE_SSL           = False                    
-AWS_S3_VERIFY            = False                   
-AWS_S3_ADDRESSING_STYLE  = "path"                   
-AWS_S3_URL_PROTOCOL      = "http:"                 
+AWS_S3_USE_SSL = False
+AWS_S3_VERIFY = False
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_URL_PROTOCOL = "http:"
 
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")

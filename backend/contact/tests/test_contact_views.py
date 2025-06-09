@@ -2,6 +2,7 @@
 
 import logging
 from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.urls import reverse
@@ -12,6 +13,7 @@ from contact.models import ContactMessage
 
 User = get_user_model()
 
+
 class ContactViewTest(APITestCase):
     def setUp(self):
         # Silenciar los logs de contact.views durante los tests
@@ -20,9 +22,11 @@ class ContactViewTest(APITestCase):
         # la ruta es simplemente '/contact/'
         self.url = reverse("contact")
         # Creamos usuarios para que el endpoint no devuelva 404
-        User.objects.create_user(username="juan",    email="juan@example.com", password="pwd")
-        User.objects.create_user(username="user_x",  email="x@x.com",         password="pwd")
-        User.objects.create_user(username="user_y",  email="y@y.com",         password="pwd")
+        User.objects.create_user(
+            username="juan", email="juan@example.com", password="pwd"
+        )
+        User.objects.create_user(username="user_x", email="x@x.com", password="pwd")
+        User.objects.create_user(username="user_y", email="y@y.com", password="pwd")
 
     def test_missing_fields(self):
         """POST sin name/email/message → 400 + error claro"""

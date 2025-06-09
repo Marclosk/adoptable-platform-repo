@@ -1,12 +1,14 @@
 # backend/app/views.py
 
+import logging
+
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
-from django.core.mail import send_mail, BadHeaderError
+from django.core.mail import BadHeaderError, send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.encoding import force_bytes
@@ -16,7 +18,6 @@ from rest_framework.decorators import api_view, parser_classes, permission_class
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-import logging
 
 from animals.models import AdoptionRequest, Animal
 from animals.serializers import AdoptionRequestSerializer, AnimalSerializer
@@ -32,6 +33,7 @@ from .serializers import (
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -555,6 +557,7 @@ def list_blocked_users(request):
     serializer = UserSerializer(blocked_qs, many=True)
     return Response(serializer.data, status=200)
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def password_reset_request(request):
@@ -574,8 +577,7 @@ def password_reset_request(request):
         # No devolvemos error explícito para no filtrar si el email existe o no.
         user = None
         return Response(
-            {"error": "error_usuario_no_encontrado"},
-            status=status.HTTP_418_IM_A_TEAPOT
+            {"error": "error_usuario_no_encontrado"}, status=status.HTTP_418_IM_A_TEAPOT
         )
     if user and user.is_active:
         # Generamos token y uid
@@ -615,6 +617,7 @@ def password_reset_request(request):
         },
         status=status.HTTP_200_OK,
     )
+
 
 @api_view(["PUT"])
 @permission_classes([AllowAny])

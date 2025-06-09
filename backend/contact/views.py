@@ -16,23 +16,25 @@ from .serializers import ContactMessageSerializer
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
-from django.utils import timezone
+import logging
+
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMessage
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from django.core.mail import EmailMessage
-import logging
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def contact_view(request):
-    name    = request.data.get("name",    "").strip()
-    email   = request.data.get("email",   "").strip()
+    name = request.data.get("name", "").strip()
+    email = request.data.get("email", "").strip()
     message = request.data.get("message", "").strip()
 
     logger.debug(f"Contacto recibido: name={name}, email={email}, message={message}")
@@ -45,8 +47,7 @@ def contact_view(request):
     # ——————————————
     if not User.objects.filter(email=email).exists():
         return Response(
-            {"error": "El usuario no existe."},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "El usuario no existe."}, status=status.HTTP_404_NOT_FOUND
         )
 
     # ——————————————
@@ -54,13 +55,12 @@ def contact_view(request):
     # ——————————————
     hoy = timezone.localdate()  # usa Europe/Madrid
     enviados_hoy = ContactMessage.objects.filter(
-        email=email,
-        created_at__date=hoy
+        email=email, created_at__date=hoy
     ).count()
     if enviados_hoy >= 3:
         return Response(
             {"error": "Has alcanzado el límite de 3 mensajes diarios."},
-            status=status.HTTP_429_TOO_MANY_REQUESTS
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
         )
 
     # ——————————————
