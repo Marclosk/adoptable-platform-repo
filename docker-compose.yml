@@ -66,7 +66,6 @@ services:
       - USE_MINIO=TRUE
       - AWS_STORAGE_BUCKET_NAME=public
       - AWS_S3_ADDRESSING_STYLE=path
-      - AWS_S3_CUSTOM_DOMAIN=localhost:9000/public
     secrets:
       - django_secret_key
       - postgres_password
