@@ -28,6 +28,7 @@ import {
   FormLabel,
   Select,
 } from '@chakra-ui/react';
+import { ArrowBackIcon } from '@chakra-ui/icons';
 import Layout from '../../components/layout';
 import Loader from '../../components/loader/loader';
 import {
@@ -100,7 +101,7 @@ const AnimalRequests: React.FC = () => {
 
   useEffect(() => {
     if (!loading && animal?.adopter) {
-      navigate(`/card_detail/${animal.id}`);
+      navigate(`/card_detail/${animal.id}`, { replace: true });
     }
   }, [loading, animal, navigate]);
 
@@ -176,6 +177,15 @@ const AnimalRequests: React.FC = () => {
   return (
     <Layout handleLogout={handleLogout}>
       <Box maxW="960px" mx="auto" py={8}>
+        <HStack justify="flex-start" mb={4}>
+          <Button
+            leftIcon={<ArrowBackIcon />}
+            variant="ghost"
+            onClick={() => navigate(-1)}
+          >
+            {t('volver')}
+          </Button>
+        </HStack>
         <AspectRatio ratio={16 / 9} mb={6} borderRadius="md" overflow="hidden">
           <ChakraImage
             src={imgUrl}

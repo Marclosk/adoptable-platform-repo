@@ -295,7 +295,7 @@
   "error_password_required": "El campo contraseña está vacío",
   "error_password_requirements": "La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.",
   "error_invalid_credentials": "Credenciales inválidas.",
-  "error_account_not_approved": "Tu cuenta aún no ha sido validada.",
+  "error_account_not_approved": "Tu cuenta aún no ha sido validada o ha sido bloqueada.",
   "accept_terms_prefix": "Acepto los",
   "terms_and_conditions": "Términos y Condiciones",
   "error_accept_terms": "Debes aceptar los Términos y Condiciones",
@@ -358,5 +358,6 @@
   "password_restablecida_exito": "Contraseña restablecida con éxito",
   "error_usuario_no_encontrado": "Usuario no encontrado",
   "revisa_tu_correo": "Revisa tu correo",
-  "error_restablecer_contraseña": "No se pudo restablecer la contraseña"
+  "error_restablecer_contraseña": "No se pudo restablecer la contraseña",
+  "usuario_bloqueado": "Usuario bloqueado. "
 }

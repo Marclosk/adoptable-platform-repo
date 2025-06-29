@@ -295,7 +295,7 @@
   "error_password_required": "El camp contrasenya està buit",
   "error_password_requirements": "La contrasenya ha de tenir almenys 8 caràcters, una majúscula i un número.",
   "error_invalid_credentials": "Credencials invàlides.",
-  "error_account_not_approved": "El teu compte encara no ha estat validat.",
+  "error_account_not_approved": "El teu compte encara no ha estat validat o ha estat bloquejat.",
   "accept_terms_prefix": "Accepto els",
   "terms_and_conditions": "Termes i Condicions",
   "error_accept_terms": "Has d'acceptar els Termes i Condicions",
@@ -357,5 +357,6 @@
   "error_restablecer_contraseña": "No s'ha pogut restablir la contrasenya",
   "error_usuario_no_encontrado": "Usuari no trobat",
   "revisa_tu_correo": "Revisa el teu correu",
-  "solicitud_rechazada": "Sol·licitud rebutjada"
+  "solicitud_rechazada": "Sol·licitud rebutjada",
+  "usuario_bloqueado": "Usuari bloquejat."
 }

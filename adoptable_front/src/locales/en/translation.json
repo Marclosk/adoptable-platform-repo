@@ -295,7 +295,7 @@
   "error_password_required": "Password field is empty.",
   "error_password_requirements": "Password must be at least 8 characters long, include one uppercase letter and one number.",
   "error_invalid_credentials": "Invalid credentials.",
-  "error_account_not_approved": "Your account has not yet been validated.",
+  "error_account_not_approved": "Your account has not yet been validated or it has been blocked",
   "accept_terms_prefix": "I accept the",
   "terms_and_conditions": "Terms and Conditions",
   "error_accept_terms": "You must accept the Terms and Conditions",
@@ -356,5 +356,6 @@
   "password_restablecida_exito": "Password successfully reset",
   "error_usuario_no_encontrado": "User not found",
   "revisa_tu_correo": "Check your email",
-  "error_restablecer_contraseña": "Could not reset password"
+  "error_restablecer_contraseña": "Could not reset password",
+  "usuario_bloqueado": "User blocked. "
 }

@@ -617,20 +617,27 @@ const Profile: React.FC = () => {
                     </Text>
                   </VStack>
                 </Stack>
-                <HStack spacing={4}>
+                <Stack
+                  direction={{ base: 'column', md: 'row' }}
+                  spacing={{ base: 2, md: 4 }}
+                  width={{ base: '100%', md: 'auto' }}
+                >
                   <Button
                     leftIcon={<EditIcon />}
                     variant="outline"
                     colorScheme="teal"
                     size="sm"
+                    width={{ base: '100%', md: 'auto' }}
                     onClick={() => setIsEditing(true)}
                   >
                     {t('editar_perfil')}
                   </Button>
+
                   {role === 'adoptante' && (
                     <Button
                       colorScheme="purple"
                       size="sm"
+                      width={{ base: '100%', md: 'auto' }}
                       onClick={toggleAdoptionForm}
                     >
                       {showAdoptionForm
@@ -638,7 +645,7 @@ const Profile: React.FC = () => {
                         : t('mostrar_formulario_adopcion')}
                     </Button>
                   )}
-                </HStack>
+                </Stack>
               </VStack>
             )}
           </Box>

@@ -56,6 +56,8 @@ const Footer: React.FC = () => {
           <GridItem>
             <VStack align="start" spacing={2}>
               <Text fontWeight="semibold">{t('footer_nav_title')}</Text>
+
+              {/* Inicio siempre */}
               <Link
                 href="/dashboard"
                 color={linkColor}
@@ -63,36 +65,87 @@ const Footer: React.FC = () => {
               >
                 {t('nav_inicio')}
               </Link>
-              {role === 'protectora' && (
-                <Link
-                  href="/protectora/dashboard"
-                  color={linkColor}
-                  _hover={{ textDecoration: 'underline' }}
-                >
-                  {t('nav_panel')}
-                </Link>
+
+              {/* Si es admin, mostramos Admin y Perfil */}
+              {role === 'admin' && (
+                <>
+                  <Link
+                    href="" // <-- pon aquí tu URL de admin
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_admin')}
+                  </Link>
+                  <Link
+                    href="/perfil"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_perfil')}
+                  </Link>
+                </>
               )}
-              <Link
-                href="/perfil"
-                color={linkColor}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                {t('nav_perfil')}
-              </Link>
-              <Link
-                href="/donaciones"
-                color={linkColor}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                {t('nav_donaciones')}
-              </Link>
-              <Link
-                href="/contacto"
-                color={linkColor}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                {t('nav_contacto')}
-              </Link>
+
+              {/* Si es protectora, añadimos el panel */}
+              {role === 'protectora' && (
+                <>
+                  <Link
+                    href="/protectora/dashboard"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_panel')}
+                  </Link>
+                  <Link
+                    href="/perfil"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_perfil')}
+                  </Link>
+                  <Link
+                    href="/donaciones"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_donaciones')}
+                  </Link>
+                  <Link
+                    href="/contacto"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_contacto')}
+                  </Link>
+                </>
+              )}
+
+              {/* Si es adoptante, mostramos Perfil, Donaciones y Contacto */}
+              {role === 'adoptante' && (
+                <>
+                  <Link
+                    href="/perfil"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_perfil')}
+                  </Link>
+                  <Link
+                    href="/donaciones"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_donaciones')}
+                  </Link>
+                  <Link
+                    href="/contacto"
+                    color={linkColor}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {t('nav_contacto')}
+                  </Link>
+                </>
+              )}
             </VStack>
           </GridItem>
 
@@ -211,6 +264,7 @@ const Footer: React.FC = () => {
                   color={iconColor}
                   _hover={{ bg: 'teal.500', color: 'white' }}
                   borderRadius="full"
+                  zIndex={0}
                   size="md"
                 />
               </HStack>

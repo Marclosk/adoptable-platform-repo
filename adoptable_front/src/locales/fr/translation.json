@@ -358,5 +358,6 @@
   "password_restablecida_exito": "Mot de passe réinitialisé avec succès",
   "error_usuario_no_encontrado": "Utilisateur non trouvé",
   "revisa_tu_correo": "Vérifie ton e-mail",
-  "error_restablecer_contraseña": "Impossible de réinitialiser le mot de passe"
+  "error_restablecer_contraseña": "Impossible de réinitialiser le mot de passe",
+  "usuario_bloqueado": "Utilisateur bloqué."
 }

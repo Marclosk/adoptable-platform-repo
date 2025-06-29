@@ -97,11 +97,6 @@ def list_contact_messages(request):
 @api_view(["GET", "DELETE"])
 @permission_classes([IsAuthenticated])
 def manage_contact_message(request, message_id):
-    """
-    GET    /api/contact/admin/messages/{message_id}/   → detalle (solo admin)
-    DELETE /api/contact/admin/messages/{message_id}/   → borrar (solo admin)
-    Solo si el mensaje no pertenece a un usuario bloqueado.
-    """
     if not request.user.is_superuser:
         return Response(
             {"detail": "No tienes permiso."},

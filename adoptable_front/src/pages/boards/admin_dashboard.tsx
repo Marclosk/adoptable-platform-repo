@@ -1,3 +1,4 @@
+// src/pages/boards/admin_dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -57,9 +58,7 @@ const AdminDashboard: React.FC = () => {
       const response = await axios.get<ProtectoraPending[]>(
         '/users/admin/pending-protectoras/',
         {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
@@ -79,9 +78,7 @@ const AdminDashboard: React.FC = () => {
         `/users/admin/validate-protectora/${id}/`,
         {},
         {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
@@ -103,9 +100,7 @@ const AdminDashboard: React.FC = () => {
       const response = await axios.get<ContactMessage[]>(
         '/api/contact/admin/messages/',
         {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
@@ -125,9 +120,7 @@ const AdminDashboard: React.FC = () => {
       const response = await axios.get<BlockedUser[]>(
         '/users/admin/blocked-users/',
         {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
@@ -148,9 +141,7 @@ const AdminDashboard: React.FC = () => {
         `/users/admin/unblock/${id}/`,
         {},
         {
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
+          headers: { 'X-CSRFToken': csrfToken },
           withCredentials: true,
         }
       );
@@ -191,22 +182,35 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <Layout handleLogout={() => navigate('/login')}>
-      <Box maxW="800px" mx="auto" py={8} px={[4, 6, 8]}>
-        <Heading mb={6} color="teal.600">
+      <Box maxW="800px" mx="auto" py={8} px={{ base: 4, md: 6, lg: 8 }}>
+        <Heading
+          mb={6}
+          color="teal.600"
+          fontSize={{ base: '2xl', md: '3xl' }}
+          textAlign="center"
+        >
           {t('panel_admin') || 'Panel Administrador'}
         </Heading>
 
-        {pendingList.length === 0 ? (
-          <Text color="gray.500" mb={8}>
-            {t('sin_protectoras_pendientes') ||
-              'No hay protectoras pendientes.'}
-          </Text>
-        ) : (
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
-            <Heading size="md" mb={4}>
-              {t('protectora_pendientes') || 'Protectoras Pendientes'}
-            </Heading>
-            <Table variant="simple">
+        {/* Protectoras pendientes */}
+        <Box
+          bg={bg}
+          boxShadow={shadow}
+          borderRadius="lg"
+          p={{ base: 4, md: 6 }}
+          mb={8}
+          overflowX="auto"
+        >
+          <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
+            {t('protectora_pendientes') || 'Protectoras Pendientes'}
+          </Heading>
+          {pendingList.length === 0 ? (
+            <Text color="gray.500">
+              {t('sin_protectoras_pendientes') ||
+                'No hay protectoras pendientes.'}
+            </Text>
+          ) : (
+            <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
               <Thead>
                 <Tr>
                   <Th>{t('username') || 'Username'}</Th>
@@ -232,11 +236,19 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </Tbody>
             </Table>
-          </Box>
-        )}
+          )}
+        </Box>
 
-        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6} mb={8}>
-          <Heading size="md" mb={4}>
+        {/* Mensajes de contacto */}
+        <Box
+          bg={bg}
+          boxShadow={shadow}
+          borderRadius="lg"
+          p={{ base: 4, md: 6 }}
+          mb={8}
+          overflowX="auto"
+        >
+          <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
             {t('mensajes_contacto') || 'Mensajes de Contacto'}
           </Heading>
           {contactList.length === 0 ? (
@@ -244,7 +256,7 @@ const AdminDashboard: React.FC = () => {
               {t('sin_mensajes_contacto') || 'No hay mensajes de contacto.'}
             </Text>
           ) : (
-            <Table variant="simple">
+            <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
               <Thead>
                 <Tr>
                   <Th>{t('nombre') || 'Nombre'}</Th>
@@ -258,7 +270,9 @@ const AdminDashboard: React.FC = () => {
                   <Tr key={c.id}>
                     <Td>{c.name}</Td>
                     <Td>{c.email}</Td>
-                    <Td>{new Date(c.created_at).toLocaleString()}</Td>
+                    <Td fontSize={{ base: 'xs', md: 'sm' }}>
+                      {new Date(c.created_at).toLocaleString()}
+                    </Td>
                     <Td textAlign="right">
                       <Button
                         size="sm"
@@ -275,8 +289,15 @@ const AdminDashboard: React.FC = () => {
           )}
         </Box>
 
-        <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-          <Heading size="md" mb={4}>
+        {/* Usuarios bloqueados */}
+        <Box
+          bg={bg}
+          boxShadow={shadow}
+          borderRadius="lg"
+          p={{ base: 4, md: 6 }}
+          overflowX="auto"
+        >
+          <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
             {t('usuarios_bloqueados') || 'Usuarios Bloqueados'}
           </Heading>
           {blockedList.length === 0 ? (
@@ -284,7 +305,7 @@ const AdminDashboard: React.FC = () => {
               {t('sin_usuarios_bloqueados') || 'No hay usuarios bloqueados.'}
             </Text>
           ) : (
-            <Table variant="simple">
+            <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
               <Thead>
                 <Tr>
                   <Th>{t('username') || 'Username'}</Th>

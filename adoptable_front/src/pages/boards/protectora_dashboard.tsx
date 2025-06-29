@@ -1,3 +1,4 @@
+// src/pages/boards/protectora_dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -47,6 +48,7 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
+  PieLabelRenderProps,
   LineChart,
   Line,
   XAxis,
@@ -61,6 +63,36 @@ import { logoutSuccess } from '../../features/auth/authSlice';
 import { logout } from '../../features/auth/authService';
 
 const COLORS = ['#38A169', '#ED8936', '#4FD1C5'];
+
+// Dibuja el porcentaje dentro de cada sector del Pie
+// Dibuja el porcentaje dentro de cada sector del Pie, pero más grande y oscuro
+const renderPercentLabel = (props: PieLabelRenderProps) => {
+  // forzamos a número inner/outer radius
+  const iR = Number(props.innerRadius) || 0;
+  const oR = Number(props.outerRadius) || 0;
+  const cx = Number(props.cx) || 0;
+  const cy = Number(props.cy) || 0;
+  const midAngle = props.midAngle ?? 0;
+
+  const RADIAN = Math.PI / 180;
+  const radius = iR + (oR - iR) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#2D3748" // gris oscuro (Gray.800)
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={16} // más grande
+      fontWeight="bold" // negrita
+    >
+      {`${(props.percent! * 100).toFixed(0)}%`}
+    </text>
+  );
+};
 
 const ProtectoraDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -134,194 +166,221 @@ const ProtectoraDashboard: React.FC = () => {
 
   return (
     <Layout handleLogout={handleLogout}>
-      <Box maxW="1200px" mx="auto" py={8} px={[4, 6, 8]}>
+      <Box maxW="1200px" mx="auto" py={8} px={{ base: 4, md: 6, lg: 8 }}>
         <Heading mb={6} color="teal.600" fontSize={['2xl', '3xl', '4xl']}>
           {t('panel_protectora')}
         </Heading>
 
+        {/* Métricas */}
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mb={8}>
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center" mb={2}>
-              <Icon as={FaPaw} boxSize={6} color="teal.500" mr={3} />
-              <Text fontSize={['md', 'lg']} fontWeight="medium">
-                {t('total_animales')}
+          {[
+            {
+              icon: FaPaw,
+              label: t('total_animales'),
+              value: total_animals,
+              color: 'teal.500',
+            },
+            {
+              icon: FaClipboardList,
+              label: t('solicitudes_pendientes'),
+              value: pending_requests,
+              color: 'orange.500',
+            },
+            {
+              icon: FaCheckCircle,
+              label: t('adopciones_completadas'),
+              value: completed_adoptions,
+              color: 'green.500',
+            },
+          ].map(({ icon, label, value, color }, idx) => (
+            <Box
+              key={idx}
+              bg={bg}
+              boxShadow={shadow}
+              borderRadius="lg"
+              p={{ base: 4, md: 6 }}
+            >
+              <Flex align="center" mb={2}>
+                <Icon
+                  as={icon}
+                  boxSize={{ base: 5, md: 6 }}
+                  color={color}
+                  mr={3}
+                />
+                <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="medium">
+                  {label}
+                </Text>
+              </Flex>
+              <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
+                {value}
               </Text>
-            </Flex>
-            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
-              {total_animals}
-            </Text>
-          </Box>
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center" mb={2}>
-              <Icon
-                as={FaClipboardList}
-                boxSize={6}
-                color="orange.500"
-                mr={3}
-              />
-              <Text fontSize={['md', 'lg']} fontWeight="medium">
-                {t('solicitudes_pendientes')}
-              </Text>
-            </Flex>
-            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
-              {pending_requests}
-            </Text>
-          </Box>
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={6}>
-            <Flex align="center" mb={2}>
-              <Icon as={FaCheckCircle} boxSize={6} color="green.500" mr={3} />
-              <Text fontSize={['md', 'lg']} fontWeight="medium">
-                {t('adopciones_completadas')}
-              </Text>
-            </Flex>
-            <Text fontSize={['2xl', '3xl']} fontWeight="bold">
-              {completed_adoptions}
-            </Text>
-          </Box>
+            </Box>
+          ))}
         </SimpleGrid>
 
         <Divider mb={8} />
 
+        {/* Gráficas */}
         <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6} mb={8}>
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+          {/* Pie Chart */}
+          <Box
+            bg={bg}
+            boxShadow={shadow}
+            borderRadius="lg"
+            p={{ base: 4, md: 6 }}
+          >
+            <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
               {t('estado_global')}
             </Heading>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: t('adoptados'), value: completed_adoptions },
-                    { name: t('pendientes'), value: pending_requests },
-                    {
-                      name: t('disponibles'),
-                      value: total_animals - completed_adoptions,
-                    },
-                  ]}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={30}
-                  outerRadius={50}
-                  paddingAngle={2}
-                  label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
-                  labelLine={false}
-                  isAnimationActive
-                  animationBegin={0}
-                  animationDuration={800}
-                  animationEasing="ease-in-out"
-                >
-                  {[
-                    completed_adoptions,
-                    pending_requests,
-                    total_animals - completed_adoptions,
-                  ].map((_, idx) => (
-                    <Cell key={idx} fill={COLORS[idx]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-                <Legend
-                  layout="vertical"
-                  verticalAlign="middle"
-                  align="right"
-                  iconType="square"
-                  formatter={value => String(value)}
-                  wrapperStyle={{
-                    top: '50%',
-                    right: 0,
-                    transform: 'translateY(-50%)',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <Box height={{ base: 150, md: 180 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: t('adoptados'), value: completed_adoptions },
+                      { name: t('pendientes'), value: pending_requests },
+                      {
+                        name: t('disponibles'),
+                        value: total_animals - completed_adoptions,
+                      },
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={30}
+                    outerRadius={50}
+                    paddingAngle={2}
+                    labelLine={false}
+                    label={renderPercentLabel}
+                    isAnimationActive
+                    animationBegin={0}
+                    animationDuration={800}
+                    animationEasing="ease-in-out"
+                  >
+                    {[
+                      completed_adoptions,
+                      pending_requests,
+                      total_animals - completed_adoptions,
+                    ].map((_, idx) => (
+                      <Cell key={idx} fill={COLORS[idx]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend
+                    layout="vertical"
+                    verticalAlign="middle"
+                    align="right"
+                    iconType="square"
+                    formatter={value => String(value)}
+                    wrapperStyle={{
+                      top: '50%',
+                      right: 0,
+                      transform: 'translateY(-50%)',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
           </Box>
 
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+          {/* Line Chart */}
+          <Box
+            bg={bg}
+            boxShadow={shadow}
+            borderRadius="lg"
+            p={{ base: 4, md: 6 }}
+          >
+            <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
               {t('adopciones_mensuales')}
             </Heading>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart
-                data={monthlyAdoptions}
-                key={monthlyAdoptions.map(d => d.count).join(',')}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis allowDecimals={false} />
-                <RechartsTooltip />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#38A169"
-                  strokeWidth={2}
-                  dot
-                  isAnimationActive
-                  animationBegin={0}
-                  animationDuration={800}
-                  animationEasing="ease-in-out"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <Box height={{ base: 150, md: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyAdoptions}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis allowDecimals={false} />
+                  <RechartsTooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#38A169"
+                    strokeWidth={2}
+                    dot
+                    isAnimationActive
+                    animationBegin={0}
+                    animationDuration={800}
+                    animationEasing="ease-in-out"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
           </Box>
 
-          <Box bg={bg} boxShadow={shadow} borderRadius="lg" p={4}>
-            <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+          {/* Bar Chart */}
+          <Box
+            bg={bg}
+            boxShadow={shadow}
+            borderRadius="lg"
+            p={{ base: 4, md: 6 }}
+          >
+            <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
               {t('animales_mas_solicitados')}
             </Heading>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={topRequested}
-                margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
-                key={topRequested.map(d => d.count).join(',')}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                />
-                <YAxis allowDecimals={false} />
-                <RechartsTooltip />
-                <Bar
-                  dataKey="count"
-                  fill="#3182CE"
-                  isAnimationActive
-                  animationBegin={0}
-                  animationDuration={800}
-                  animationEasing="ease-in-out"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <Box height={{ base: 150, md: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={topRequested}
+                  margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    interval={0}
+                    height={60}
+                  />
+                  <YAxis allowDecimals={false} />
+                  <RechartsTooltip />
+                  <Bar dataKey="count" fill="#3182CE" />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
           </Box>
         </SimpleGrid>
 
         <Divider mb={8} />
 
+        {/* Tablas */}
         <Box
           bg={bg}
           boxShadow={shadow}
           borderRadius="lg"
-          p={6}
+          p={{ base: 4, md: 6 }}
           mb={8}
           overflowX="auto"
         >
-          <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+          <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
             {t('animales_en_adopcion')}
           </Heading>
-          <Table variant="simple" size="sm">
+          <Table variant="simple" size={{ base: 'xs', md: 'sm' }}>
             <Thead>
               <Tr>
-                <Th>{t('nombre')}</Th>
-                <Th isNumeric>{t('solicitudes')}</Th>
-                <Th textAlign="right">{t('acciones')}</Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }}>{t('nombre')}</Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }} isNumeric>
+                  {t('solicitudes')}
+                </Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }} textAlign="right">
+                  {t('acciones')}
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
               {availableAnimals.map(a => (
                 <Tr key={a.id}>
-                  <Td>{a.name}</Td>
-                  <Td isNumeric>{a.pending_requests}</Td>
+                  <Td fontSize={{ base: 'xs', md: 'sm' }}>{a.name}</Td>
+                  <Td fontSize={{ base: 'xs', md: 'sm' }} isNumeric>
+                    {a.pending_requests}
+                  </Td>
                   <Td textAlign="right">
                     <Button
                       size="sm"
@@ -347,25 +406,29 @@ const ProtectoraDashboard: React.FC = () => {
           bg={bg}
           boxShadow={shadow}
           borderRadius="lg"
-          p={6}
+          p={{ base: 4, md: 6 }}
           overflowX="auto"
         >
-          <Heading size="md" mb={4} fontSize={['lg', 'md']}>
+          <Heading size="md" mb={4} fontSize={{ base: 'lg', md: 'md' }}>
             {t('animales_adoptados')}
           </Heading>
-          <Table variant="simple" size="sm">
+          <Table variant="simple" size={{ base: 'xs', md: 'sm' }}>
             <Thead>
               <Tr>
-                <Th>{t('nombre')}</Th>
-                <Th>{t('adoptado_por')}</Th>
-                <Th textAlign="right">{t('acciones')}</Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }}>{t('nombre')}</Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }}>{t('adoptado_por')}</Th>
+                <Th fontSize={{ base: 'xs', md: 'sm' }} textAlign="right">
+                  {t('acciones')}
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
               {adoptedAnimals.map(a => (
                 <Tr key={a.id}>
-                  <Td>{a.name}</Td>
-                  <Td>{a.adopter_username}</Td>
+                  <Td fontSize={{ base: 'xs', md: 'sm' }}>{a.name}</Td>
+                  <Td fontSize={{ base: 'xs', md: 'sm' }}>
+                    {a.adopter_username}
+                  </Td>
                   <Td textAlign="right">
                     <Button
                       size="sm"

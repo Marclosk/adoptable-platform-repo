@@ -409,6 +409,7 @@ const Dashboard: React.FC = () => {
           borderRadius="full"
           boxShadow="lg"
           size="lg"
+          zIndex={1}
           onClick={() => navigate('/add-animal')}
         >
           {t('boton_anadir_perro')}
