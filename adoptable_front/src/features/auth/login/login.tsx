@@ -187,6 +187,7 @@ const Login: React.FC = () => {
 
           {!showResetForm && (
             <VStack spacing={4} align="stretch">
+              {/* — login form — */}
               <FormControl isInvalid={!!usernameError} mb={4}>
                 <FormLabel>{t('login_username_label')}</FormLabel>
                 <Input
@@ -260,10 +261,19 @@ const Login: React.FC = () => {
                 {t('recuperar_contraseña')}
               </Text>
 
+              {/* — feedback success — */}
               {resetMessage && (
                 <Alert status="success" mb={4}>
                   <AlertIcon />
                   {resetMessage}
+                </Alert>
+              )}
+
+              {/* — feedback error — */}
+              {resetEmailError && (
+                <Alert status="error" mb={4}>
+                  <AlertIcon />
+                  {resetEmailError}
                 </Alert>
               )}
 
@@ -275,9 +285,6 @@ const Login: React.FC = () => {
                   placeholder={t('placeholder_email')}
                   focusBorderColor="teal.500"
                 />
-                {resetEmailError && (
-                  <FormErrorMessage>{resetEmailError}</FormErrorMessage>
-                )}
               </FormControl>
 
               <Button
