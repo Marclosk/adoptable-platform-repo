@@ -106,6 +106,8 @@ AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
 AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", "")
 AWS_S3_ADDRESSING_STYLE = os.getenv("AWS_S3_ADDRESSING_STYLE", "path")
 AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", "")
+AWS_S3_USE_SSL = os.getenv("AWS_S3_USE_SSL", "True") == "True"
+AWS_S3_VERIFY = os.getenv("AWS_S3_VERIFY", "True") == "True"
 
 DEFAULT_FILE_STORAGE = "app.storages.PublicMediaStorage"
 STORAGES = {

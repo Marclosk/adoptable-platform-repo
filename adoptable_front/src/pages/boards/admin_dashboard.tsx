@@ -20,6 +20,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Layout from '../../components/layout';
 import axios from 'axios';
+import { logout } from '../../features/auth/authService';
+import { logoutSuccess } from '../../features/auth/authSlice';
+import { useDispatch } from 'react-redux';
 import { getCSRFToken } from '../profile/user_services';
 
 interface ProtectoraPending {
@@ -43,6 +46,7 @@ interface BlockedUser {
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -70,6 +74,11 @@ const AdminDashboard: React.FC = () => {
         status: 'error',
       });
     }
+  };
+  const handleLogout = async () => {
+    await logout();
+    dispatch(logoutSuccess());
+    navigate('/login');
   };
 
   const handleValidate = async (id: number) => {
@@ -172,7 +181,7 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout handleLogout={() => navigate('/login')}>
+      <Layout handleLogout={handleLogout}>
         <Flex justify="center" py={20}>
           <Spinner size="xl" color="teal.500" />
         </Flex>
@@ -181,7 +190,7 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <Layout handleLogout={() => navigate('/login')}>
+    <Layout handleLogout={handleLogout}>
       <Box maxW="800px" mx="auto" py={8} px={{ base: 4, md: 6, lg: 8 }}>
         <Heading
           mb={6}

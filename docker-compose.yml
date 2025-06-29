@@ -8,15 +8,15 @@ services:
     environment:
       POSTGRES_DB: adoptable_db
       POSTGRES_USER: marc
-      POSTGRES_PORT: "5432"
-    secrets:
-      - postgres_password
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - app_network
+    secrets:
+      - postgres_password
 
   minio:
     image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
@@ -83,7 +83,7 @@ services:
       context: ./adoptable_front
       dockerfile: Dockerfile
     container_name: adoptable_frontend
-    command: npm run dev # para que arranque Vite en container
+    command: npm run dev
     volumes:
       - ./adoptable_front:/app
       - /app/node_modules
@@ -104,10 +104,10 @@ volumes:
   minio_data:
 
 secrets:
-  django_secret_key:
-    file: ./backend/secrets/django_secret_key.txt
   postgres_password:
     file: ./backend/secrets/postgres_password.txt
+  django_secret_key:
+    file: ./backend/secrets/django_secret_key.txt
   email_host_password:
     file: ./backend/secrets/email_host_password.txt
   aws_secret_key:

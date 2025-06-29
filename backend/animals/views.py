@@ -12,9 +12,12 @@ from .models import AdoptionRequest, Animal
 from .permissions import IsOwnerOrAdmin
 from .serializers import AdoptionRequestSerializer, AnimalSerializer, ProtectoraAnimalSerializer
 from .signals import haversine_distance
+import sys
+import logging
 
 User = get_user_model()
 
+logger = logging.getLogger(__name__)
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     """
@@ -22,7 +25,6 @@ class AnimalListCreateView(generics.ListCreateAPIView):
          opcionalmente filtrados por distancia y por nombre (?search=).
     POST: permite crear un nuevo animal; se asigna automáticamente la protectora creadora.
     """
-
     serializer_class = AnimalSerializer
     permission_classes = [IsAuthenticated]
 
@@ -46,7 +48,9 @@ class AnimalListCreateView(generics.ListCreateAPIView):
                 filtered_ids = []
                 for animal in queryset:
                     if animal.latitude is not None and animal.longitude is not None:
-                        dist = haversine_distance(lat_user, lng_user, animal.latitude, animal.longitude)
+                        dist = haversine_distance(
+                            lat_user, lng_user, animal.latitude, animal.longitude
+                        )
                         if dist <= distance_km:
                             filtered_ids.append(animal.id)
 
@@ -57,7 +61,19 @@ class AnimalListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        # DEBUG: imprimir datos entrantes para creación
+        logger.debug(f"DEBUG Animal creation payload keys: {list(self.request.data.keys())}")
+        logger.debug(f"DEBUG Animal creation full data: {self.request.data}")
+
+        try:
+            serializer.save(owner=self.request.user)
+        except Exception as e:
+            # DEBUG: loguear y visualizar stacktrace completo
+            logger.exception("DEBUG Error al guardar animal en perform_create")
+            print("=== DEBUG: excepción al guardar animal ===", file=sys.stderr)
+            print(e, file=sys.stderr)
+            # vuelvo a lanzar para que Django/DRF lo registre también
+            raise
 
 
 class AnimalDetailView(generics.RetrieveUpdateDestroyAPIView):
