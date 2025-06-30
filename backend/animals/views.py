@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
@@ -12,12 +15,11 @@ from .models import AdoptionRequest, Animal
 from .permissions import IsOwnerOrAdmin
 from .serializers import AdoptionRequestSerializer, AnimalSerializer, ProtectoraAnimalSerializer
 from .signals import haversine_distance
-import sys
-import logging
 
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
+
 
 class AnimalListCreateView(generics.ListCreateAPIView):
     """
@@ -25,6 +27,7 @@ class AnimalListCreateView(generics.ListCreateAPIView):
          opcionalmente filtrados por distancia y por nombre (?search=).
     POST: permite crear un nuevo animal; se asigna automáticamente la protectora creadora.
     """
+
     serializer_class = AnimalSerializer
     permission_classes = [IsAuthenticated]
 
@@ -48,9 +51,7 @@ class AnimalListCreateView(generics.ListCreateAPIView):
                 filtered_ids = []
                 for animal in queryset:
                     if animal.latitude is not None and animal.longitude is not None:
-                        dist = haversine_distance(
-                            lat_user, lng_user, animal.latitude, animal.longitude
-                        )
+                        dist = haversine_distance(lat_user, lng_user, animal.latitude, animal.longitude)
                         if dist <= distance_km:
                             filtered_ids.append(animal.id)
 
